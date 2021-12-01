@@ -16,8 +16,16 @@ builder.Services.AddDefaultIdentity<IdentityUser>(options => options.SignIn.Requ
     .AddEntityFrameworkStores<ApplicationDbContext>();
 builder.Services.AddRazorPages(options =>
 {
-    options.Conventions.AuthorizeAreaFolder("Logistics", "/Booking");
+    options.Conventions.AuthorizeAreaFolder("Logistics", "/");
 });
+
+builder.Services.AddLogging((options) =>
+{
+    options.AddConsole();
+    options.AddDebug();
+});
+
+builder.Services.AddMvcCore();
 
 var app = builder.Build();
 
@@ -50,10 +58,14 @@ app.UseHttpsRedirection();
 app.UseStaticFiles();
 
 app.UseRouting();
-
 app.UseAuthentication();
 app.UseAuthorization();
+app.UseEndpoints(options =>
+{
+    
+    options.MapControllers();
+    options.MapRazorPages();
+});
 
-app.MapRazorPages();
 
 app.Run();

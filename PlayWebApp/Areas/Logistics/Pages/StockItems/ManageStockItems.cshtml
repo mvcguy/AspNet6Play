@@ -5,6 +5,9 @@
     ViewData["SelectedPage"] = "ManageStock";
 }
 
+@{
+    //ViewContext.ViewData.TemplateInfo.HtmlFieldPrefix = "xxx";
+}
 
 @section ToolBar{
 <div class="row">
@@ -23,9 +26,9 @@
         <div class="col-12">
             <label asp-for="StockItemVm.ItemDescription"></label>
             <input asp-for="StockItemVm.ItemDescription" class="form-control" aria-required="true" />
-            <span asp-validation-for="StockItemVm.ItemDescription" class="text-danger"></span>
+            <span asp-validation-for="StockItemVm.ItemDescription" class="text-danger"></span>            
         </div>
-
+        
         <ul class="nav nav-tabs" id="tabsStockItem" role="tablist">
             <li class="nav-item" role="presentation">
                 <button class="nav-link active" id="tabPrices" data-bs-toggle="tab" data-bs-target="#tabPricesContent"
@@ -61,6 +64,25 @@
 
 @section Scripts {
 <partial name="_ValidationScriptsPartial" />
+<script>
+    $.fn.serializeObject = function () {
+        var o = {};
+        var a = this.serializeArray();
+        $.each(a, function () {
+            if (o[this.name]) {
+                if (!o[this.name].push) {
+                    o[this.name] = [o[this.name]];
+                }
+                o[this.name].push(this.value || '');
+            } else {
+                o[this.name] = this.value || '';
+            }
+        });
+        //console.log(a);
+        //console.log(o);
+        return o;
+    };
+</script>
 
 <script>
 
@@ -73,47 +95,49 @@
                 console.log('saving changes ...', e);
                 var postParams = {
                     callback: function (response) {
-                        console.log('data is save on the server. Service response: ', response);
+                        console.log('data is saved on the server. Service response: ', response);
                     },
                     errorCallback: function (error) {
                         console.error('an error has occurred while saving the record. Error: ', error);
                     },
-                    data: { 'StockItemVm.ItemDisplayId': "item1", 'StockItemVm.ItemDescription': "Some description" }
-                };
-                postRequest(postParams);
-            });
-        };
-
-        var dumpParams = function () {
-            console.log(serviceParams);
-        };
-
-        var postRequest = function (postParams) {
-            var ajaxOptions = {
-                url: url,
-                method: 'POST',
-                data: postParams.data ? JSON.stringify(postParams.data) : {},
-                contentType: 'application/json',
-                headers: postParams.headers ? postParams.headers : {}
+                    @* data: { 'StockItemVm.ItemDisplayId': "item1", 'StockItemVm.ItemDescription': "Some description" } *@
+                    data: $('#' + formId).serializeObject()
             };
+            console.log(postParams);
+            postRequest(postParams);
+        });
+    };
 
-            $.ajax(ajaxOptions).then(function done(response) {
-                postParams.callback(response);
-            }, function error(error) {
-                postParams.errorCallback(error);
-            });
-        }
+    var dumpParams = function () {
+        console.log(serviceParams);
+    };
 
-        return {
-            registerHandlers,
-            dumpParams,
-            postRequest
+    var postRequest = function (postParams) {
+        var ajaxOptions = {
+            url: url,
+            method: 'POST',
+            data: postParams.data ? JSON.stringify(postParams.data) : {},
+            contentType: 'application/json',
+            headers: postParams.headers ? postParams.headers : {}
         };
+
+        $.ajax(ajaxOptions).then(function done(response) {
+            postParams.callback(response);
+        }, function error(error) {
+            postParams.errorCallback(error);
+        });
+    };
+
+    return {
+        registerHandlers,
+        dumpParams,
+        postRequest
+    };
 
     };
 
     $(document).ready(function () {
-        var srv = new persistenceService({ url: "https://localhost:7096/Logistics/StockItems/ManageStockItems/StockItem", formId: "frmStockItems" });
+        var srv = new persistenceService({ url: "https://localhost:7096/api/v1/StockItems", formId: "frmStockItems" });
         srv.registerHandlers();
         srv.dumpParams();
     });
