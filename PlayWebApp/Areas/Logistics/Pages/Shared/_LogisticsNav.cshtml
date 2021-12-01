@@ -1,0 +1,19 @@
+@{
+    ViewData.TryGetValue("SelectedPage", out var selectedPageRaw);
+    var selectedPage = selectedPageRaw as string;
+    if (string.IsNullOrWhiteSpace(selectedPage))
+    {
+        selectedPage = "Index";
+    }
+
+}
+
+<ul class="nav nav-pills flex-column">
+    <li class="nav-item"><a class='nav-link @(selectedPage=="Index" ? "active" : "")' id="indexPage"
+            asp-page="/Home/Index">Home</a></li>
+    <li class="nav-item"><a class='nav-link @(selectedPage=="ManageBooking" ? "active" : "")' id="manageBooking"
+            asp-page="/Booking/ManageBooking">Bookings</a></li>
+    <li class="nav-item"><a class='nav-link @(selectedPage=="ManageStock" ? "active" : "")' id="manageStock"
+            asp-page="/StockItems/ManageStockItems">Stock Items</a></li>
+
+</ul>

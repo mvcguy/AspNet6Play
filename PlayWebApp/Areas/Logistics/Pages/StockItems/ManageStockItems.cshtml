@@ -1,0 +1,123 @@
+@page
+@model ManageStockItemsModel
+@{
+    ViewData["Title"] = "Stock items";
+    ViewData["SelectedPage"] = "ManageStock";
+}
+
+
+@section ToolBar{
+<div class="row">
+    <partial name="_ActionBar" />
+</div>
+}
+
+@if (Model != null)
+{
+    <form class="row g-3" id="frmStockItems" method="post">
+        <div class="col-12">
+            <label asp-for="StockItemVm.ItemDisplayId"></label>
+            <input asp-for="StockItemVm.ItemDisplayId" class="form-control" aria-required="true" />
+            <span asp-validation-for="StockItemVm.ItemDisplayId" class="text-danger"></span>
+        </div>
+        <div class="col-12">
+            <label asp-for="StockItemVm.ItemDescription"></label>
+            <input asp-for="StockItemVm.ItemDescription" class="form-control" aria-required="true" />
+            <span asp-validation-for="StockItemVm.ItemDescription" class="text-danger"></span>
+        </div>
+
+        <ul class="nav nav-tabs" id="tabsStockItem" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active" id="tabPrices" data-bs-toggle="tab" data-bs-target="#tabPricesContent"
+                type="button" role="tab" aria-controls="tabPricesContent" aria-selected="true">Prices</button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="tabSuppliers" data-bs-toggle="tab" data-bs-target="#tabSuppliersContent"
+                type="button" role="tab" aria-controls="tabSuppliersContent" aria-selected="false">Suppliers</button>
+            </li>
+        </ul>
+        <div class="tab-content" id="myTabContent">
+            <div class="tab-pane fade show active" id="tabPricesContent" role="tabpanel" aria-labelledby="tabPrices">
+                <div class="row">
+                    <div class="col-sm-6">Display ID</div>
+                    <div class="col-sm-6">Description</div>
+                </div>
+                @foreach (var item in Model.StockItemsList)
+                {
+                    <div class="row">
+                        <div class="col-sm-6">@item.DisplayId</div>
+                        <div class="col-sm-6">@item.Description</div>
+                    </div>
+                }
+            </div>
+            <div class="tab-pane fade" id="tabSuppliersContent" role="tabpanel" aria-labelledby="tabSuppliers">Stock item
+                suppliers</div>
+        </div>
+
+    </form>
+
+}
+
+
+@section Scripts {
+<partial name="_ValidationScriptsPartial" />
+
+<script>
+
+    var persistenceService = function (serviceParams) {
+        var url = serviceParams.url;
+        var formId = serviceParams.formId;
+
+        var registerHandlers = function () {
+            $('#btnSave').on('click', function (e) {
+                console.log('saving changes ...', e);
+                var postParams = {
+                    callback: function (response) {
+                        console.log('data is save on the server. Service response: ', response);
+                    },
+                    errorCallback: function (error) {
+                        console.error('an error has occurred while saving the record. Error: ', error);
+                    },
+                    data: { 'StockItemVm.ItemDisplayId': "item1", 'StockItemVm.ItemDescription': "Some description" }
+                };
+                postRequest(postParams);
+            });
+        };
+
+        var dumpParams = function () {
+            console.log(serviceParams);
+        };
+
+        var postRequest = function (postParams) {
+            var ajaxOptions = {
+                url: url,
+                method: 'POST',
+                data: postParams.data ? JSON.stringify(postParams.data) : {},
+                contentType: 'application/json',
+                headers: postParams.headers ? postParams.headers : {}
+            };
+
+            $.ajax(ajaxOptions).then(function done(response) {
+                postParams.callback(response);
+            }, function error(error) {
+                postParams.errorCallback(error);
+            });
+        }
+
+        return {
+            registerHandlers,
+            dumpParams,
+            postRequest
+        };
+
+    };
+
+    $(document).ready(function () {
+        var srv = new persistenceService({ url: "https://localhost:7096/Logistics/StockItems/ManageStockItems/StockItem", formId: "frmStockItems" });
+        srv.registerHandlers();
+        srv.dumpParams();
+    });
+
+</script>
+
+}

@@ -1,0 +1,27 @@
+@{
+    Layout = "/Pages/Shared/_Layout.cshtml";
+}
+
+<div>
+
+    <hr />
+    <div class="row">
+        <div class="col-md-3">
+
+            <div class="row">
+                <h2>@ViewData["Title"]</h2>
+            </div>
+            <div class="row">
+                <partial name="_LogisticsNav" />
+            </div>
+        </div>
+        <div class="col-md-9">
+            @RenderSection("ToolBar", required: false)
+            <div class="row">@RenderBody()</div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+@RenderSection("Scripts", required: false)
+}

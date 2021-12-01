@@ -1,0 +1,46 @@
+tooling
+
+dotnet tool install --global dotnet-ef
+dotnet ef database update
+
+migrations:
+dotnet ef migrations add CustomUserData
+dotnet ef database update
+
+
+Booking
+
+UserID: Shahid
+Date: 01.11.2021
+AddressID: 10200
+BookingID: ef3b82a6-d27a-470b-9d6d-5bbdd02e7102
+
+BookingItems:
+ProductID: p1
+BookingID: ef..
+
+StockItems
+
+ItemID: cb...
+DisplayID: air heater
+Description: 
+
+StockItemPrices
+ItemID: cb..
+BreakQty: 10
+PriceValidFrom: 
+PriceExpiresAt:
+Unit Cost: 
+UnitOfMeasure: 
+
+Address
+AddressID: 10200
+Address: Ingeniør Rybergs gate 9A
+PostalCode: 3024
+City: Drammen
+Country: Norway
+Phone: 97482020
+Email: shahid.ali@play.com
+
+
+
