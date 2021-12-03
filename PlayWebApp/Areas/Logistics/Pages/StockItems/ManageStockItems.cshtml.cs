@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
+using Microsoft.EntityFrameworkCore;
 using PlayWebApp.Services.Database;
 using PlayWebApp.Services.Logistics.Model;
 using PlayWebApp.Services.ViewModels;
@@ -26,8 +27,16 @@ namespace PlayWebApp.Areas.Logistics.Pages.StockItems
 
         public async Task OnGetAsync()
         {
-            await Task.FromResult<int>(0);
-            StockItemsList = dbContext.StockItems.ToList();
+            StockItemsList = await dbContext.StockItems.OrderBy(x => x.DisplayId).ToListAsync();
+            var item = await dbContext.StockItems.OrderBy(x => x.DisplayId).Take(1).FirstOrDefaultAsync();
+            if (item != null)
+            {
+                StockItemVm = new StockItemUpdateVm
+                {
+                    ItemDisplayId = item.DisplayId,
+                    ItemDescription = item.Description
+                };
+            }
         }
 
     }

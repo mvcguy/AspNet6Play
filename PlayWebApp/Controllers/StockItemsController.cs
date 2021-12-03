@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using PlayWebApp.Services.Database;
 using PlayWebApp.Services.Logistics.Model;
 using PlayWebApp.Services.ViewModels;
@@ -31,5 +32,89 @@ namespace PlayWebApp.Controllers
             await dbContext.SaveChangesAsync();
             return Ok(item.Entity.Id);
         }
+
+        [HttpGet()]
+        [Route("{currentRecord}/next")]
+        public async Task<IActionResult> GetNextRecord(string currentRecord)
+        {
+            // select top 1, order by displayID, where displayID > currentRecord
+
+            StockItem nextRecord;
+
+            if (string.IsNullOrWhiteSpace(currentRecord))
+            {
+                nextRecord = await dbContext.StockItems.OrderBy(x => x.DisplayId).Take(1).FirstOrDefaultAsync();
+            }
+            else
+            {
+                nextRecord = await dbContext.StockItems.OrderBy(x => x.DisplayId)
+                            .Where(x => x.DisplayId.CompareTo(currentRecord) > 0).
+                            Take(1).FirstOrDefaultAsync();
+            }
+
+            if (nextRecord == null) return NotFound();
+
+            return Ok(new StockItemDto { ItemDisplayId = nextRecord.DisplayId, ItemDescription = nextRecord.Description });
+
+        }
+
+        [HttpGet()]
+        [Route("{currentRecord}/previous")]
+        public async Task<IActionResult> GetPreviousRecord(string currentRecord)
+        {
+            // select top 1, order by displayID descending, where displayID < currentRecord
+
+            StockItem nextRecord;
+
+            if (string.IsNullOrWhiteSpace(currentRecord))
+            {
+                nextRecord = await dbContext.StockItems.OrderByDescending(x => x.DisplayId).Take(1).FirstOrDefaultAsync();
+            }
+            else
+            {
+                nextRecord = await dbContext.StockItems.OrderByDescending(x => x.DisplayId)
+                            .Where(x => x.DisplayId.CompareTo(currentRecord) < 0).
+                            Take(1).FirstOrDefaultAsync();
+            }
+
+            if (nextRecord == null) return NotFound();
+
+            return Ok(new StockItemDto { ItemDisplayId = nextRecord.DisplayId, ItemDescription = nextRecord.Description });
+        }
+
+        [HttpGet()]
+        [Route("first")]
+        public async Task<IActionResult> GetFirst()
+        {
+            var first = await dbContext.StockItems.OrderBy(x => x.DisplayId).FirstOrDefaultAsync();
+            if (first == null) return NotFound();
+            return Ok(new StockItemDto { ItemDisplayId = first.DisplayId, ItemDescription = first.Description });
+        }
+
+        [HttpGet()]
+        [Route("last")]
+        public async Task<IActionResult> GetLast()
+        {
+            var last = await dbContext.StockItems.OrderByDescending(x => x.DisplayId).FirstOrDefaultAsync();
+            if (last == null) return NotFound();
+            return Ok(new StockItemDto { ItemDisplayId = last.DisplayId, ItemDescription = last.Description });
+        }
+
+        [HttpDelete]
+        [Route("{displayId}")]
+        public async Task<IActionResult> Delete(string displayId)
+        {
+            if (string.IsNullOrWhiteSpace(displayId)) return BadRequest();
+
+            var item = await dbContext.StockItems.FirstOrDefaultAsync(x => x.DisplayId == displayId);
+            if (item == null) return NotFound();
+
+            dbContext.StockItems.Remove(item);
+
+            await dbContext.SaveChangesAsync();
+
+            return Ok(new StockItemDto { ItemDisplayId = item.DisplayId, ItemDescription = item.Description });
+        }
+
     }
 }

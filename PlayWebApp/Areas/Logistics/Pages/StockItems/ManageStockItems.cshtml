@@ -12,12 +12,18 @@
 @section ToolBar{
 <div class="row">
     <partial name="_ActionBar" />
+
+    <div class="row g-1">
+        <div id="serverMessages">
+
+        </div>
+    </div>
 </div>
 }
 
 @if (Model != null)
 {
-    <form class="row g-3" id="frmStockItems" method="post">
+    <form class="row g-1" id="frmStockItems" method="post">
         <div class="col-12">
             <label asp-for="StockItemVm.ItemDisplayId"></label>
             <input asp-for="StockItemVm.ItemDisplayId" class="form-control" aria-required="true" />
@@ -26,9 +32,9 @@
         <div class="col-12">
             <label asp-for="StockItemVm.ItemDescription"></label>
             <input asp-for="StockItemVm.ItemDescription" class="form-control" aria-required="true" />
-            <span asp-validation-for="StockItemVm.ItemDescription" class="text-danger"></span>            
+            <span asp-validation-for="StockItemVm.ItemDescription" class="text-danger"></span>
         </div>
-        
+
         <ul class="nav nav-tabs" id="tabsStockItem" role="tablist">
             <li class="nav-item" role="presentation">
                 <button class="nav-link active" id="tabPrices" data-bs-toggle="tab" data-bs-target="#tabPricesContent"
@@ -89,23 +95,188 @@
     var persistenceService = function (serviceParams) {
         var url = serviceParams.url;
         var formId = serviceParams.formId;
+        var msgContainer = serviceParams.msgContainer;
+        var getIdCallback = serviceParams.getIdCallback;
+        var nextEndpoint = serviceParams.nextEndpoint;
+        var prevEndpoint = serviceParams.prevEndpoint;
+        var onAdd = serviceParams.onAdd;
+        var lastEndpoint = serviceParams.lastEndpoint;
+        var firstEndpoint = serviceParams.firstEndpoint;
+        var deleteEndpoint = serviceParams.deleteEndpoint;
+
+        var onGetResponse = serviceParams.onGetResponse;
+        var onDeleteResponse = serviceParams.onDeleteResponse;        
 
         var registerHandlers = function () {
+
+            //
+            // save record
+            //
             $('#btnSave').on('click', function (e) {
                 console.log('saving changes ...', e);
                 var postParams = {
                     callback: function (response) {
                         console.log('data is saved on the server. Service response: ', response);
+                        $('#' + msgContainer).attr('class', 'alert alert-success')
+                            .text("Record is successfully saved").show(0).delay(8000).hide(0);
                     },
                     errorCallback: function (error) {
                         console.error('an error has occurred while saving the record. Error: ', error);
+                        $('#' + msgContainer).attr('class', 'alert alert-danger')
+                            .text("An error has occurred while saving the changes. Error: " + error.responseText).show(0).delay(8000).hide(0);
                     },
                     @* data: { 'StockItemVm.ItemDisplayId': "item1", 'StockItemVm.ItemDescription': "Some description" } *@
-                    data: $('#' + formId).serializeObject()
+                    data: $('#' + formId).serializeObject(),
+                        url: url,
             };
             console.log(postParams);
             postRequest(postParams);
         });
+
+        var resetOnNotFound = function (error) {
+            console.log('error-status', error.status);
+            if (error.status === 404) {
+                onAdd();
+            }
+        };
+
+        //
+        // move to next record
+        //
+
+        var moveNext = function () {
+            console.log('moving to next record');
+            var getParams = {
+                callback: function (response) {
+                    console.log(response);
+                    onGetResponse(response);
+                },
+                errorCallback: function (error) {
+                    console.error(error);
+                    resetOnNotFound(error);
+                },
+                url: url + nextEndpoint()
+            };
+            getRequest(getParams);
+        };
+
+        //
+        // move to prev record
+        //
+        var movePrev = function () {
+            console.log('moving to prev record');
+            var getParams = {
+                callback: function (response) {
+                    console.log(response);
+                    onGetResponse(response);
+                },
+                errorCallback: function (error) {
+                    console.error(error);
+                    resetOnNotFound(error);
+                },
+                url: url + prevEndpoint()
+            };
+            getRequest(getParams);
+        };
+
+        //
+        // move to first
+        //
+
+        var moveFirst = function () {
+            console.log('moving to First record');
+            var getParams = {
+                callback: function (response) {
+                    console.log(response);
+                    onGetResponse(response);
+                },
+                errorCallback: function (error) {
+                    console.error(error);
+                },
+                url: url + firstEndpoint
+            };
+            getRequest(getParams);
+        };
+        //
+        // move to last
+        //
+
+        var moveLast = function () {
+            console.log('moving to last record');
+            var getParams = {
+                callback: function (response) {
+                    console.log(response);
+                    onGetResponse(response);
+                },
+                errorCallback: function (error) {
+                    console.error(error);
+                },
+                url: url + lastEndpoint
+            };
+            getRequest(getParams);
+        };
+
+        var deleteItem = function () {
+            console.log('deleting record');
+            var deleteParams = {
+                callback: function (response) {
+
+                    console.log('Record is deleted. Service response: ', response);
+                    $('#' + msgContainer).attr('class', 'alert alert-success')
+                        .text("Record is successfully deleted").show(0).delay(8000).hide(0);
+
+                    console.log(response);
+                    onDeleteResponse(response);
+                    moveNext();
+                },
+                errorCallback: function (error) {
+                    console.error(error);
+                },
+                url: url + deleteEndpoint()
+            };
+            deleteRequest(deleteParams);
+        };
+
+
+        $("#btnNext").on('click', function (e) {
+            if (!getIdCallback()) {
+                moveFirst();
+                return;
+            }
+            moveNext();
+        });
+
+        $("#btnPrev").on('click', function (e) {
+            if (!getIdCallback()) {
+                moveLast();
+                return;
+            }
+            movePrev();
+        });
+
+        $('#btnFirst').on('click', function (e) {
+            moveFirst();
+        });
+
+        $('#btnLast').on('click', function (e) {
+            moveLast();
+        });
+
+        //
+        // add new
+        //
+        $("#btnAdd").on('click', function (e) {
+            onAdd();
+        });
+
+        //
+        // delete record
+        //
+        $("#btnDelete").on('click', function (e) {
+            if (!getIdCallback()) return;
+            deleteItem();
+        });
+
     };
 
     var dumpParams = function () {
@@ -114,7 +285,7 @@
 
     var postRequest = function (postParams) {
         var ajaxOptions = {
-            url: url,
+            url: postParams.url,
             method: 'POST',
             data: postParams.data ? JSON.stringify(postParams.data) : {},
             contentType: 'application/json',
@@ -128,16 +299,75 @@
         });
     };
 
+    var getRequest = function (getParams) {
+        var ajaxOptions = {
+            url: getParams.url,
+            method: 'GET',
+            headers: getParams.headers ? getParams.headers : {}
+        };
+
+        $.ajax(ajaxOptions).then(function done(response) {
+            getParams.callback(response);
+        }, function error(error) {
+            getParams.errorCallback(error);
+        });
+
+    };
+
+    var deleteRequest = function (deleteParams) {
+        var ajaxOptions = {
+            url: deleteParams.url,
+            method: 'DELETE',
+            headers: deleteParams.headers ? deleteParams.headers : {}
+        };
+
+        $.ajax(ajaxOptions).then(function done(response) {
+            deleteParams.callback(response);
+        }, function error(error) {
+            deleteParams.errorCallback(error);
+        });
+    };
+
     return {
         registerHandlers,
         dumpParams,
-        postRequest
+        postRequest,
+        getRequest
     };
 
     };
 
     $(document).ready(function () {
-        var srv = new persistenceService({ url: "https://localhost:7096/api/v1/StockItems", formId: "frmStockItems" });
+        var srv = new persistenceService({
+            url: "https://localhost:7096/api/v1/StockItems/",
+            formId: "frmStockItems",
+            msgContainer: "serverMessages",
+            getIdCallback: function () {
+                return $('#StockItemVm_ItemDisplayId').val();
+            },
+            nextEndpoint: function () {
+                return $('#StockItemVm_ItemDisplayId').val() + "/next";
+            },
+            prevEndpoint: function () {
+                return $('#StockItemVm_ItemDisplayId').val() + "/previous";
+            },
+            onAdd: function () {
+                $('#StockItemVm_ItemDisplayId').val('');
+                $('#StockItemVm_ItemDescription').val('');
+            },
+            lastEndpoint: "last",
+            firstEndpoint: "first",
+            onGetResponse: function (response) {
+                $('#StockItemVm_ItemDisplayId').val(response.itemDisplayId);
+                $('#StockItemVm_ItemDescription').val(response.itemDescription);
+            },
+            deleteEndpoint: function () {
+                return $('#StockItemVm_ItemDisplayId').val();
+            },
+            onDeleteResponse: function (response) {
+
+            },
+        });
         srv.registerHandlers();
         srv.dumpParams();
     });

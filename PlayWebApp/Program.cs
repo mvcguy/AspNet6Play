@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using PlayWebApp.Services;
 using PlayWebApp.Services.Database;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -25,7 +26,10 @@ builder.Services.AddLogging((options) =>
     options.AddDebug();
 });
 
-builder.Services.AddMvcCore();
+builder.Services.AddMvcCore(options =>
+{
+    options.Filters.Add<CustomExceptionFilter>();
+});
 
 var app = builder.Build();
 
@@ -62,7 +66,7 @@ app.UseAuthentication();
 app.UseAuthorization();
 app.UseEndpoints(options =>
 {
-    
+
     options.MapControllers();
     options.MapRazorPages();
 });
