@@ -32,6 +32,11 @@ public class ApplicationDbContext : IdentityDbContext
         var address = builder.Entity<Address>().ToTable(nameof(Address));
         var stockPrice = builder.Entity<StockItemPrice>().ToTable(nameof(StockItemPrice));
 
+        var userExt = builder.Entity<IdentityUserExt>().ToTable("UserExt");
+
+        userExt.HasKey(x => x.UserId);
+        userExt.Property(x => x.FirstName).HasColumnType("nvarchar").HasMaxLength(128).IsRequired();
+        userExt.Property(x => x.LastName).HasColumnType("nvarchar").HasMaxLength(128).IsRequired();
 
         stockItem.HasKey(x => x.Id);
         stockItem.Property(x => x.Description).HasColumnType("nvarchar").HasMaxLength(128);
@@ -54,6 +59,14 @@ public class ApplicationDbContext : IdentityDbContext
 
         stockPrice.HasKey(x => x.Id);
 
+
+        //
+        // atleast one default address is required for any user
+        //
+        userExt.HasOne(x => x.User).WithOne();
+        userExt.HasMany(u => u.Addresses).WithOne(x => x.UserExt).HasForeignKey(x => x.UserId);     
+        userExt.Property(x => x.DefaultAddressId).IsRequired(false);
+        
 
         //
         // booking has many booking items

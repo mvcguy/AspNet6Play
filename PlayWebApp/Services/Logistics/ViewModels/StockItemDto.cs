@@ -1,5 +1,7 @@
 #nullable disable
-namespace PlayWebApp.Services.ViewModels
+using PlayWebApp;
+
+namespace PlayWebApp.Services.Logistics.ViewModels
 {
     public class StockItemDto
     {

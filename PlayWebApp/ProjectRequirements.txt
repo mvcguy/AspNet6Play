@@ -35,11 +35,11 @@ UnitOfMeasure:
 
 Address
 AddressID: 10200
-Address: Ingeniør Rybergs gate 9A
-PostalCode: 3024
-City: Drammen
+Address: Ml Shahid gate 34H
+PostalCode: 1234
+City: Oslo
 Country: Norway
-Phone: 97482020
+Phone: 123456789
 Email: shahid.ali@play.com
 
 

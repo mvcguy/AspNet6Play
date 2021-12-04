@@ -3,7 +3,7 @@ using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.EntityFrameworkCore;
 using PlayWebApp.Services.Database;
 using PlayWebApp.Services.Database.Model;
-using PlayWebApp.Services.ViewModels;
+using PlayWebApp.Services.Logistics.ViewModels;
 #nullable disable
 namespace PlayWebApp.Areas.Logistics.Pages.StockItems
 {

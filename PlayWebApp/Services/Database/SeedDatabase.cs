@@ -1,11 +1,56 @@
+using Microsoft.AspNetCore.Identity;
 using PlayWebApp.Services.Database.Model;
 
 namespace PlayWebApp.Services.Database;
 
+
 public class SeedDatabase
 {
-    public static void Run(ApplicationDbContext context)
+
+
+    public static void Run(ApplicationDbContext context, UserManagerExt userManager)
     {
+
+        var user = new IdentityUser
+        {
+            Id = Guid.NewGuid().ToString(),
+            Email = "shahid.ali@play.com",
+            UserName = "shahid.ali@play.com"
+        };
+
+        var userExt = new IdentityUserExt
+        {
+            UserId = user.Id,
+            FirstName = "Shahid",
+            LastName = "Khan"
+        };
+
+        var res = userManager.CreateAsync(user, userExt, "Shahid@123").Result;
+
+        var token = userManager.GenerateEmailConfirmationTokenAsync(user).Result;
+        var eRes = userManager.ConfirmEmailAsync(user, token).Result;
+
+        var address = new Address
+        {
+            Id = Guid.NewGuid(),
+            StreetAddress = "Ml Shahid gate 34H",
+            PostalCode = "1234",
+            City = "Oslo",
+            Country = "Norway",
+            UserId = user.Id
+        };
+
+        context.Addresses.Add(address);
+        context.SaveChanges();
+
+        //
+        // set default address for the user
+        //
+        userExt.DefaultAddressId = address.Id;
+        context.Update(userExt);
+        context.SaveChanges();
+
+
         var tyres = new StockItem
         {
             Id = Guid.NewGuid(),
@@ -29,17 +74,7 @@ public class SeedDatabase
         context.StockItemPrices.Add(tyrePrice);
         context.SaveChanges();
 
-        var address = new Address
-        {
-            Id = Guid.NewGuid(),
-            StreetAddress = "Ingenior Rybergs gate 9A",
-            PostalCode = "3024",
-            City = "Drammen",
-            Country = "Norway"
-        };
 
-        context.Addresses.Add(address);
-        context.SaveChanges();
 
         var bookingId = Guid.NewGuid();
 
@@ -57,9 +92,10 @@ public class SeedDatabase
         var booking = new Booking
         {
             Id = bookingId,
+            BookingNumber = "0001",
             ShippingAddressId = address.Id,
             Description = "Purchase of tyres - pick at the store",
-            UserId = "857b2dfe-2fab-4387-b87b-4e71680c5e73",
+            UserId = user.Id,
             BookingDate = new DateTime(2021, 11, 20),
             BookingItems = new BookingItem[] { bookingItem }
         };

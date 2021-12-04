@@ -15,6 +15,9 @@ builder.Services.AddDatabaseDeveloperPageExceptionFilter();
 
 builder.Services.AddDefaultIdentity<IdentityUser>(options => options.SignIn.RequireConfirmedAccount = true)
     .AddEntityFrameworkStores<ApplicationDbContext>();
+
+builder.Services.AddScoped<UserManagerExt>();
+
 builder.Services.AddRazorPages(options =>
 {
     options.Conventions.AuthorizeAreaFolder("Logistics", "/");
@@ -36,11 +39,12 @@ var app = builder.Build();
 using (var scope = app.Services.CreateScope())
 {
     var ctx = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+    var usrMgr = scope.ServiceProvider.GetRequiredService<UserManagerExt>();
 
     if (ctx.StockItems.Count() <= 0)
     {
 
-        SeedDatabase.Run(ctx);
+        SeedDatabase.Run(ctx, usrMgr);
     }
 
 }
