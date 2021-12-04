@@ -1,5 +1,7 @@
 @page
 
+@model ManageBookingModel
+
 @{
     ViewData["Title"] = "Manage bookings";
     ViewData["SelectedPage"] = "ManageBooking";
@@ -8,50 +10,104 @@
 @section ToolBar{
 <div class="row">
     <partial name="_ActionBar" />
+
+    <div class="row g-1">
+        <div id="serverMessages">
+
+        </div>
+    </div>
 </div>
 }
 
-<form class="row g-3">
-    <div class="col-md-6">
-        <label for="inputEmail4" class="form-label">Email</label>
-        <input type="email" class="form-control" id="inputEmail4">
-    </div>
-    <div class="col-md-6">
-        <label for="inputPassword4" class="form-label">Password</label>
-        <input type="password" class="form-control" id="inputPassword4">
-    </div>
-    <div class="col-12">
-        <label for="inputAddress" class="form-label">Address</label>
-        <input type="text" class="form-control" id="inputAddress" placeholder="1234 Main St">
-    </div>
-    <div class="col-12">
-        <label for="inputAddress2" class="form-label">Address 2</label>
-        <input type="text" class="form-control" id="inputAddress2" placeholder="Apartment, studio, or floor">
-    </div>
-    <div class="col-md-6">
-        <label for="inputCity" class="form-label">City</label>
-        <input type="text" class="form-control" id="inputCity">
-    </div>
-    <div class="col-md-4">
-        <label for="inputState" class="form-label">State</label>
-        <select id="inputState" class="form-select">
-            <option selected>Choose...</option>
-            <option>...</option>
-        </select>
-    </div>
-    <div class="col-md-2">
-        <label for="inputZip" class="form-label">Zip</label>
-        <input type="text" class="form-control" id="inputZip">
-    </div>
-    <div class="col-12">
-        <div class="form-check">
-            <input class="form-check-input" type="checkbox" id="gridCheck">
-            <label class="form-check-label" for="gridCheck">
-                Check me out
-            </label>
+
+@if (Model != null)
+{
+    <form class="row g-1" id="frmBooking" method="post">
+        <div class="col-12">
+            <label asp-for="BookingVm.BookingNumber"></label>
+            <input asp-for="BookingVm.BookingNumber" class="form-control" aria-required="true" />
+            <span asp-validation-for="BookingVm.BookingNumber" class="text-danger"></span>
         </div>
-    </div>
-    <div class="col-12">
-        <button type="submit" class="btn btn-primary">Save</button>
-    </div>
-</form>
+        <div class="col-12">
+            <label asp-for="BookingVm.Description"></label>
+            <input asp-for="BookingVm.Description" class="form-control" aria-required="true" />
+            <span asp-validation-for="BookingVm.Description" class="text-danger"></span>
+        </div>
+
+        <ul class="nav nav-tabs" id="tabsBooking" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active" id="tabBookingDetails" data-bs-toggle="tab" data-bs-target="#tabBookingItemsContent"
+                type="button" role="tab" aria-controls="tabBookingItemsContent" aria-selected="true">Details</button>
+            </li>
+        </ul>
+        <div class="tab-content" id="myTabContent">
+            <div class="tab-pane fade show active" id="tabBookingItemsContent" role="tabpanel" aria-labelledby="tabPrices">
+                <div class="row">
+                    <div class="col-sm-2">Item ID</div>
+                    <div class="col-sm-2">Description</div>
+                    <div class="col-sm-2">Unit cost</div>
+                    <div class="col-sm-2">Quantity</div>
+                    <div class="col-sm-2">Ext. Cost</div>
+                    <div class="col-sm-2">Discount</div>
+
+
+                </div>
+            </div>
+        </div>
+
+    </form>
+
+}
+
+
+@section Scripts {
+<partial name="_ValidationScriptsPartial" />
+
+<script>
+
+    $(document).ready(function () {
+        var srv = new persistenceService({
+            url: "https://localhost:7096/api/v1/Bookings/",
+            formId: "frmBooking",
+            idField: 'BookingVm_BookingNumber',
+            msgContainer: "serverMessages",
+            getIdCallback: function () {
+                return $('#BookingVm_BookingNumber').val();
+            },
+            nextEndpoint: function () {
+                return $('#BookingVm_BookingNumber').val() + "/next";
+            },
+            prevEndpoint: function () {
+                return $('#BookingVm_BookingNumber').val() + "/previous";
+            },
+            onAdd: function (id) {
+                $('#BookingVm_BookingNumber').val('');
+                $('#BookingVm_Description').val('');
+
+                if (id && id !== '')
+                    $('#BookingVm_BookingNumber').val(id);
+
+            },
+            lastEndpoint: "last",
+            firstEndpoint: "first",
+            onGetResponse: function (response) {
+                $('#BookingVm_BookingNumber').val(response.bookingNumber);
+                $('#BookingVm_Description').val(response.description);
+            },
+            deleteEndpoint: function () {
+                return $('#BookingVm_BookingNumber').val();
+            },
+            onDeleteResponse: function (response) {
+
+            },
+            onSaveResponse: function (response) {
+
+            },
+        });
+        srv.registerHandlers();
+        srv.dumpParams();
+    });
+
+</script>
+
+}

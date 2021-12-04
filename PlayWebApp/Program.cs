@@ -1,7 +1,7 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
-using PlayWebApp.Services;
 using PlayWebApp.Services.Database;
+using PlayWebApp.Services.Filters;
 
 var builder = WebApplication.CreateBuilder(args);
 

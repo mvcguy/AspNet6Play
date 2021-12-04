@@ -1,6 +1,6 @@
 ﻿using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
-using PlayWebApp.Services.Logistics.Model;
+using PlayWebApp.Services.Database.Model;
 
 namespace PlayWebApp.Services.Database;
 
@@ -39,6 +39,7 @@ public class ApplicationDbContext : IdentityDbContext
 
 
         booking.HasKey(x => x.Id);
+        booking.Property(x => x.BookingNumber).HasColumnType("nvarchar").HasMaxLength(10);
         booking.Property(x => x.Description).HasColumnType("nvarchar").HasMaxLength(128);
 
 

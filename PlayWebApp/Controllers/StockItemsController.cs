@@ -1,7 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using PlayWebApp.Services.Database;
-using PlayWebApp.Services.Logistics.Model;
+using PlayWebApp.Services.Database.Model;
 using PlayWebApp.Services.ViewModels;
 #nullable disable
 
@@ -18,19 +18,50 @@ namespace PlayWebApp.Controllers
             this.dbContext = dbContext;
         }
 
+        [HttpPut]
+        public async Task<IActionResult> Put(StockItemUpdateVm model)
+        {
+            if (!ModelState.IsValid) return BadRequest(ModelState);
+
+            var id = model.ItemDisplayId;
+            var existingItem = await dbContext.StockItems.FirstOrDefaultAsync(x => x.DisplayId == id);
+            if (existingItem == null) return BadRequest($"Stock item with ID: {id} does not exist");
+
+            //
+            // update the db model
+            //
+            existingItem.Description = model.ItemDescription;
+            var item = dbContext.StockItems.Update(existingItem);
+
+            await dbContext.SaveChangesAsync();
+            return Ok(item.Entity.Id);
+        }
+
         [HttpPost]
         public async Task<IActionResult> Post(StockItemUpdateVm model)
         {
             if (!ModelState.IsValid) return BadRequest(ModelState);
 
             var id = model.ItemDisplayId;
-            var exists = dbContext.StockItems.FirstOrDefault(x => x.DisplayId == id);
+            var exists = await dbContext.StockItems.FirstOrDefaultAsync(x => x.DisplayId == id);
             if (exists != null) return BadRequest($"Stock item with ID: {id} exists from before");
 
             var item = dbContext.StockItems.Add(new StockItem { Id = Guid.NewGuid(), DisplayId = id, Description = model.ItemDescription });
 
             await dbContext.SaveChangesAsync();
             return Ok(item.Entity.Id);
+        }
+
+        [HttpGet()]
+        [Route("{id}")]
+        public async Task<IActionResult> GetById(string id)
+        {
+            if (string.IsNullOrWhiteSpace(id)) return BadRequest();
+
+            var record = await dbContext.StockItems.FirstOrDefaultAsync(x => x.DisplayId == id);
+            if (record == null) return NotFound();
+
+            return Ok(new StockItemDto { ItemDisplayId = record.DisplayId, ItemDescription = record.Description });
         }
 
         [HttpGet()]

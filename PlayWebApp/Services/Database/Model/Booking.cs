@@ -1,10 +1,12 @@
 using Microsoft.AspNetCore.Identity;
 
-namespace PlayWebApp.Services.Logistics.Model;
+namespace PlayWebApp.Services.Database.Model;
 
 public class Booking
 {
     public virtual Guid? Id { get; set; }
+
+    public virtual string? BookingNumber { get; set; }
 
     public virtual string? Description { get; set; }
 

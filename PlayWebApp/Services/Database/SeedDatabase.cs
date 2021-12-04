@@ -1,4 +1,4 @@
-using PlayWebApp.Services.Logistics.Model;
+using PlayWebApp.Services.Database.Model;
 
 namespace PlayWebApp.Services.Database;
 

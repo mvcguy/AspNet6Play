@@ -2,7 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.EntityFrameworkCore;
 using PlayWebApp.Services.Database;
-using PlayWebApp.Services.Logistics.Model;
+using PlayWebApp.Services.Database.Model;
 using PlayWebApp.Services.ViewModels;
 #nullable disable
 namespace PlayWebApp.Areas.Logistics.Pages.StockItems
