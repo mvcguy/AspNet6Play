@@ -70,6 +70,7 @@ namespace PlayWebApp.Areas.Identity.Pages.Account.Manage
             [Display(Name = "Last name")]
             [StringLength(128, ErrorMessage = "The {0} must be at least {2} and at max {1} characters long.", MinimumLength = 2)]
 
+            public string LastName { get; set; }
         }
 
         private async Task LoadAsync(IdentityUser user)
