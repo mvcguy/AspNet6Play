@@ -20,10 +20,20 @@
     <div class="col-md-6">
         <form id="address-form" method="post">
             <div asp-validation-summary="ModelOnly" class="text-danger"></div>
-            <div class="form-floating">
-                <input asp-for="AddressVm.AddressCode" class="form-control" />
-                <label asp-for="AddressVm.AddressCode" class="form-label"></label>
-                <span asp-validation-for="AddressVm.AddressCode" class="text-danger"></span>
+            <div class="row g-2">
+                <div class="col-md">
+                    <div class="form-floating">
+                        <input asp-for="AddressVm.AddressCode" class="form-control" />
+                        <label asp-for="AddressVm.AddressCode" class="form-label"></label>
+                        <span asp-validation-for="AddressVm.AddressCode" class="text-danger"></span>
+                    </div>
+                </div>
+                <div class="col-md">
+                    <div class="form-check form-switch">
+                        <input type="checkbox" asp-for="AddressVm.PreferredAddress" class="form-check-input" disabled />
+                        <label asp-for="AddressVm.PreferredAddress" class="form-check-label"></label>
+                    </div>
+                </div>
             </div>
             <div class="form-floating">
                 <input asp-for="AddressVm.StreetAddress" class="form-control" />
@@ -44,7 +54,7 @@
                 <input asp-for="AddressVm.Country" class="form-control" />
                 <label asp-for="AddressVm.Country" class="form-label"></label>
                 <span asp-validation-for="AddressVm.Country" class="text-danger"></span>
-            </div>            
+            </div>
         </form>
     </div>
 </div>
@@ -76,6 +86,7 @@
                 $('#AddressVm_City').val('');
                 $('#AddressVm_PostalCode').val('');
                 $('#AddressVm_Country').val('');
+                $('#AddressVm_PreferredAddress').prop('checked', false);
 
                 if (id && id !== '')
                     $('#AddressVm_AddressCode').val(id);
@@ -89,6 +100,7 @@
                 $('#AddressVm_City').val(response.city);
                 $('#AddressVm_PostalCode').val(response.postalCode);
                 $('#AddressVm_Country').val(response.country);
+                $('#AddressVm_PreferredAddress').prop('checked', response.preferredAddress);
 
             },
             deleteEndpoint: function () {

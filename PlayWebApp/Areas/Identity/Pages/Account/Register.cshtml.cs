@@ -20,6 +20,7 @@ using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.Extensions.Logging;
 using PlayWebApp.Services.Database;
 using PlayWebApp.Services.Database.Model;
+using PlayWebApp.Services.Logistics.ViewModels;
 
 namespace PlayWebApp.Areas.Identity.Pages.Account
 {
@@ -111,6 +112,8 @@ namespace PlayWebApp.Areas.Identity.Pages.Account
             [StringLength(128, ErrorMessage = "The {0} must be at least {2} and at max {1} characters long.", MinimumLength = 2)]
 
             public string LastName { get; set; }
+
+            public AddressUpdateVm AddressVm { get; set; }
         }
 
 
@@ -118,6 +121,7 @@ namespace PlayWebApp.Areas.Identity.Pages.Account
         {
             ReturnUrl = returnUrl;
             ExternalLogins = (await _signInManager.GetExternalAuthenticationSchemesAsync()).ToList();
+            Input = new InputModel { AddressVm = new AddressUpdateVm { AddressCode = "Shipping" } };
         }
 
         public async Task<IActionResult> OnPostAsync(string returnUrl = null)
@@ -129,16 +133,28 @@ namespace PlayWebApp.Areas.Identity.Pages.Account
                 var user = CreateUser();
                 user.Id = Guid.NewGuid().ToString();
 
+                var address = new Address
+                {
+                    Id = Guid.NewGuid(),
+                    AddressCode = "Shipping",
+                    StreetAddress = Input.AddressVm.StreetAddress,
+                    City = Input.AddressVm.City,
+                    PostalCode = Input.AddressVm.PostalCode,
+                    Country = Input.AddressVm.Country,
+                    UserId = user.Id
+                };
+
                 var userExt = new IdentityUserExt
                 {
                     UserId = user.Id,
                     FirstName = Input.FirstName,
-                    LastName = Input.LastName
+                    LastName = Input.LastName,
+                    DefaultAddressId = address.Id
                 };
 
                 await _userStore.SetUserNameAsync(user, Input.Email, CancellationToken.None);
                 await _emailStore.SetEmailAsync(user, Input.Email, CancellationToken.None);
-                var result = await _userManager.CreateAsync(user, userExt, Input.Password);
+                var result = await _userManager.CreateAsync(user, userExt, address, Input.Password);
 
                 if (result.Succeeded)
                 {

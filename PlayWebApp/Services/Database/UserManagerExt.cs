@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using PlayWebApp.Services.Database.Model;
+using System.Linq;
 #nullable disable
 namespace PlayWebApp.Services.Database;
 
@@ -36,8 +37,23 @@ public class UserManagerExt : UserManager<IdentityUser>
         return baseResult;
     }
 
+    public virtual async Task<IdentityResult> CreateAsync(IdentityUser user, IdentityUserExt userExt, Address address, string password)
+    {
+        var baseResult = await base.CreateAsync(user, password);
+
+        if (baseResult.Succeeded)
+        {
+            dbContext.Addresses.Add(address);
+            dbContext.Add(userExt);
+            dbContext.SaveChanges();
+        }
+
+        return baseResult;
+    }
+
+
     public virtual async Task<IdentityResult> UpdateExtendedUser(IdentityUserExt userExt)
-    {        
+    {
         try
         {
             dbContext.Set<IdentityUserExt>().Update(userExt);
@@ -50,10 +66,44 @@ public class UserManagerExt : UserManager<IdentityUser>
         }
     }
 
-    public virtual async Task<IdentityUserExt> GetUserExtAsync(IdentityUser user)
+    public virtual async Task<IdentityUserExt> GetUserExtWithAddressesAsync(IdentityUser user)
     {
-        var userExt = await dbContext.Set<IdentityUserExt>().FirstOrDefaultAsync(x => x.UserId == user.Id);
+        return await dbContext.Set<IdentityUserExt>().Include(x => x.Addresses).FirstOrDefaultAsync(x => x.UserId == user.Id);
+    }
+
+    public virtual async Task<IdentityUserExt> GetUserExtAsync(IdentityUser user, bool includeDefaultAddress = false)
+    {
+
+        IQueryable<IdentityUserExt> query;
+        if (includeDefaultAddress)
+        {
+            query = from u in dbContext.Set<IdentityUserExt>()
+                    join a in dbContext.Addresses on new { k1 = u.UserId, k2 = u.DefaultAddressId } equals new { k1 = a.UserId, k2 = a.Id }
+                    select new IdentityUserExt
+                    {
+                        UserId = u.UserId,
+                        DefaultAddressId = u.DefaultAddressId,
+                        FirstName = u.FirstName,
+                        LastName = u.LastName,
+                        Addresses = new List<Address> { a }
+                    } into UserAndAddres
+                    select UserAndAddres;
+        }
+        else
+        {
+            query = dbContext.Set<IdentityUserExt>();
+        }
+
+
+        var userExt = await query.FirstOrDefaultAsync(x => x.UserId == user.Id);
         return userExt;
     }
+
+    public virtual async Task<Address> GetUserAddress(IdentityUserExt userExt, string addressCode)
+    {
+        return await dbContext.Addresses.FirstOrDefaultAsync(x => x.AddressCode == addressCode);
+    }
+
+
 }
 

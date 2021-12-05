@@ -1,5 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 using System.Text.Json.Serialization;
+using PlayWebApp.Services.JsonConverters;
 #nullable disable
 namespace PlayWebApp.Services.Logistics.ViewModels
 {
@@ -35,6 +36,11 @@ namespace PlayWebApp.Services.Logistics.ViewModels
         [JsonPropertyName("AddressVm.Country")]
         [StringLength(128, ErrorMessage = "The {0} must be at least {2} and at max {1} characters long.", MinimumLength = 3)]
         public string Country { get; set; }
+
+        [Display(Name = "Preferred address")]
+        [JsonPropertyName("AddressVm.PreferredAddress")]   
+        [JsonConverter(typeof(StringToBooleanConverter))]     
+        public bool PreferredAddress { get; set; }
     }
 
     public class AddressDto
@@ -48,6 +54,8 @@ namespace PlayWebApp.Services.Logistics.ViewModels
         public string PostalCode { get; set; }
 
         public string Country { get; set; }
+
+        public bool PreferredAddress { get; set; }
     }
 
 }

@@ -1,3 +1,4 @@
+using System.Text.Json.Serialization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using PlayWebApp.Services.Database;
@@ -32,6 +33,11 @@ builder.Services.AddLogging((options) =>
 builder.Services.AddMvcCore(options =>
 {
     options.Filters.Add<CustomExceptionFilter>();
+});
+
+builder.Services.AddControllers().AddJsonOptions(options =>
+{
+    options.JsonSerializerOptions.NumberHandling = JsonNumberHandling.AllowReadingFromString | JsonNumberHandling.WriteAsString;
 });
 
 var app = builder.Build();

@@ -10,6 +10,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.EntityFrameworkCore;
 using PlayWebApp.Services.Database;
+using PlayWebApp.Services.Database.Model;
 using PlayWebApp.Services.Logistics.ViewModels;
 
 namespace PlayWebApp.Areas.Identity.Pages.Account.Manage
@@ -34,15 +35,25 @@ namespace PlayWebApp.Areas.Identity.Pages.Account.Manage
             var first = await dbContext.Addresses.OrderBy(x => x.AddressCode).FirstOrDefaultAsync(x => x.UserId == userId);
             if (first != null)
             {
+
                 AddressVm = new AddressUpdateVm
                 {
                     AddressCode = first.AddressCode,
                     StreetAddress = first.StreetAddress,
                     City = first.City,
                     PostalCode = first.PostalCode,
-                    Country = first.Country
+                    Country = first.Country,
+                    PreferredAddress = await IsPreferredAddress(userId, first.Id.GetValueOrDefault())
                 };
             }
+        }
+
+        private async Task<bool> IsPreferredAddress(string userId, Guid addressId)
+        {
+            var userExt = await dbContext.Set<IdentityUserExt>().FirstOrDefaultAsync(x => x.UserId == userId && x.DefaultAddressId == addressId);
+            if(userExt!=null) return true;
+
+            return false;
         }
     }
 }

@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using PlayWebApp.Services.Database;
 using PlayWebApp.Services.Database.Model;
 using PlayWebApp.Services.Logistics.ViewModels;
+using PlayWebApp.Services.ModelExtentions;
 #nullable disable
 
 namespace PlayWebApp.Controllers
@@ -28,6 +29,27 @@ namespace PlayWebApp.Controllers
                 }
 
             }
+        }
+
+        private Guid? DefaultAddressId
+        {
+            get
+            {
+                try
+                {
+                    var address = dbContext.Set<IdentityUserExt>().FirstOrDefault(x => x.UserId == UserId.ToString());
+                    return address?.DefaultAddressId;
+                }
+                catch
+                {
+                    return null;
+                }
+            }
+        }
+
+        private bool IsDefaultAddress(Address address)
+        {
+            return address.Id == DefaultAddressId && DefaultAddressId.HasValue;
         }
 
         public AddressController(ApplicationDbContext dbContext)
@@ -94,14 +116,9 @@ namespace PlayWebApp.Controllers
             var record = await dbContext.Addresses.FirstOrDefaultAsync(x => x.AddressCode == id && x.UserId == usr);
             if (record == null) return NotFound();
 
-            return Ok(new AddressDto
-            {
-                AddressCode = record.AddressCode,
-                StreetAddress = record.StreetAddress,
-                City = record.City,
-                PostalCode = record.PostalCode,
-                Country = record.Country
-            });
+            var model = record.ToAddressDto();
+            model.PreferredAddress = IsDefaultAddress(record);
+            return Ok(model);
         }
 
         [HttpGet()]
@@ -126,14 +143,9 @@ namespace PlayWebApp.Controllers
 
             if (record == null) return NotFound();
 
-            return Ok(new AddressDto
-            {
-                AddressCode = record.AddressCode,
-                StreetAddress = record.StreetAddress,
-                City = record.City,
-                PostalCode = record.PostalCode,
-                Country = record.Country
-            });
+            var model = record.ToAddressDto();
+            model.PreferredAddress = IsDefaultAddress(record);
+            return Ok(model);
 
         }
 
@@ -159,14 +171,9 @@ namespace PlayWebApp.Controllers
 
             if (record == null) return NotFound();
 
-            return Ok(new AddressDto
-            {
-                AddressCode = record.AddressCode,
-                StreetAddress = record.StreetAddress,
-                City = record.City,
-                PostalCode = record.PostalCode,
-                Country = record.Country
-            });
+            var model = record.ToAddressDto();
+            model.PreferredAddress = IsDefaultAddress(record);
+            return Ok(model);
         }
 
         [HttpGet()]
@@ -176,14 +183,9 @@ namespace PlayWebApp.Controllers
             var usr = UserId.ToString();
             var record = await dbContext.Addresses.Where(x => x.UserId == usr).OrderBy(x => x.AddressCode).FirstOrDefaultAsync();
             if (record == null) return NotFound();
-            return Ok(new AddressDto
-            {
-                AddressCode = record.AddressCode,
-                StreetAddress = record.StreetAddress,
-                City = record.City,
-                PostalCode = record.PostalCode,
-                Country = record.Country
-            });
+            var model = record.ToAddressDto();
+            model.PreferredAddress = IsDefaultAddress(record);
+            return Ok(model);
         }
 
         [HttpGet()]
@@ -193,20 +195,19 @@ namespace PlayWebApp.Controllers
             var usr = UserId.ToString();
             var record = await dbContext.Addresses.Where(x => x.UserId == usr).OrderByDescending(x => x.AddressCode).FirstOrDefaultAsync();
             if (record == null) return NotFound();
-            return Ok(new AddressDto
-            {
-                AddressCode = record.AddressCode,
-                StreetAddress = record.StreetAddress,
-                City = record.City,
-                PostalCode = record.PostalCode,
-                Country = record.Country
-            });
+            var model = record.ToAddressDto();
+            model.PreferredAddress = IsDefaultAddress(record);
+            return Ok(model);
         }
 
         [HttpDelete]
         [Route("{addressCode}")]
         public async Task<IActionResult> Delete(string addressCode)
         {
+
+            //
+            // TODO: Preferred address cannot be deleted, unless user is given an option to choose an alternate one as preferred.
+            //
             if (string.IsNullOrWhiteSpace(addressCode)) return BadRequest();
 
             var usr = UserId.ToString();
@@ -217,14 +218,9 @@ namespace PlayWebApp.Controllers
 
             await dbContext.SaveChangesAsync();
 
-            return Ok(new AddressDto
-            {
-                AddressCode = record.AddressCode,
-                StreetAddress = record.StreetAddress,
-                City = record.City,
-                PostalCode = record.PostalCode,
-                Country = record.Country
-            });
+            var model = record.ToAddressDto();
+            model.PreferredAddress = IsDefaultAddress(record);
+            return Ok(model);
         }
 
     }

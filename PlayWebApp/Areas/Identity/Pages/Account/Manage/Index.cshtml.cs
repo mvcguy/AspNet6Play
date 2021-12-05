@@ -2,14 +2,14 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 #nullable disable
 
-using System;
 using System.ComponentModel.DataAnnotations;
-using System.Text.Encodings.Web;
-using System.Threading.Tasks;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
+using Microsoft.AspNetCore.Mvc.Rendering;
 using PlayWebApp.Services.Database;
+using PlayWebApp.Services.Database.Model;
+using PlayWebApp.Services.Logistics.ViewModels;
 
 namespace PlayWebApp.Areas.Identity.Pages.Account.Manage
 {
@@ -50,6 +50,9 @@ namespace PlayWebApp.Areas.Identity.Pages.Account.Manage
         ///     This API supports the ASP.NET Core Identity default UI infrastructure and is not intended to be used
         ///     directly from your code. This API may change or be removed in future releases.
         /// </summary>
+
+        public IEnumerable<SelectListItem> UserAddressesList { get; set; }
+
         public class InputModel
         {
             /// <summary>
@@ -64,14 +67,14 @@ namespace PlayWebApp.Areas.Identity.Pages.Account.Manage
             [Required]
             [Display(Name = "First name")]
             [StringLength(128, ErrorMessage = "The {0} must be at least {2} and at max {1} characters long.", MinimumLength = 2)]
-
             public string FirstName { get; set; }
 
             [Required]
             [Display(Name = "Last name")]
             [StringLength(128, ErrorMessage = "The {0} must be at least {2} and at max {1} characters long.", MinimumLength = 2)]
-
             public string LastName { get; set; }
+
+            public AddressDto AddressVm { get; set; }
         }
 
         private async Task LoadAsync(IdentityUser user)
@@ -81,13 +84,27 @@ namespace PlayWebApp.Areas.Identity.Pages.Account.Manage
 
             Username = userName;
 
-            var userExt = await _userManager.GetUserExtAsync(user);
-
+            var userExt = await _userManager.GetUserExtWithAddressesAsync(user);
+            var address = userExt.Addresses.FirstOrDefault(x => x.Id == userExt.DefaultAddressId) ?? new Address { };
+            UserAddressesList = userExt.Addresses.Select(x => new SelectListItem
+            {
+                Value = x.AddressCode,
+                Text = $"{x.AddressCode} - {x.StreetAddress}"
+            });
             Input = new InputModel
             {
                 PhoneNumber = phoneNumber,
                 FirstName = userExt?.FirstName,
-                LastName = userExt?.LastName
+                LastName = userExt?.LastName,
+                AddressVm = new AddressDto
+                {
+                    AddressCode = address.AddressCode,
+                    City = address.City,
+                    Country = address.Country,
+                    PostalCode = address.PostalCode,
+                    PreferredAddress = true,
+                    StreetAddress = address.StreetAddress
+                }
             };
         }
 
@@ -131,9 +148,9 @@ namespace PlayWebApp.Areas.Identity.Pages.Account.Manage
             //
             // save first name and last name
             //
-            var userExt = await _userManager.GetUserExtAsync(user);
-            userExt.FirstName = Input.FirstName;
-            userExt.LastName = Input.LastName;
+            var userExt = await _userManager.GetUserExtAsync(user, true);
+            await UpdateAddress(user, userExt);
+
             var result = await _userManager.UpdateExtendedUser(userExt);
             if (!result.Succeeded)
             {
@@ -144,6 +161,24 @@ namespace PlayWebApp.Areas.Identity.Pages.Account.Manage
             await _signInManager.RefreshSignInAsync(user);
             StatusMessage = "Your profile has been updated";
             return RedirectToPage();
+        }
+
+        private async Task UpdateAddress(IdentityUser user, IdentityUserExt userExt)
+        {
+            
+            userExt.FirstName = Input.FirstName;
+            userExt.LastName = Input.LastName;
+
+            // selected address is different than existing one, update the default address
+            var currentAddress = userExt.Addresses.FirstOrDefault(x => x.Id == userExt.DefaultAddressId)?.AddressCode;
+            if (!string.IsNullOrWhiteSpace(Input.AddressVm.AddressCode) && currentAddress != Input.AddressVm.AddressCode)
+            {
+                var newAddress = await _userManager.GetUserAddress(userExt, Input.AddressVm.AddressCode);
+                if (newAddress != null)
+                {
+                    userExt.DefaultAddressId = newAddress.Id;
+                }
+            }
         }
     }
 }
