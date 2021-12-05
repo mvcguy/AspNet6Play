@@ -352,3 +352,4 @@ MigrationBackup/
 *.db
 *.db-shm
 *.db-wal
+PlayWebApp/app.db-wal
