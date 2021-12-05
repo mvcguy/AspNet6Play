@@ -204,15 +204,19 @@ namespace PlayWebApp.Controllers
         [Route("{addressCode}")]
         public async Task<IActionResult> Delete(string addressCode)
         {
-
-            //
-            // TODO: Preferred address cannot be deleted, unless user is given an option to choose an alternate one as preferred.
-            //
             if (string.IsNullOrWhiteSpace(addressCode)) return BadRequest();
 
             var usr = UserId.ToString();
             var record = await dbContext.Addresses.FirstOrDefaultAsync(x => x.AddressCode == addressCode && x.UserId == usr);
             if (record == null) return NotFound();
+
+            //
+            // default address cannot be deleted
+            //    
+            if(IsDefaultAddress(record))
+            {
+                return BadRequest("Default address cannot be deleted. Please change the default address from the profile page first!");
+            }
 
             dbContext.Addresses.Remove(record);
 

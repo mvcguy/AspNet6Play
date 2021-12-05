@@ -209,7 +209,8 @@
                         moveNext();
                     },
                     errorCallback: function (error) {
-                        console.error(error);
+                        $('#' + msgContainer).attr('class', 'alert alert-danger').text("An error has occurred while deleting the record. Error: " + error.responseText).show(0).delay(8000).hide(0);
+
                     },
                     url: url + deleteEndpoint()
                 };
