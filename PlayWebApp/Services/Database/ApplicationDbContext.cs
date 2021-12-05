@@ -52,6 +52,8 @@ public class ApplicationDbContext : IdentityDbContext
         bookingItem.Property(x => x.Description).HasColumnType("nvarchar").HasMaxLength(128);
 
         address.HasKey(x => x.Id);
+
+        address.Property(x => x.AddressCode).HasColumnType("nvarchar").HasMaxLength(10);
         address.Property(x => x.City).HasColumnType("nvarchar").HasMaxLength(128);
         address.Property(x => x.Country).HasColumnType("nvarchar").HasMaxLength(128);
         address.Property(x => x.PostalCode).HasColumnType("nvarchar").HasMaxLength(128);

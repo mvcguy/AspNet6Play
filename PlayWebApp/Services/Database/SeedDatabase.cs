@@ -32,6 +32,7 @@ public class SeedDatabase
 
         var address = new Address
         {
+            AddressCode = "Home",
             Id = Guid.NewGuid(),
             StreetAddress = "Ml Shahid gate 34H",
             PostalCode = "1234",

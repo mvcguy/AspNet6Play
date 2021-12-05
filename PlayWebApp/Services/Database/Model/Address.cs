@@ -4,6 +4,8 @@ public class Address
 {
     public virtual Guid? Id { get; set; }
 
+    public virtual string? AddressCode { get; set; }
+
     public virtual string? StreetAddress { get; set; }
 
     public virtual string? PostalCode { get; set; }

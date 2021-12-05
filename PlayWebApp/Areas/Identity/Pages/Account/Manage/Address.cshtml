@@ -1,0 +1,110 @@
+﻿@page
+@model AddressModel
+@{
+    ViewData["Title"] = "Manage Addresses";
+    ViewData["ActivePage"] = ManageNavPages.Address;
+}
+
+<h3>@ViewData["Title"]</h3>
+<div class="row">
+    <partial name="_ActionBar" />
+
+    <div class="row g-1">
+        <div id="serverMessages">
+
+        </div>
+    </div>
+</div>
+<partial name="_StatusMessage" for="StatusMessage" />
+<div class="row">
+    <div class="col-md-6">
+        <form id="address-form" method="post">
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            <div class="form-floating">
+                <input asp-for="AddressVm.AddressCode" class="form-control" />
+                <label asp-for="AddressVm.AddressCode" class="form-label"></label>
+                <span asp-validation-for="AddressVm.AddressCode" class="text-danger"></span>
+            </div>
+            <div class="form-floating">
+                <input asp-for="AddressVm.StreetAddress" class="form-control" />
+                <label asp-for="AddressVm.StreetAddress" class="form-label"></label>
+                <span asp-validation-for="AddressVm.StreetAddress" class="text-danger"></span>
+            </div>
+            <div class="form-floating">
+                <input asp-for="AddressVm.City" class="form-control" />
+                <label asp-for="AddressVm.City" class="form-label"></label>
+                <span asp-validation-for="AddressVm.City" class="text-danger"></span>
+            </div>
+            <div class="form-floating">
+                <input asp-for="AddressVm.PostalCode" class="form-control" />
+                <label asp-for="AddressVm.PostalCode" class="form-label"></label>
+                <span asp-validation-for="AddressVm.PostalCode" class="text-danger"></span>
+            </div>
+            <div class="form-floating">
+                <input asp-for="AddressVm.Country" class="form-control" />
+                <label asp-for="AddressVm.Country" class="form-label"></label>
+                <span asp-validation-for="AddressVm.Country" class="text-danger"></span>
+            </div>            
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+<partial name="_ValidationScriptsPartial" />
+
+
+<script>
+
+    $(document).ready(function () {
+        var srv = new persistenceService({
+            url: "https://localhost:7096/api/v1/Addresses/",
+            formId: "address-form",
+            idField: 'AddressVm_AddressCode',
+            msgContainer: "serverMessages",
+            getIdCallback: function () {
+                return $('#AddressVm_AddressCode').val();
+            },
+            nextEndpoint: function () {
+                return $('#AddressVm_AddressCode').val() + "/next";
+            },
+            prevEndpoint: function () {
+                return $('#AddressVm_AddressCode').val() + "/previous";
+            },
+            onAdd: function (id) {
+                $('#AddressVm_AddressCode').val('');
+                $('#AddressVm_StreetAddress').val('');
+                $('#AddressVm_City').val('');
+                $('#AddressVm_PostalCode').val('');
+                $('#AddressVm_Country').val('');
+
+                if (id && id !== '')
+                    $('#AddressVm_AddressCode').val(id);
+
+            },
+            lastEndpoint: "last",
+            firstEndpoint: "first",
+            onGetResponse: function (response) {
+                $('#AddressVm_AddressCode').val(response.addressCode);
+                $('#AddressVm_StreetAddress').val(response.streetAddress);
+                $('#AddressVm_City').val(response.city);
+                $('#AddressVm_PostalCode').val(response.postalCode);
+                $('#AddressVm_Country').val(response.country);
+
+            },
+            deleteEndpoint: function () {
+                return $('#AddressVm_AddressCode').val();
+            },
+            onDeleteResponse: function (response) {
+
+            },
+            onSaveResponse: function (response) {
+
+            },
+        });
+        srv.registerHandlers();
+        srv.dumpParams();
+    });
+
+</script>
+
+}

@@ -9,16 +9,17 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
+using PlayWebApp.Services.Database;
 
 namespace PlayWebApp.Areas.Identity.Pages.Account.Manage
 {
     public class IndexModel : PageModel
     {
-        private readonly UserManager<IdentityUser> _userManager;
+        private readonly UserManagerExt _userManager;
         private readonly SignInManager<IdentityUser> _signInManager;
 
         public IndexModel(
-            UserManager<IdentityUser> userManager,
+            UserManagerExt userManager,
             SignInManager<IdentityUser> signInManager)
         {
             _userManager = userManager;
@@ -59,7 +60,7 @@ namespace PlayWebApp.Areas.Identity.Pages.Account.Manage
             [Display(Name = "Phone number")]
             public string PhoneNumber { get; set; }
 
-            
+
             [Required]
             [Display(Name = "First name")]
             [StringLength(128, ErrorMessage = "The {0} must be at least {2} and at max {1} characters long.", MinimumLength = 2)]
@@ -80,9 +81,13 @@ namespace PlayWebApp.Areas.Identity.Pages.Account.Manage
 
             Username = userName;
 
+            var userExt = await _userManager.GetUserExtAsync(user);
+
             Input = new InputModel
             {
-                PhoneNumber = phoneNumber
+                PhoneNumber = phoneNumber,
+                FirstName = userExt?.FirstName,
+                LastName = userExt?.LastName
             };
         }
 
@@ -121,6 +126,19 @@ namespace PlayWebApp.Areas.Identity.Pages.Account.Manage
                     StatusMessage = "Unexpected error when trying to set phone number.";
                     return RedirectToPage();
                 }
+            }
+
+            //
+            // save first name and last name
+            //
+            var userExt = await _userManager.GetUserExtAsync(user);
+            userExt.FirstName = Input.FirstName;
+            userExt.LastName = Input.LastName;
+            var result = await _userManager.UpdateExtendedUser(userExt);
+            if (!result.Succeeded)
+            {
+                StatusMessage = $"Error updating profile. Error: {result.Errors.FirstOrDefault()}";
+                return RedirectToPage();
             }
 
             await _signInManager.RefreshSignInAsync(user);

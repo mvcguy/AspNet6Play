@@ -1,7 +1,8 @@
 using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using PlayWebApp.Services.Database.Model;
-
+#nullable disable
 namespace PlayWebApp.Services.Database;
 
 public class UserManagerExt : UserManager<IdentityUser>
@@ -22,17 +23,37 @@ public class UserManagerExt : UserManager<IdentityUser>
         this.dbContext = dbContext;
     }
 
-    public async Task<IdentityResult> CreateAsync(IdentityUser user, IdentityUserExt userExt, string password)
+    public virtual async Task<IdentityResult> CreateAsync(IdentityUser user, IdentityUserExt userExt, string password)
     {
         var baseResult = await base.CreateAsync(user, password);
 
         if (baseResult.Succeeded)
-        {            
+        {
             dbContext.Add(userExt);
             dbContext.SaveChanges();
         }
 
         return baseResult;
+    }
+
+    public virtual async Task<IdentityResult> UpdateExtendedUser(IdentityUserExt userExt)
+    {        
+        try
+        {
+            dbContext.Set<IdentityUserExt>().Update(userExt);
+            await dbContext.SaveChangesAsync();
+            return IdentityResult.Success;
+        }
+        catch (Exception e)
+        {
+            return IdentityResult.Failed(new IdentityError() { Description = e.Message });
+        }
+    }
+
+    public virtual async Task<IdentityUserExt> GetUserExtAsync(IdentityUser user)
+    {
+        var userExt = await dbContext.Set<IdentityUserExt>().FirstOrDefaultAsync(x => x.UserId == user.Id);
+        return userExt;
     }
 }
 

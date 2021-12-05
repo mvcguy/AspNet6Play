@@ -24,18 +24,3 @@ public class Booking
     public virtual Address ShippingAddress { get; set; } = null!;
 
 }
-
-public class IdentityUserExt
-{
-    public virtual string? UserId { get; set; }
-
-    public string? FirstName { get; set; }
-
-    public string? LastName { get; set; }
-
-    public virtual Guid? DefaultAddressId { get; set; }
-
-    public virtual IdentityUser User { get; set; } = null!;
-
-    public virtual ICollection<Address> Addresses { get; set; } = null!;
-}
