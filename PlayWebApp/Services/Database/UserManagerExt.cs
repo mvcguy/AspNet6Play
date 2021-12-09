@@ -56,7 +56,15 @@ public class UserManagerExt : UserManager<IdentityUser>
     {
         try
         {
-            dbContext.Set<IdentityUserExt>().Update(userExt);
+            var record = await GetUserExtAsync(userExt.UserId);
+
+            record.FirstName = userExt.FirstName;
+            record.LastName = userExt.LastName;
+            record.DefaultAddressId = userExt.DefaultAddressId;
+            record.ModifiedOn = DateTime.Now;
+
+
+            dbContext.Set<IdentityUserExt>().Update(record);
             await dbContext.SaveChangesAsync();
             return IdentityResult.Success;
         }
@@ -66,42 +74,25 @@ public class UserManagerExt : UserManager<IdentityUser>
         }
     }
 
-    public virtual async Task<IdentityUserExt> GetUserExtWithAddressesAsync(IdentityUser user)
+    public virtual async Task<IEnumerable<Address>> GetUserAddressesAsync(string userId)
     {
-        return await dbContext.Set<IdentityUserExt>().Include(x => x.Addresses).FirstOrDefaultAsync(x => x.UserId == user.Id);
+        return await dbContext.Set<Address>().Where(x => x.UserId == userId).ToListAsync();
     }
 
-    public virtual async Task<IdentityUserExt> GetUserExtAsync(IdentityUser user, bool includeDefaultAddress = false)
+    public virtual async Task<Address> GetUserDefaultAddress(string userId, string addressId)
     {
-
-        IQueryable<IdentityUserExt> query;
-        if (includeDefaultAddress)
-        {
-            query = from u in dbContext.Set<IdentityUserExt>()
-                    join a in dbContext.Addresses on new { k1 = u.UserId, k2 = u.DefaultAddressId } equals new { k1 = a.UserId, k2 = a.Id }
-                    select new IdentityUserExt
-                    {
-                        UserId = u.UserId,
-                        DefaultAddressId = u.DefaultAddressId,
-                        FirstName = u.FirstName,
-                        LastName = u.LastName,
-                        Addresses = new List<Address> { a }
-                    } into UserAndAddres
-                    select UserAndAddres;
-        }
-        else
-        {
-            query = dbContext.Set<IdentityUserExt>();
-        }
-
-
-        var userExt = await query.FirstOrDefaultAsync(x => x.UserId == user.Id);
-        return userExt;
+        return await dbContext.Set<Address>().FirstOrDefaultAsync(x => x.UserId == userId && x.Id == addressId);
     }
 
-    public virtual async Task<Address> GetUserAddress(IdentityUserExt userExt, string addressCode)
+    public virtual async Task<IdentityUserExt> GetUserExtAsync(string userId)
     {
-        return await dbContext.Addresses.FirstOrDefaultAsync(x => x.AddressCode == addressCode);
+        return await dbContext.Set<IdentityUserExt>().FirstOrDefaultAsync(x => x.UserId == userId);
+
+    }
+
+    public virtual async Task<Address> GetUserAddress(string userId, string addressCode)
+    {
+        return await dbContext.Addresses.FirstOrDefaultAsync(x => x.Code == addressCode && x.UserId == userId);
     }
 
 

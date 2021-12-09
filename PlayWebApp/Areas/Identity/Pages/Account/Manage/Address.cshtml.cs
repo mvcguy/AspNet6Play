@@ -32,25 +32,25 @@ namespace PlayWebApp.Areas.Identity.Pages.Account.Manage
         public async Task OnGetAsync()
         {
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            var first = await dbContext.Addresses.OrderBy(x => x.AddressCode).FirstOrDefaultAsync(x => x.UserId == userId);
+            var first = await dbContext.Addresses.OrderBy(x => x.Code).FirstOrDefaultAsync(x => x.UserId == userId);
             if (first != null)
             {
 
                 AddressVm = new AddressUpdateVm
                 {
-                    AddressCode = first.AddressCode,
+                    AddressCode = first.Code,
                     StreetAddress = first.StreetAddress,
                     City = first.City,
                     PostalCode = first.PostalCode,
                     Country = first.Country,
-                    PreferredAddress = await IsPreferredAddress(userId, first.Id.GetValueOrDefault())
+                    PreferredAddress = await IsPreferredAddress(userId, first.Id)
                 };
             }
         }
 
-        private async Task<bool> IsPreferredAddress(string userId, Guid addressId)
+        private async Task<bool> IsPreferredAddress(string userId, string addressId)
         {
-            var userExt = await dbContext.Set<IdentityUserExt>().FirstOrDefaultAsync(x => x.UserId == userId && x.DefaultAddressId == addressId);
+            var userExt = await dbContext.Set<IdentityUserExt>().FirstOrDefaultAsync(x => x.UserId == userId && x.Code == addressId);
             if(userExt!=null) return true;
 
             return false;

@@ -8,11 +8,11 @@ using PlayWebApp.Services.Database;
 
 #nullable disable
 
-namespace PlayWebApp.Data.Migrations
+namespace PlayWebApp.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20211203153609_Booking_Add_Booking_Number")]
-    partial class Booking_Add_Booking_Number
+    [Migration("20211209034054_Application_Tables")]
+    partial class Application_Tables
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
@@ -215,19 +215,34 @@ namespace PlayWebApp.Data.Migrations
                     b.ToTable("AspNetUserTokens", (string)null);
                 });
 
-            modelBuilder.Entity("PlayWebApp.Services.Logistics.Model.Address", b =>
+            modelBuilder.Entity("PlayWebApp.Services.Database.Model.Address", b =>
                 {
-                    b.Property<Guid?>("Id")
-                        .ValueGeneratedOnAdd()
+                    b.Property<string>("Id")
                         .HasColumnType("TEXT");
 
                     b.Property<string>("City")
                         .HasMaxLength(128)
                         .HasColumnType("nvarchar");
 
+                    b.Property<string>("Code")
+                        .IsRequired()
+                        .HasMaxLength(10)
+                        .HasColumnType("nvarchar");
+
                     b.Property<string>("Country")
                         .HasMaxLength(128)
                         .HasColumnType("nvarchar");
+
+                    b.Property<DateTime?>("CreatedOn")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("ModifiedBy")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("ModifiedOn")
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("TEXT");
 
                     b.Property<string>("PostalCode")
                         .HasMaxLength(128)
@@ -237,35 +252,72 @@ namespace PlayWebApp.Data.Migrations
                         .HasMaxLength(128)
                         .HasColumnType("nvarchar");
 
+                    b.Property<string>("TenantId")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<byte[]>("Timestamp")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("BLOB");
+
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasMaxLength(128)
+                        .HasColumnType("nvarchar");
+
                     b.HasKey("Id");
+
+                    b.HasIndex("UserId");
 
                     b.ToTable("Address", (string)null);
                 });
 
-            modelBuilder.Entity("PlayWebApp.Services.Logistics.Model.Booking", b =>
+            modelBuilder.Entity("PlayWebApp.Services.Database.Model.Booking", b =>
                 {
-                    b.Property<Guid?>("Id")
-                        .ValueGeneratedOnAdd()
+                    b.Property<string>("Id")
                         .HasColumnType("TEXT");
 
                     b.Property<DateTime>("BookingDate")
                         .HasColumnType("TEXT");
 
-                    b.Property<string>("BookingNumber")
+                    b.Property<string>("Code")
+                        .IsRequired()
                         .HasMaxLength(10)
                         .HasColumnType("nvarchar");
+
+                    b.Property<DateTime?>("CreatedOn")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
 
                     b.Property<string>("Description")
                         .HasMaxLength(128)
                         .HasColumnType("nvarchar");
 
-                    b.Property<Guid?>("ShippingAddressId")
+                    b.Property<string>("ModifiedBy")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("ModifiedOn")
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("ShippingAddressId")
                         .IsRequired()
                         .HasColumnType("TEXT");
 
-                    b.Property<string>("UserId")
+                    b.Property<string>("TenantId")
                         .IsRequired()
                         .HasColumnType("TEXT");
+
+                    b.Property<byte[]>("Timestamp")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("BLOB");
+
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasMaxLength(128)
+                        .HasColumnType("nvarchar");
 
                     b.HasKey("Id");
 
@@ -276,12 +328,22 @@ namespace PlayWebApp.Data.Migrations
                     b.ToTable("Booking", (string)null);
                 });
 
-            modelBuilder.Entity("PlayWebApp.Services.Logistics.Model.BookingItem", b =>
+            modelBuilder.Entity("PlayWebApp.Services.Database.Model.BookingItem", b =>
                 {
-                    b.Property<Guid?>("BookingId")
+                    b.Property<string>("Id")
                         .HasColumnType("TEXT");
 
-                    b.Property<Guid?>("StockItemId")
+                    b.Property<string>("BookingId")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Code")
+                        .IsRequired()
+                        .HasMaxLength(10)
+                        .HasColumnType("nvarchar");
+
+                    b.Property<DateTime?>("CreatedOn")
+                        .ValueGeneratedOnAdd()
                         .HasColumnType("TEXT");
 
                     b.Property<string>("Description")
@@ -294,22 +356,115 @@ namespace PlayWebApp.Data.Migrations
                     b.Property<decimal?>("ExtCost")
                         .HasColumnType("TEXT");
 
+                    b.Property<string>("ModifiedBy")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("ModifiedOn")
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("TEXT");
+
                     b.Property<decimal?>("Quantity")
                         .HasColumnType("TEXT");
+
+                    b.Property<string>("StockItemId")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("TenantId")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<byte[]>("Timestamp")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("BLOB");
 
                     b.Property<decimal?>("UnitCost")
                         .HasColumnType("TEXT");
 
-                    b.HasKey("BookingId", "StockItemId");
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasMaxLength(128)
+                        .HasColumnType("nvarchar");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("BookingId");
 
                     b.HasIndex("StockItemId");
+
+                    b.HasIndex("UserId");
 
                     b.ToTable("BookingItem", (string)null);
                 });
 
-            modelBuilder.Entity("PlayWebApp.Services.Logistics.Model.StockItem", b =>
+            modelBuilder.Entity("PlayWebApp.Services.Database.Model.IdentityUserExt", b =>
                 {
-                    b.Property<Guid?>("Id")
+                    b.Property<string>("Id")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Code")
+                        .IsRequired()
+                        .HasMaxLength(10)
+                        .HasColumnType("nvarchar");
+
+                    b.Property<DateTime?>("CreatedOn")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("DefaultAddressId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("FirstName")
+                        .IsRequired()
+                        .HasMaxLength(128)
+                        .HasColumnType("nvarchar");
+
+                    b.Property<string>("LastName")
+                        .IsRequired()
+                        .HasMaxLength(128)
+                        .HasColumnType("nvarchar");
+
+                    b.Property<string>("ModifiedBy")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("ModifiedOn")
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("TenantId")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<byte[]>("Timestamp")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("BLOB");
+
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasMaxLength(128)
+                        .HasColumnType("nvarchar");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId")
+                        .IsUnique();
+
+                    b.ToTable("UserExt", (string)null);
+                });
+
+            modelBuilder.Entity("PlayWebApp.Services.Database.Model.StockItem", b =>
+                {
+                    b.Property<string>("Id")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Code")
+                        .IsRequired()
+                        .HasMaxLength(10)
+                        .HasColumnType("nvarchar");
+
+                    b.Property<DateTime?>("CreatedOn")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("TEXT");
 
@@ -317,22 +472,49 @@ namespace PlayWebApp.Data.Migrations
                         .HasMaxLength(128)
                         .HasColumnType("nvarchar");
 
-                    b.Property<string>("DisplayId")
-                        .HasMaxLength(10)
+                    b.Property<string>("ModifiedBy")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("ModifiedOn")
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("TenantId")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<byte[]>("Timestamp")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("BLOB");
+
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasMaxLength(128)
                         .HasColumnType("nvarchar");
 
                     b.HasKey("Id");
 
+                    b.HasIndex("UserId");
+
                     b.ToTable("StockItem", (string)null);
                 });
 
-            modelBuilder.Entity("PlayWebApp.Services.Logistics.Model.StockItemPrice", b =>
+            modelBuilder.Entity("PlayWebApp.Services.Database.Model.StockItemPrice", b =>
                 {
-                    b.Property<Guid?>("Id")
-                        .ValueGeneratedOnAdd()
+                    b.Property<string>("Id")
                         .HasColumnType("TEXT");
 
                     b.Property<decimal>("BreakQty")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Code")
+                        .IsRequired()
+                        .HasMaxLength(10)
+                        .HasColumnType("nvarchar");
+
+                    b.Property<DateTime?>("CreatedOn")
+                        .ValueGeneratedOnAdd()
                         .HasColumnType("TEXT");
 
                     b.Property<DateTime>("EffectiveFrom")
@@ -341,9 +523,25 @@ namespace PlayWebApp.Data.Migrations
                     b.Property<DateTime>("ExpiresAt")
                         .HasColumnType("TEXT");
 
-                    b.Property<Guid?>("StockItemId")
+                    b.Property<string>("ModifiedBy")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("ModifiedOn")
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("StockItemId")
                         .IsRequired()
                         .HasColumnType("TEXT");
+
+                    b.Property<string>("TenantId")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<byte[]>("Timestamp")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("BLOB");
 
                     b.Property<decimal>("UnitCost")
                         .HasColumnType("TEXT");
@@ -351,11 +549,57 @@ namespace PlayWebApp.Data.Migrations
                     b.Property<string>("UnitOfMeasure")
                         .HasColumnType("TEXT");
 
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasMaxLength(128)
+                        .HasColumnType("nvarchar");
+
                     b.HasKey("Id");
 
                     b.HasIndex("StockItemId");
 
+                    b.HasIndex("UserId");
+
                     b.ToTable("StockItemPrice", (string)null);
+                });
+
+            modelBuilder.Entity("PlayWebApp.Services.Database.Model.Tenant", b =>
+                {
+                    b.Property<string>("Id")
+                        .HasMaxLength(128)
+                        .HasColumnType("nvarchar");
+
+                    b.Property<string>("Country")
+                        .IsRequired()
+                        .HasMaxLength(128)
+                        .HasColumnType("nvarchar");
+
+                    b.Property<DateTime?>("CreatedOn")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("ModifiedOn")
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("TenantCode")
+                        .IsRequired()
+                        .HasMaxLength(10)
+                        .HasColumnType("nvarchar");
+
+                    b.Property<string>("TenantName")
+                        .IsRequired()
+                        .HasMaxLength(128)
+                        .HasColumnType("nvarchar");
+
+                    b.Property<byte[]>("Timestamp")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("BLOB");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Tenant");
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>
@@ -409,9 +653,20 @@ namespace PlayWebApp.Data.Migrations
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("PlayWebApp.Services.Logistics.Model.Booking", b =>
+            modelBuilder.Entity("PlayWebApp.Services.Database.Model.Address", b =>
                 {
-                    b.HasOne("PlayWebApp.Services.Logistics.Model.Address", "ShippingAddress")
+                    b.HasOne("Microsoft.AspNetCore.Identity.IdentityUser", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("PlayWebApp.Services.Database.Model.Booking", b =>
+                {
+                    b.HasOne("PlayWebApp.Services.Database.Model.Address", "ShippingAddress")
                         .WithMany()
                         .HasForeignKey("ShippingAddressId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -428,42 +683,80 @@ namespace PlayWebApp.Data.Migrations
                     b.Navigation("User");
                 });
 
-            modelBuilder.Entity("PlayWebApp.Services.Logistics.Model.BookingItem", b =>
+            modelBuilder.Entity("PlayWebApp.Services.Database.Model.BookingItem", b =>
                 {
-                    b.HasOne("PlayWebApp.Services.Logistics.Model.Booking", "Booking")
+                    b.HasOne("PlayWebApp.Services.Database.Model.Booking", "Booking")
                         .WithMany("BookingItems")
                         .HasForeignKey("BookingId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("PlayWebApp.Services.Logistics.Model.StockItem", "StockItem")
+                    b.HasOne("PlayWebApp.Services.Database.Model.StockItem", "StockItem")
                         .WithMany("BookingItems")
                         .HasForeignKey("StockItemId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Microsoft.AspNetCore.Identity.IdentityUser", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.Navigation("Booking");
 
                     b.Navigation("StockItem");
+
+                    b.Navigation("User");
                 });
 
-            modelBuilder.Entity("PlayWebApp.Services.Logistics.Model.StockItemPrice", b =>
+            modelBuilder.Entity("PlayWebApp.Services.Database.Model.IdentityUserExt", b =>
                 {
-                    b.HasOne("PlayWebApp.Services.Logistics.Model.StockItem", "StockItem")
+                    b.HasOne("Microsoft.AspNetCore.Identity.IdentityUser", "User")
+                        .WithOne()
+                        .HasForeignKey("PlayWebApp.Services.Database.Model.IdentityUserExt", "UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("PlayWebApp.Services.Database.Model.StockItem", b =>
+                {
+                    b.HasOne("Microsoft.AspNetCore.Identity.IdentityUser", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("PlayWebApp.Services.Database.Model.StockItemPrice", b =>
+                {
+                    b.HasOne("PlayWebApp.Services.Database.Model.StockItem", "StockItem")
                         .WithMany("StockItemPrices")
                         .HasForeignKey("StockItemId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.HasOne("Microsoft.AspNetCore.Identity.IdentityUser", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
                     b.Navigation("StockItem");
+
+                    b.Navigation("User");
                 });
 
-            modelBuilder.Entity("PlayWebApp.Services.Logistics.Model.Booking", b =>
+            modelBuilder.Entity("PlayWebApp.Services.Database.Model.Booking", b =>
                 {
                     b.Navigation("BookingItems");
                 });
 
-            modelBuilder.Entity("PlayWebApp.Services.Logistics.Model.StockItem", b =>
+            modelBuilder.Entity("PlayWebApp.Services.Database.Model.StockItem", b =>
                 {
                     b.Navigation("BookingItems");
 

@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using PlayWebApp.Services.Database;
 using PlayWebApp.Services.Filters;
+using PlayWebApp.Services.Identity;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -15,9 +16,13 @@ options.UseSqlite(connectionString));
 builder.Services.AddDatabaseDeveloperPageExceptionFilter();
 
 builder.Services.AddDefaultIdentity<IdentityUser>(options => options.SignIn.RequireConfirmedAccount = true)
-    .AddEntityFrameworkStores<ApplicationDbContext>();
+    .AddEntityFrameworkStores<ApplicationDbContext>().AddDefaultTokenProviders();
+
 
 builder.Services.AddScoped<UserManagerExt>();
+
+builder.Services.AddScoped<IUserClaimsPrincipalFactory<IdentityUser>, AdditionalUserClaimsPrincipalFactory>();
+
 
 builder.Services.AddRazorPages(options =>
 {
@@ -47,11 +52,7 @@ using (var scope = app.Services.CreateScope())
     var ctx = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
     var usrMgr = scope.ServiceProvider.GetRequiredService<UserManagerExt>();
 
-    if (ctx.StockItems.Count() <= 0)
-    {
-
-        SeedDatabase.Run(ctx, usrMgr);
-    }
+    SeedDatabase.Seed(ctx, usrMgr);
 
 }
 

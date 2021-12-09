@@ -19,10 +19,10 @@ namespace PlayWebApp.Areas.Logistics.Pages.Booking
 
         public async Task OnGet()
         {
-            var top1 = await dbContext.Bookings.OrderBy(x => x.BookingNumber).FirstOrDefaultAsync();
+            var top1 = await dbContext.Bookings.OrderBy(x => x.Code).FirstOrDefaultAsync();
             if (top1 != null)
             {
-                BookingVm = new BookingUpdateVm { BookingNumber = top1.BookingNumber, Description = top1.Description };
+                BookingVm = new BookingUpdateVm { BookingNumber = top1.Code, Description = top1.Description };
             }
         }
     }

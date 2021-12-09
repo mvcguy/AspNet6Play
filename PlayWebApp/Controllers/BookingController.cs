@@ -4,37 +4,37 @@ using Microsoft.EntityFrameworkCore;
 using PlayWebApp.Services.Database;
 using PlayWebApp.Services.Database.Model;
 using PlayWebApp.Services.Logistics.ViewModels;
+using PlayWebApp.Services.ModelExtentions;
 #nullable disable
 
 namespace PlayWebApp.Controllers
 {
-    [Route("api/v1/bookings")]
-    [ApiController]
-    public class BookingController : Controller
-    {
-        private readonly ApplicationDbContext dbContext;
 
-        public BookingController(ApplicationDbContext dbContext)
+    [Route("api/v1/bookings")]
+    public class BookingController : NavigationBaseController
+    {
+        public BookingController(ApplicationDbContext dbContext) : base(dbContext)
         {
-            this.dbContext = dbContext;
+            
         }
 
         [HttpPut]
         public async Task<IActionResult> Put(BookingUpdateVm model)
         {
             if (!ModelState.IsValid) return BadRequest(ModelState);
+            if (string.IsNullOrWhiteSpace(UserId)) return BadRequest("User not found");
 
             var id = model.BookingNumber;
-            var existingItem = await dbContext.Bookings.FirstOrDefaultAsync(x => x.BookingNumber == id);
+            var existingItem = await GetRecord<Booking>(id);
             if (existingItem == null) return BadRequest($"Booking with ID: {id} does not exist");
 
             //
             // update the db model
             //
             existingItem.Description = model.Description;
-            var item = dbContext.Bookings.Update(existingItem);
+            var item = Update(existingItem);
 
-            await dbContext.SaveChangesAsync();
+            await SaveChanges();
             return Ok(item.Entity.Id);
         }
 
@@ -42,23 +42,24 @@ namespace PlayWebApp.Controllers
         public async Task<IActionResult> Post(BookingUpdateVm model)
         {
             if (!ModelState.IsValid) return BadRequest(ModelState);
+            if (string.IsNullOrWhiteSpace(UserId)) return BadRequest("User not found");
 
             var id = model.BookingNumber;
-            var exists = await dbContext.Bookings.FirstOrDefaultAsync(x => x.BookingNumber == id);
+            var exists = await GetRecord<Booking>(id);
             if (exists != null) return BadRequest($"Booking with ID: {id} exists from before");
 
-            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            if(!Guid.TryParse(userId, out var userGuid)) return BadRequest("User not found");
-            var item = dbContext.Bookings.Add(new Booking
+            
+            if (!Guid.TryParse(UserId, out var userGuid)) return BadRequest("User not found");
+            var item = Add(new Booking
             {
-                Id = Guid.NewGuid(),
-                BookingNumber = id,
+                Id = Guid.NewGuid().ToString(),
+                Code = id,
                 Description = model.Description,
-                UserId = userId,
-                ShippingAddressId = Guid.Parse("055CC167-A9FC-4932-AC2E-46582881A740")
+                UserId = UserId,
+                ShippingAddressId = DefaultAddressId
             });
 
-            await dbContext.SaveChangesAsync();
+            await SaveChanges();
             return Ok(item.Entity.Id);
         }
 
@@ -67,35 +68,23 @@ namespace PlayWebApp.Controllers
         public async Task<IActionResult> GetById(string id)
         {
             if (string.IsNullOrWhiteSpace(id)) return BadRequest();
+            if (string.IsNullOrWhiteSpace(UserId)) return BadRequest("User not found");
 
-            var record = await dbContext.Bookings.FirstOrDefaultAsync(x => x.BookingNumber == id);
+            var record = await GetRecord<Booking>(id);
             if (record == null) return NotFound();
 
-            return Ok(new BookingDto { BookingNumber = record.BookingNumber, Description = record.Description });
+            return Ok(record.ToBookingDto());
         }
 
         [HttpGet()]
         [Route("{currentRecord}/next")]
         public async Task<IActionResult> GetNextRecord(string currentRecord)
         {
-            // select top 1, order by bookingNumber, where bookingNumber > currentRecord
 
-            Booking nextRecord;
-
-            if (string.IsNullOrWhiteSpace(currentRecord))
-            {
-                nextRecord = await dbContext.Bookings.OrderBy(x => x.BookingNumber).Take(1).FirstOrDefaultAsync();
-            }
-            else
-            {
-                nextRecord = await dbContext.Bookings.OrderBy(x => x.BookingNumber)
-                            .Where(x => x.BookingNumber.CompareTo(currentRecord) > 0).
-                            Take(1).FirstOrDefaultAsync();
-            }
-
-            if (nextRecord == null) return NotFound();
-
-            return Ok(new BookingDto { BookingNumber = nextRecord.BookingNumber, Description = nextRecord.Description });
+            if (string.IsNullOrWhiteSpace(UserId)) return BadRequest("User not found");
+            var record = await GetNextRecord<Booking>(currentRecord);
+            if (record == null) return NotFound();
+            return Ok(record.ToBookingDto());
 
         }
 
@@ -103,59 +92,50 @@ namespace PlayWebApp.Controllers
         [Route("{currentRecord}/previous")]
         public async Task<IActionResult> GetPreviousRecord(string currentRecord)
         {
-            // select top 1, order by bookingNumber descending, where bookingNumber < currentRecord
+            if (string.IsNullOrWhiteSpace(UserId)) return BadRequest("User not found");
+            
+            var record = await GetPreviousRecord<Booking>(currentRecord);
+            if (record == null) return NotFound();
 
-            Booking nextRecord;
-
-            if (string.IsNullOrWhiteSpace(currentRecord))
-            {
-                nextRecord = await dbContext.Bookings.OrderByDescending(x => x.BookingNumber).Take(1).FirstOrDefaultAsync();
-            }
-            else
-            {
-                nextRecord = await dbContext.Bookings.OrderByDescending(x => x.BookingNumber)
-                            .Where(x => x.BookingNumber.CompareTo(currentRecord) < 0).
-                            Take(1).FirstOrDefaultAsync();
-            }
-
-            if (nextRecord == null) return NotFound();
-
-            return Ok(new BookingDto { BookingNumber = nextRecord.BookingNumber, Description = nextRecord.Description });
+            return Ok(record.ToBookingDto());
         }
 
         [HttpGet()]
         [Route("first")]
         public async Task<IActionResult> GetFirst()
         {
-            var first = await dbContext.Bookings.OrderBy(x => x.BookingNumber).FirstOrDefaultAsync();
-            if (first == null) return NotFound();
-            return Ok(new BookingDto { BookingNumber = first.BookingNumber, Description = first.Description });
+            if (string.IsNullOrWhiteSpace(UserId)) return BadRequest("User not found");
+            var record = await GetTopRecord<Booking>();
+            if (record == null) return NotFound();
+            return Ok(record.ToBookingDto());
         }
 
         [HttpGet()]
         [Route("last")]
         public async Task<IActionResult> GetLast()
         {
-            var last = await dbContext.Bookings.OrderByDescending(x => x.BookingNumber).FirstOrDefaultAsync();
-            if (last == null) return NotFound();
-            return Ok(new BookingDto { BookingNumber = last.BookingNumber, Description = last.Description });
+            if (string.IsNullOrWhiteSpace(UserId)) return BadRequest("User not found");
+            var record = await GetLastRecord<Booking>();
+            if (record == null) return NotFound();
+            return Ok(record.ToBookingDto());
         }
 
         [HttpDelete]
         [Route("{bookingNumber}")]
         public async Task<IActionResult> Delete(string bookingNumber)
         {
+            if (string.IsNullOrWhiteSpace(UserId)) return BadRequest("User not found");
             if (string.IsNullOrWhiteSpace(bookingNumber)) return BadRequest();
 
-            var item = await dbContext.Bookings.FirstOrDefaultAsync(x => x.BookingNumber == bookingNumber);
-            if (item == null) return NotFound();
+            var record = await GetRecord<Booking>(bookingNumber);
+            if (record == null) return NotFound();
 
-            dbContext.Bookings.Remove(item);
+            Delete(record);
+            await SaveChanges();
 
-            await dbContext.SaveChangesAsync();
-
-            return Ok(new BookingDto { BookingNumber = item.BookingNumber, Description = item.Description });
+            return Ok(record.ToBookingDto());
         }
+
 
     }
 }

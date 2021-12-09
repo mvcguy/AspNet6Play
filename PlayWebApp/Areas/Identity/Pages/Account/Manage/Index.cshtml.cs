@@ -84,12 +84,13 @@ namespace PlayWebApp.Areas.Identity.Pages.Account.Manage
 
             Username = userName;
 
-            var userExt = await _userManager.GetUserExtWithAddressesAsync(user);
-            var address = userExt.Addresses.FirstOrDefault(x => x.Id == userExt.DefaultAddressId) ?? new Address { };
-            UserAddressesList = userExt.Addresses.Select(x => new SelectListItem
+            var userExt = await _userManager.GetUserExtAsync(user.Id);
+            var addresses = await _userManager.GetUserAddressesAsync(user.Id);
+            var address = addresses.FirstOrDefault(x => x.Id == userExt.DefaultAddressId) ?? new Address();
+            UserAddressesList = addresses.Select(x => new SelectListItem
             {
-                Value = x.AddressCode,
-                Text = $"{x.AddressCode} - {x.StreetAddress}"
+                Value = x.Code,
+                Text = $"{x.Code} - {x.StreetAddress}"
             });
             Input = new InputModel
             {
@@ -98,7 +99,7 @@ namespace PlayWebApp.Areas.Identity.Pages.Account.Manage
                 LastName = userExt?.LastName,
                 AddressVm = new AddressDto
                 {
-                    AddressCode = address.AddressCode,
+                    AddressCode = address.Code,
                     City = address.City,
                     Country = address.Country,
                     PostalCode = address.PostalCode,
@@ -148,7 +149,7 @@ namespace PlayWebApp.Areas.Identity.Pages.Account.Manage
             //
             // save first name and last name
             //
-            var userExt = await _userManager.GetUserExtAsync(user, true);
+            var userExt = await _userManager.GetUserExtAsync(user.Id);
             await UpdateAddress(user, userExt);
 
             var result = await _userManager.UpdateExtendedUser(userExt);
@@ -170,10 +171,10 @@ namespace PlayWebApp.Areas.Identity.Pages.Account.Manage
             userExt.LastName = Input.LastName;
 
             // selected address is different than existing one, update the default address
-            var currentAddress = userExt.Addresses.FirstOrDefault(x => x.Id == userExt.DefaultAddressId)?.AddressCode;
-            if (!string.IsNullOrWhiteSpace(Input.AddressVm.AddressCode) && currentAddress != Input.AddressVm.AddressCode)
+            var currentAddress = await _userManager.GetUserDefaultAddress(userExt.UserId, userExt.Code);
+            if (!string.IsNullOrWhiteSpace(Input.AddressVm.AddressCode) && currentAddress?.Code != Input.AddressVm.AddressCode)
             {
-                var newAddress = await _userManager.GetUserAddress(userExt, Input.AddressVm.AddressCode);
+                var newAddress = await _userManager.GetUserAddress(userExt.UserId, Input.AddressVm.AddressCode);
                 if (newAddress != null)
                 {
                     userExt.DefaultAddressId = newAddress.Id;

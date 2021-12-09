@@ -9,12 +9,17 @@ namespace PlayWebApp.Services.ModelExtentions
         {
             return new AddressDto
             {
-                AddressCode = model.AddressCode,
+                AddressCode = model.Code,
                 StreetAddress = model.StreetAddress,
                 City = model.City,
                 PostalCode = model.PostalCode,
                 Country = model.Country
             };
+        }
+
+        public static BookingDto ToBookingDto(this Booking model)
+        {
+            return new BookingDto { BookingNumber = model.Code, Description = model.Description };
         }
     }
 

@@ -135,8 +135,8 @@ namespace PlayWebApp.Areas.Identity.Pages.Account
 
                 var address = new Address
                 {
-                    Id = Guid.NewGuid(),
-                    AddressCode = "Shipping",
+                    Id = Guid.NewGuid().ToString(),
+                    Code = "Shipping",
                     StreetAddress = Input.AddressVm.StreetAddress,
                     City = Input.AddressVm.City,
                     PostalCode = Input.AddressVm.PostalCode,

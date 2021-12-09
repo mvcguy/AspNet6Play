@@ -1,11 +1,9 @@
+using Microsoft.AspNetCore.Identity;
+
 namespace PlayWebApp.Services.Database.Model;
 
-public class Address
+public class Address : EntityBase
 {
-    public virtual Guid? Id { get; set; }
-
-    public virtual string? AddressCode { get; set; }
-
     public virtual string? StreetAddress { get; set; }
 
     public virtual string? PostalCode { get; set; }
@@ -13,9 +11,4 @@ public class Address
     public virtual string? City { get; set; }
 
     public virtual string? Country { get; set; }
-
-    public virtual string? UserId { get; set; }
-
-    public virtual IdentityUserExt UserExt { get; set; } = null!;
-
 }

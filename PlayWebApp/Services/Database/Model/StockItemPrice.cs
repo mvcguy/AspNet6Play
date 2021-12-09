@@ -1,10 +1,8 @@
 namespace PlayWebApp.Services.Database.Model;
 
-public class StockItemPrice
+public class StockItemPrice : EntityBase
 {
-
-    public virtual Guid? Id { get; set; }
-    public virtual Guid? StockItemId { get; set; }
+    public virtual string? StockItemId { get; set; }
 
     public virtual decimal BreakQty { get; set; }
 
