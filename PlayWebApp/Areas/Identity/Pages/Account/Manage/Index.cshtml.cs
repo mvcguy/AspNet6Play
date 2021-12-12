@@ -7,22 +7,26 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.AspNetCore.Mvc.Rendering;
-using PlayWebApp.Services.Database;
 using PlayWebApp.Services.Database.Model;
+using PlayWebApp.Services.Identity;
+using PlayWebApp.Services.Identity.ViewModels;
 using PlayWebApp.Services.Logistics.ViewModels;
 
 namespace PlayWebApp.Areas.Identity.Pages.Account.Manage
 {
     public class IndexModel : PageModel
     {
-        private readonly UserManagerExt _userManager;
+        private readonly UserManager<IdentityUser> _userManager;
+        private readonly UserManagementService userManagementService;
         private readonly SignInManager<IdentityUser> _signInManager;
 
         public IndexModel(
-            UserManagerExt userManager,
+            UserManager<IdentityUser> userManager,
+            UserManagementService userManagementService,
             SignInManager<IdentityUser> signInManager)
         {
             _userManager = userManager;
+            this.userManagementService = userManagementService;
             _signInManager = signInManager;
         }
 
@@ -74,7 +78,7 @@ namespace PlayWebApp.Areas.Identity.Pages.Account.Manage
             [StringLength(128, ErrorMessage = "The {0} must be at least {2} and at max {1} characters long.", MinimumLength = 2)]
             public string LastName { get; set; }
 
-            public AddressDto AddressVm { get; set; }
+            public AddressUpdateVm AddressVm { get; set; }
         }
 
         private async Task LoadAsync(IdentityUser user)
@@ -84,27 +88,28 @@ namespace PlayWebApp.Areas.Identity.Pages.Account.Manage
 
             Username = userName;
 
-            var userExt = await _userManager.GetUserExtAsync(user.Id);
-            var addresses = await _userManager.GetUserAddressesAsync(user.Id);
-            var address = addresses.FirstOrDefault(x => x.Id == userExt.DefaultAddressId) ?? new Address();
+            var userExt = await userManagementService.GetIdentityUserExt(user.Id);
+            var addresses = await userManagementService.GetAllUserAddresses(user.Id);
+
+            var userDefaultAddress = addresses.FirstOrDefault(x => x.Key == userExt.DefaultAddressId);
             UserAddressesList = addresses.Select(x => new SelectListItem
             {
-                Value = x.Code,
-                Text = $"{x.Code} - {x.StreetAddress}"
+                Value = x.AddressCode,
+                Text = $"{x.AddressCode} - {x.StreetAddress}"
             });
             Input = new InputModel
             {
                 PhoneNumber = phoneNumber,
                 FirstName = userExt?.FirstName,
                 LastName = userExt?.LastName,
-                AddressVm = new AddressDto
+                AddressVm = new AddressUpdateVm
                 {
-                    AddressCode = address.Code,
-                    City = address.City,
-                    Country = address.Country,
-                    PostalCode = address.PostalCode,
+                    AddressCode = userDefaultAddress.AddressCode,
+                    City = userDefaultAddress.City,
+                    Country = userDefaultAddress.Country,
+                    PostalCode = userDefaultAddress.PostalCode,
                     PreferredAddress = true,
-                    StreetAddress = address.StreetAddress
+                    StreetAddress = userDefaultAddress.StreetAddress
                 }
             };
         }
@@ -146,16 +151,19 @@ namespace PlayWebApp.Areas.Identity.Pages.Account.Manage
                 }
             }
 
-            //
-            // save first name and last name
-            //
-            var userExt = await _userManager.GetUserExtAsync(user.Id);
-            await UpdateAddress(user, userExt);
+            var updateVm = new IdentityUserUpdateVm
+            {
+                UserId = user.Id,
+                FirstName = Input.FirstName,
+                LastName = Input.LastName,
+                DefaultAddress = Input.AddressVm
+            };
 
-            var result = await _userManager.UpdateExtendedUser(userExt);
+            var result = await userManagementService.UpdateIdentityUserExt(updateVm);
+
             if (!result.Succeeded)
             {
-                StatusMessage = $"Error updating profile. Error: {result.Errors.FirstOrDefault()}";
+                StatusMessage = $"Error updating profile. Error: {result.Errors.FirstOrDefault().Message}";
                 return RedirectToPage();
             }
 
@@ -164,22 +172,5 @@ namespace PlayWebApp.Areas.Identity.Pages.Account.Manage
             return RedirectToPage();
         }
 
-        private async Task UpdateAddress(IdentityUser user, IdentityUserExt userExt)
-        {
-            
-            userExt.FirstName = Input.FirstName;
-            userExt.LastName = Input.LastName;
-
-            // selected address is different than existing one, update the default address
-            var currentAddress = await _userManager.GetUserDefaultAddress(userExt.UserId, userExt.Code);
-            if (!string.IsNullOrWhiteSpace(Input.AddressVm.AddressCode) && currentAddress?.Code != Input.AddressVm.AddressCode)
-            {
-                var newAddress = await _userManager.GetUserAddress(userExt.UserId, Input.AddressVm.AddressCode);
-                if (newAddress != null)
-                {
-                    userExt.DefaultAddressId = newAddress.Id;
-                }
-            }
-        }
     }
 }

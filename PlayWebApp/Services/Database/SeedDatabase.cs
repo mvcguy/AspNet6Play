@@ -1,5 +1,8 @@
 using Microsoft.AspNetCore.Identity;
 using PlayWebApp.Services.Database.Model;
+using PlayWebApp.Services.Identity;
+using PlayWebApp.Services.Identity.ViewModels;
+using PlayWebApp.Services.Logistics.ViewModels;
 #nullable disable
 
 namespace PlayWebApp.Services.Database;
@@ -14,11 +17,11 @@ public class SeedDatabase
     /// </summary>
     /// <param name="context"></param>
     /// <param name="userManager"></param>
-    public static void Seed(ApplicationDbContext context, UserManagerExt userManager)
+    public static void Seed(ApplicationDbContext context, UserManager<IdentityUser> userManager, UserManagementService usrMgtSrv)
     {
         if (context.Tenants.Count() == 0)
-        {            
-            AddIdentityUserAndDefaultAddress(context, userManager, out var userId, out var addressId);
+        {
+            AddIdentityUserAndDefaultAddress(context, userManager, usrMgtSrv, out _, out _);
         }
     }
 
@@ -27,10 +30,10 @@ public class SeedDatabase
     /// </summary>
     /// <param name="context"></param>
     /// <param name="userManager"></param>
-    public static void Seed2(ApplicationDbContext context, UserManagerExt userManager)
+    public static void Seed2(ApplicationDbContext context, UserManager<IdentityUser> userManager, UserManagementService usrMgtSrv)
     {
 
-        AddIdentityUserAndDefaultAddress(context, userManager, out var userId, out var addressId);
+        AddIdentityUserAndDefaultAddress(context, userManager, usrMgtSrv, out var userId, out var addressId);
 
         var tyres = new StockItem
         {
@@ -86,7 +89,7 @@ public class SeedDatabase
         context.SaveChanges();
     }
 
-    
+
     private static void AddAuditData<TModel>(TModel model, string tenantId, string userId) where TModel : EntityBase
     {
         model.TenantId = tenantId;
@@ -98,26 +101,26 @@ public class SeedDatabase
     }
 
     public static void AddIdentityUserAndDefaultAddress(ApplicationDbContext context,
-        UserManagerExt userManager, out string userId, out string addressId)
+        UserManager<IdentityUser> userManager, UserManagementService usrMgtSrv, out string userId, out string addressId)
     {
 
         var tenant = context.Tenants.Add(new Tenant
-            {
-                Id = Guid.NewGuid().ToString(),
-                Country = "PK",
-                TenantCode = "SH-TEST-01",
-                TenantName = "Shahid Test company 01",
-                CreatedOn = DateTime.UtcNow,
-                ModifiedOn = DateTime.UtcNow,
-            });
-
-            context.SaveChanges();
-
-        if (context.Users.Count() > 0)
         {
-            var userX = context.Users.FirstOrDefault();
-            userId = userX.Id;
-            addressId = context.Set<IdentityUserExt>().FirstOrDefault(x => x.UserId == userX.Id).DefaultAddressId;
+            Id = Guid.NewGuid().ToString(),
+            Country = "PK",
+            TenantCode = "SH-TEST-01",
+            TenantName = "Shahid Test company 01",
+            CreatedOn = DateTime.UtcNow,
+            ModifiedOn = DateTime.UtcNow,
+        });
+
+        context.SaveChanges();
+
+        if (context.Set<IdentityUserExt>().Count() > 0)
+        {
+            var userExt = context.Set<IdentityUserExt>().FirstOrDefault();
+            userId = userExt.Id;
+            addressId = userExt.DefaultAddressId;
             return;
         }
 
@@ -128,45 +131,36 @@ public class SeedDatabase
             UserName = "shahid.ali@play.com"
         };
 
-        var userExt = new IdentityUserExt
-        {
-            Id = Guid.NewGuid().ToString(),
-            FirstName = "Shahid",
-            LastName = "Khan",
-            Code = "Admin"
-        };
-
-        AddAuditData(userExt, tenant.Entity.Id, user.Id);
-
-        var res = userManager.CreateAsync(user, userExt, "Shahid@123").Result;
+        var res = userManager.CreateAsync(user, "Shahid@123").Result;
 
         var token = userManager.GenerateEmailConfirmationTokenAsync(user).Result;
         var eRes = userManager.ConfirmEmailAsync(user, token).Result;
 
-        var address = new Address
+        //
+        // create Identity user ext
+        //
+        var uvm = new IdentityUserUpdateVm()
         {
-            Code = "Home",
-            Id = Guid.NewGuid().ToString(),
-            StreetAddress = "Ml Shahid gate 34H",
-            PostalCode = "1234",
-            City = "Oslo",
-            Country = "Norway",
+            UserId = user.Id,
+            FirstName = "Shahid",
+            LastName = "Khan",
+            TenantCode = tenant.Entity.TenantCode,
+            DefaultAddress = new AddressUpdateVm
+            {
+                AddressCode = "Shipping",
+                StreetAddress = "Moniba street",
+                City = "Chd",
+                PostalCode = "4000",
+                Country = "PK",
+            }
         };
-        AddAuditData(address, tenant.Entity.Id, user.Id);
-
-        context.Addresses.Add(address);
-        context.SaveChanges();
+        var result = usrMgtSrv.CreateIdentityUserExt(uvm).Result;
 
         //
-        // set default address for the user
+        // set OUT params
         //
-        userExt.DefaultAddressId = address.Id;
-        context.Update(userExt);
-        context.SaveChanges();
-
+        addressId = usrMgtSrv.GetIdentityUserExt(user.Id).Result.DefaultAddressId;
         userId = user.Id;
-        addressId = address.Id;
-
     }
 
 }

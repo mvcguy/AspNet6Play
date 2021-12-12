@@ -9,22 +9,29 @@ namespace PlayWebApp.Services.Identity
     public class AdditionalUserClaimsPrincipalFactory
         : UserClaimsPrincipalFactory<IdentityUser>
     {
-        private readonly UserManagerExt userManagerExt;
+        private readonly UserManager<IdentityUser> userManager;
+        private readonly UserManagementService userManagementService;
+        private readonly ApplicationDbContext dbContext;
+        private readonly IOptions<IdentityOptions> optionsAccessor;
 
         public AdditionalUserClaimsPrincipalFactory(
-        UserManagerExt userManagerExt,
+        UserManager<IdentityUser> userManager,
+        UserManagementService userManagementService,
         ApplicationDbContext dbContext,
         IOptions<IdentityOptions> optionsAccessor)
-        : base(userManagerExt, optionsAccessor)
+        : base(userManager, optionsAccessor)
         {
-            this.userManagerExt = userManagerExt;
+            this.userManager = userManager;
+            this.userManagementService = userManagementService;
+            this.dbContext = dbContext;
+            this.optionsAccessor = optionsAccessor;
         }
 
         public async override Task<ClaimsPrincipal> CreateAsync(IdentityUser user)
         {
             var principal = await base.CreateAsync(user);
             var identity = (ClaimsIdentity)principal.Identity;
-            var tentantId = (await userManagerExt.GetUserExtAsync(user.Id)).TenantId;
+            var tentantId = (await userManagementService.GetIdentityUserExt(user.Id))?.TenantId;
 
             var claims = new List<Claim>();
             // if (user.IsAdmin)

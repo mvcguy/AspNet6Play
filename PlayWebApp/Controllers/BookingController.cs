@@ -73,7 +73,7 @@ namespace PlayWebApp.Controllers
             var record = await GetRecord<Booking>(id);
             if (record == null) return NotFound();
 
-            return Ok(record.ToBookingDto());
+            return Ok(record.ToDto());
         }
 
         [HttpGet()]
@@ -84,7 +84,7 @@ namespace PlayWebApp.Controllers
             if (string.IsNullOrWhiteSpace(UserId)) return BadRequest("User not found");
             var record = await GetNextRecord<Booking>(currentRecord);
             if (record == null) return NotFound();
-            return Ok(record.ToBookingDto());
+            return Ok(record.ToDto());
 
         }
 
@@ -97,7 +97,7 @@ namespace PlayWebApp.Controllers
             var record = await GetPreviousRecord<Booking>(currentRecord);
             if (record == null) return NotFound();
 
-            return Ok(record.ToBookingDto());
+            return Ok(record.ToDto());
         }
 
         [HttpGet()]
@@ -107,7 +107,7 @@ namespace PlayWebApp.Controllers
             if (string.IsNullOrWhiteSpace(UserId)) return BadRequest("User not found");
             var record = await GetTopRecord<Booking>();
             if (record == null) return NotFound();
-            return Ok(record.ToBookingDto());
+            return Ok(record.ToDto());
         }
 
         [HttpGet()]
@@ -117,7 +117,7 @@ namespace PlayWebApp.Controllers
             if (string.IsNullOrWhiteSpace(UserId)) return BadRequest("User not found");
             var record = await GetLastRecord<Booking>();
             if (record == null) return NotFound();
-            return Ok(record.ToBookingDto());
+            return Ok(record.ToDto());
         }
 
         [HttpDelete]
@@ -133,7 +133,7 @@ namespace PlayWebApp.Controllers
             Delete(record);
             await SaveChanges();
 
-            return Ok(record.ToBookingDto());
+            return Ok(record.ToDto());
         }
 
 

@@ -37,9 +37,11 @@ public class ApplicationDbContext : IdentityDbContext
         var user = builder.Entity<IdentityUser>();
 
         var userExt = builder.Entity<IdentityUserExt>().ToTable("UserExt");
-
+        
         userExt.Property(x => x.FirstName).HasColumnType("nvarchar").HasMaxLength(128).IsRequired();
         userExt.Property(x => x.LastName).HasColumnType("nvarchar").HasMaxLength(128).IsRequired();
+        userExt.Property(x => x.TenantId).IsRequired(false);
+        builder.Entity<IdentityUserExt>().Ignore(x => x.Code);
 
         stockItem.Property(x => x.Description).HasColumnType("nvarchar").HasMaxLength(128);
 

@@ -16,10 +16,13 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
+using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.Extensions.Logging;
-using PlayWebApp.Services.Database;
+using PlayWebApp.Services.AppManagement;
 using PlayWebApp.Services.Database.Model;
+using PlayWebApp.Services.Identity;
+using PlayWebApp.Services.Identity.ViewModels;
 using PlayWebApp.Services.Logistics.ViewModels;
 
 namespace PlayWebApp.Areas.Identity.Pages.Account
@@ -27,24 +30,30 @@ namespace PlayWebApp.Areas.Identity.Pages.Account
     public class RegisterModel : PageModel
     {
         private readonly SignInManager<IdentityUser> _signInManager;
-        private readonly UserManagerExt _userManager;
+        private readonly UserManager<IdentityUser> _userManager;
+        private readonly UserManagementService userManagementService;
         private readonly IUserStore<IdentityUser> _userStore;
         private readonly IUserEmailStore<IdentityUser> _emailStore;
         private readonly ILogger<RegisterModel> _logger;
+        private readonly AppMgtService appMgtService;
         private readonly IEmailSender _emailSender;
 
         public RegisterModel(
-            UserManagerExt userManager,
+            UserManager<IdentityUser> userManager,
+            UserManagementService userManagementService,
             IUserStore<IdentityUser> userStore,
             SignInManager<IdentityUser> signInManager,
             ILogger<RegisterModel> logger,
+            AppMgtService appMgtService,
             IEmailSender emailSender)
         {
             _userManager = userManager;
+            this.userManagementService = userManagementService;
             _userStore = userStore;
             _emailStore = GetEmailStore();
             _signInManager = signInManager;
             _logger = logger;
+            this.appMgtService = appMgtService;
             _emailSender = emailSender;
         }
 
@@ -114,14 +123,28 @@ namespace PlayWebApp.Areas.Identity.Pages.Account
             public string LastName { get; set; }
 
             public AddressUpdateVm AddressVm { get; set; }
+
+            [Required]
+            [Display(Name = "Tenant")]
+            public string TenantCode { get; set; }
         }
 
+        public IList<SelectListItem> Tenants { get; set; }
 
         public async Task OnGetAsync(string returnUrl = null)
         {
             ReturnUrl = returnUrl;
             ExternalLogins = (await _signInManager.GetExternalAuthenticationSchemesAsync()).ToList();
             Input = new InputModel { AddressVm = new AddressUpdateVm { AddressCode = "Shipping" } };
+
+            Tenants = (await appMgtService.GetAllTenants()).Select(x => new SelectListItem
+            {
+                Value = x.Code,
+                Text = $"{x.Code} - {x.Name}"
+            }).ToList();
+
+            Input.TenantCode = Tenants.FirstOrDefault()?.Value;
+
         }
 
         public async Task<IActionResult> OnPostAsync(string returnUrl = null)
@@ -132,41 +155,23 @@ namespace PlayWebApp.Areas.Identity.Pages.Account
             {
                 var user = CreateUser();
                 user.Id = Guid.NewGuid().ToString();
-
-                var address = new Address
-                {
-                    Id = Guid.NewGuid().ToString(),
-                    Code = "Shipping",
-                    StreetAddress = Input.AddressVm.StreetAddress,
-                    City = Input.AddressVm.City,
-                    PostalCode = Input.AddressVm.PostalCode,
-                    Country = Input.AddressVm.Country,
-                    UserId = user.Id
-                };
-
-                var userExt = new IdentityUserExt
-                {
-                    UserId = user.Id,
-                    FirstName = Input.FirstName,
-                    LastName = Input.LastName,
-                    DefaultAddressId = address.Id
-                };
-
                 await _userStore.SetUserNameAsync(user, Input.Email, CancellationToken.None);
                 await _emailStore.SetEmailAsync(user, Input.Email, CancellationToken.None);
-                var result = await _userManager.CreateAsync(user, userExt, address, Input.Password);
+                var result = await _userManager.CreateAsync(user, Input.Password);
 
                 if (result.Succeeded)
                 {
+
+                    SaveIdentityUserExt(user.Id, Input.TenantCode);
+
                     _logger.LogInformation("User created a new account with password.");
 
-                    var userId = user.Id;
                     var code = await _userManager.GenerateEmailConfirmationTokenAsync(user);
                     code = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(code));
                     var callbackUrl = Url.Page(
                         "/Account/ConfirmEmail",
                         pageHandler: null,
-                        values: new { area = "Identity", userId = userId, code = code, returnUrl = returnUrl },
+                        values: new { area = "Identity", userId = user.Id, code = code, returnUrl = returnUrl },
                         protocol: Request.Scheme);
 
                     await _emailSender.SendEmailAsync(Input.Email, "Confirm your email",
@@ -213,6 +218,29 @@ namespace PlayWebApp.Areas.Identity.Pages.Account
                 throw new NotSupportedException("The default UI requires a user store with email support.");
             }
             return (IUserEmailStore<IdentityUser>)_userStore;
+        }
+
+        private async Task SaveIdentityUserExt(string userId, string tenantCode)
+        {
+            var uvm = new IdentityUserUpdateVm()
+            {
+                UserId = userId,
+                FirstName = Input.FirstName,
+                LastName = Input.LastName,
+                TenantCode = tenantCode,
+                DefaultAddress = new AddressUpdateVm
+                {
+                    AddressCode = "Shipping",
+                    StreetAddress = Input.AddressVm.StreetAddress,
+                    City = Input.AddressVm.City,
+                    PostalCode = Input.AddressVm.PostalCode,
+                    Country = Input.AddressVm.Country,
+                }
+            };
+
+            var result = await userManagementService.CreateIdentityUserExt(uvm);
+            _logger.LogError($"Cannot create userExt. Error: {result.Errors.FirstOrDefault()?.Message}", result.Errors.FirstOrDefault());
+
         }
     }
 }

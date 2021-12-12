@@ -77,7 +77,7 @@ namespace PlayWebApp.Controllers
             var record = await GetRecord<Address>(id);
             if (record == null) return NotFound();
 
-            var model = record.ToAddressDto();
+            var model = record.ToDto();
             model.PreferredAddress = IsDefaultAddress(record);
             return Ok(model);
         }
@@ -93,7 +93,7 @@ namespace PlayWebApp.Controllers
 
             if (record == null) return NotFound();
 
-            var model = record.ToAddressDto();
+            var model = record.ToDto();
             model.PreferredAddress = IsDefaultAddress(record);
             return Ok(model);
 
@@ -107,7 +107,7 @@ namespace PlayWebApp.Controllers
             var record = await GetPreviousRecord<Address>(currentRecord);
             if (record == null) return NotFound();
 
-            var model = record.ToAddressDto();
+            var model = record.ToDto();
             model.PreferredAddress = IsDefaultAddress(record);
             return Ok(model);
         }
@@ -119,7 +119,7 @@ namespace PlayWebApp.Controllers
             if (string.IsNullOrWhiteSpace(UserId)) return BadRequest("User not found");
             var record = await GetTopRecord<Address>();
             if (record == null) return NotFound();
-            var model = record.ToAddressDto();
+            var model = record.ToDto();
             model.PreferredAddress = IsDefaultAddress(record);
             return Ok(model);
         }
@@ -131,7 +131,7 @@ namespace PlayWebApp.Controllers
             if (string.IsNullOrWhiteSpace(UserId)) return BadRequest("User not found");
             var record = await GetLastRecord<Address>();
             if (record == null) return NotFound();
-            var model = record.ToAddressDto();
+            var model = record.ToDto();
             model.PreferredAddress = IsDefaultAddress(record);
             return Ok(model);
         }
@@ -158,7 +158,7 @@ namespace PlayWebApp.Controllers
 
             await SaveChanges();
 
-            var model = record.ToAddressDto();
+            var model = record.ToDto();
             model.PreferredAddress = IsDefaultAddress(record);
             return Ok(model);
         }

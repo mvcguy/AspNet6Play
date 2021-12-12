@@ -50,7 +50,7 @@ namespace PlayWebApp.Areas.Identity.Pages.Account.Manage
 
         private async Task<bool> IsPreferredAddress(string userId, string addressId)
         {
-            var userExt = await dbContext.Set<IdentityUserExt>().FirstOrDefaultAsync(x => x.UserId == userId && x.Code == addressId);
+            var userExt = await dbContext.Set<IdentityUserExt>().FirstOrDefaultAsync(x => x.UserId == userId && x.DefaultAddressId == addressId);
             if(userExt!=null) return true;
 
             return false;

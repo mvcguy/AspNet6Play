@@ -10,7 +10,7 @@ namespace PlayWebApp.Services.Logistics.ViewModels
         [Required]
         [Display(Name = "Address code")]
         [JsonPropertyName("AddressVm.AddressCode")]
-        [StringLength(10, ErrorMessage = "The {0} must be at least {2} and at max {1} characters long.", MinimumLength = 3)]
+        // [StringLength(10, ErrorMessage = "The {0} must be at least {2} and at max {1} characters long.", MinimumLength = 3)]
         public string AddressCode { get; set; }
 
         [Required]
@@ -34,17 +34,20 @@ namespace PlayWebApp.Services.Logistics.ViewModels
         [Required]
         [Display(Name = "Country:")]
         [JsonPropertyName("AddressVm.Country")]
-        [StringLength(128, ErrorMessage = "The {0} must be at least {2} and at max {1} characters long.", MinimumLength = 3)]
+        [StringLength(128, ErrorMessage = "The {0} must be at least {2} and at max {1} characters long.", MinimumLength = 2)]
         public string Country { get; set; }
 
         [Display(Name = "Preferred address")]
-        [JsonPropertyName("AddressVm.PreferredAddress")]   
-        [JsonConverter(typeof(StringToBooleanConverter))]     
+        [JsonPropertyName("AddressVm.PreferredAddress")]
+        [JsonConverter(typeof(StringToBooleanConverter))]
         public bool PreferredAddress { get; set; }
     }
 
     public class AddressDto
     {
+
+        public string Key { get; set; }
+
         public string AddressCode { get; set; }
 
         public string StreetAddress { get; set; }

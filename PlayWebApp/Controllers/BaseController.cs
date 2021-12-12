@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore.ChangeTracking;
 using PlayWebApp.Services.Database;
 using PlayWebApp.Services.Database.Model;
+using PlayWebApp.Services.Identity;
 #nullable disable
 
 namespace PlayWebApp.Controllers
@@ -41,7 +42,7 @@ namespace PlayWebApp.Controllers
             {
                 try
                 {
-                    return User.FindFirstValue(ClaimTypes.NameIdentifier);
+                    return User.FindFirstValue(CustomClaimTypes.TenantId);
                 }
                 catch
                 {

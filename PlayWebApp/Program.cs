@@ -1,9 +1,12 @@
 using System.Text.Json.Serialization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using PlayWebApp.Services.AppManagement;
+using PlayWebApp.Services.AppManagement.Repository;
 using PlayWebApp.Services.Database;
 using PlayWebApp.Services.Filters;
 using PlayWebApp.Services.Identity;
+using PlayWebApp.Services.Identity.Repository;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -17,9 +20,6 @@ builder.Services.AddDatabaseDeveloperPageExceptionFilter();
 
 builder.Services.AddDefaultIdentity<IdentityUser>(options => options.SignIn.RequireConfirmedAccount = true)
     .AddEntityFrameworkStores<ApplicationDbContext>().AddDefaultTokenProviders();
-
-
-builder.Services.AddScoped<UserManagerExt>();
 
 builder.Services.AddScoped<IUserClaimsPrincipalFactory<IdentityUser>, AdditionalUserClaimsPrincipalFactory>();
 
@@ -45,14 +45,20 @@ builder.Services.AddControllers().AddJsonOptions(options =>
     options.JsonSerializerOptions.NumberHandling = JsonNumberHandling.AllowReadingFromString | JsonNumberHandling.WriteAsString;
 });
 
+builder.Services.AddScoped<UserManagementRepository>();
+builder.Services.AddScoped<UserManagementService>();
+builder.Services.AddScoped<AppMgtRepository>();
+builder.Services.AddScoped<AppMgtService>();
+
 var app = builder.Build();
 
 using (var scope = app.Services.CreateScope())
 {
     var ctx = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-    var usrMgr = scope.ServiceProvider.GetRequiredService<UserManagerExt>();
+    var usrMgr = scope.ServiceProvider.GetRequiredService<UserManager<IdentityUser>>();
+    var usrMgtSrv = scope.ServiceProvider.GetRequiredService<UserManagementService>();
 
-    SeedDatabase.Seed(ctx, usrMgr);
+    SeedDatabase.Seed(ctx, usrMgr, usrMgtSrv);
 
 }
 
