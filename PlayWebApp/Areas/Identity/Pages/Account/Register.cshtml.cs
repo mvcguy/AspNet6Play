@@ -162,7 +162,7 @@ namespace PlayWebApp.Areas.Identity.Pages.Account
                 if (result.Succeeded)
                 {
 
-                    SaveIdentityUserExt(user.Id, Input.TenantCode);
+                    await SaveIdentityUserExt(user.Id, Input.TenantCode);
 
                     _logger.LogInformation("User created a new account with password.");
 
