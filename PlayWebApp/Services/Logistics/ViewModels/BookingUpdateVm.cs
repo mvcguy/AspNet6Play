@@ -3,7 +3,7 @@ using System.Text.Json.Serialization;
 #nullable disable
 namespace PlayWebApp.Services.Logistics.ViewModels
 {
-    public class BookingUpdateVm
+    public class BookingUpdateVm : ViewModelBase
     {
 
         [Required]
@@ -17,6 +17,7 @@ namespace PlayWebApp.Services.Logistics.ViewModels
         [JsonPropertyName("BookingVm.Description")]
         [StringLength(128, ErrorMessage = "The {0} must be at least {2} and at max {1} characters long.", MinimumLength = 3)]
         public string Description { get; set; }
-    }
 
+        public IList<BookingItemUpdateVm> Lines { get; set; }
+    }
 }

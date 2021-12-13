@@ -4,9 +4,17 @@ using Microsoft.EntityFrameworkCore;
 using PlayWebApp.Services.AppManagement;
 using PlayWebApp.Services.AppManagement.Repository;
 using PlayWebApp.Services.Database;
+using PlayWebApp.Services.Database.Model;
+using PlayWebApp.Services.DataNavigation;
 using PlayWebApp.Services.Filters;
 using PlayWebApp.Services.Identity;
 using PlayWebApp.Services.Identity.Repository;
+using PlayWebApp.Services.Logistics.BookingMgt;
+using PlayWebApp.Services.Logistics.BookingMgt.Repository;
+using PlayWebApp.Services.Logistics.InventoryMgt;
+using PlayWebApp.Services.Logistics.InventoryMgt.Repository;
+using PlayWebApp.Services.Logistics.LocationMgt;
+using PlayWebApp.Services.Logistics.LocationMgt.Repository;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -49,6 +57,16 @@ builder.Services.AddScoped<UserManagementRepository>();
 builder.Services.AddScoped<UserManagementService>();
 builder.Services.AddScoped<AppMgtRepository>();
 builder.Services.AddScoped<AppMgtService>();
+
+builder.Services.AddScoped<INavigationRepository<Address>, LocationRepository>();
+builder.Services.AddScoped<LocationService>();
+
+builder.Services.AddScoped<INavigationRepository<StockItem>, InventoryRepository>();
+builder.Services.AddScoped<InventoryService>();
+
+builder.Services.AddScoped<INavigationRepository<Booking>, BookingRepository>();
+builder.Services.AddScoped<BookingService>();
+
 
 var app = builder.Build();
 

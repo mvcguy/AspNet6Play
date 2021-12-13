@@ -11,19 +11,20 @@ using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.EntityFrameworkCore;
 using PlayWebApp.Services.Database;
 using PlayWebApp.Services.Database.Model;
+using PlayWebApp.Services.Identity;
 using PlayWebApp.Services.Logistics.ViewModels;
 
 namespace PlayWebApp.Areas.Identity.Pages.Account.Manage
 {
     public class AddressModel : PageModel
     {
-        private readonly ApplicationDbContext dbContext;
+        private readonly UserManagementService userMgtSrv;
 
-        public AddressModel(ApplicationDbContext dbContext)
+        public AddressModel(UserManagementService userMgtSrv)
         {
-            this.dbContext = dbContext;
+            this.userMgtSrv = userMgtSrv;
         }
-
+        
         [TempData]
         public string StatusMessage { get; set; }
 
@@ -32,28 +33,21 @@ namespace PlayWebApp.Areas.Identity.Pages.Account.Manage
         public async Task OnGetAsync()
         {
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            var first = await dbContext.Addresses.OrderBy(x => x.Code).FirstOrDefaultAsync(x => x.UserId == userId);
-            if (first != null)
+            var defaultAddress = await userMgtSrv.GetUserDefaultAddress(userId);
+            if (defaultAddress != null)
             {
 
                 AddressVm = new AddressUpdateVm
                 {
-                    AddressCode = first.Code,
-                    StreetAddress = first.StreetAddress,
-                    City = first.City,
-                    PostalCode = first.PostalCode,
-                    Country = first.Country,
-                    PreferredAddress = await IsPreferredAddress(userId, first.Id)
+                    AddressCode = defaultAddress.AddressCode,
+                    StreetAddress = defaultAddress.StreetAddress,
+                    City = defaultAddress.City,
+                    PostalCode = defaultAddress.PostalCode,
+                    Country = defaultAddress.Country,
+                    PreferredAddress = true
                 };
             }
         }
 
-        private async Task<bool> IsPreferredAddress(string userId, string addressId)
-        {
-            var userExt = await dbContext.Set<IdentityUserExt>().FirstOrDefaultAsync(x => x.UserId == userId && x.DefaultAddressId == addressId);
-            if(userExt!=null) return true;
-
-            return false;
-        }
     }
 }

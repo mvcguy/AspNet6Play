@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using PlayWebApp.Services.Database;
 using PlayWebApp.Services.Database.Model;
+using PlayWebApp.Services.Logistics.InventoryMgt;
 using PlayWebApp.Services.Logistics.ViewModels;
 #nullable disable
 
@@ -9,11 +10,13 @@ namespace PlayWebApp.Controllers
 {
     [Route("api/v1/StockItems")]
     [ApiController]
-    public class StockItemsController : NavigationBaseController
+    public class StockItemsController : BaseController
     {
-        
-        public StockItemsController(ApplicationDbContext dbContext) : base(dbContext)
+        private readonly InventoryService service;
+
+        public StockItemsController(InventoryService service)
         {
+            this.service = service;
         }
 
         [HttpPut]
@@ -22,17 +25,12 @@ namespace PlayWebApp.Controllers
             if (!ModelState.IsValid) return BadRequest(ModelState);
 
             var id = model.ItemDisplayId;
-            var existingItem = await GetRecord<StockItem>(id);
+            var existingItem = await service.GetById(new StockItemRequestDto { RefNbr = id });
             if (existingItem == null) return BadRequest($"Stock item with ID: {id} does not exist");
+            var item = service.Update(model, UserId);
 
-            //
-            // update the db model
-            //
-            existingItem.Description = model.ItemDescription;
-            var item = Update(existingItem);
-
-            await SaveChanges();
-            return Ok(item.Entity.Id);
+            await service.SaveChanges();
+            return Ok(item.ItemDisplayId);
         }
 
         [HttpPost]
@@ -41,13 +39,13 @@ namespace PlayWebApp.Controllers
             if (!ModelState.IsValid) return BadRequest(ModelState);
 
             var id = model.ItemDisplayId;
-            var exists = await GetRecord<Address>(id);
+            var exists = await service.GetById(new StockItemRequestDto { RefNbr = id });
             if (exists != null) return BadRequest($"Stock item with ID: {id} exists from before");
 
-            var item = Add(new StockItem { Id = Guid.NewGuid().ToString(), Code = id, Description = model.ItemDescription });
+            var item = service.Add(model, UserId);
 
-            await SaveChanges();
-            return Ok(item.Entity.Id);
+            await service.SaveChanges();
+            return Ok(item.ItemDisplayId);
         }
 
         [HttpGet()]
@@ -56,10 +54,10 @@ namespace PlayWebApp.Controllers
         {
             if (string.IsNullOrWhiteSpace(id)) return BadRequest();
 
-            var record = await GetRecord<StockItem>(id);
+            var record = await service.GetById(new StockItemRequestDto { RefNbr = id }); ;
             if (record == null) return NotFound();
 
-            return Ok(new StockItemDto { ItemDisplayId = record.Code, ItemDescription = record.Description });
+            return Ok(record);
         }
 
         [HttpGet()]
@@ -68,11 +66,9 @@ namespace PlayWebApp.Controllers
         {
             // select top 1, order by displayID, where displayID > currentRecord
 
-            var record = await GetNextRecord<StockItem>(currentRecord);
-
+            var record = await service.GetNext(new StockItemRequestDto { RefNbr = currentRecord });
             if (record == null) return NotFound();
-
-            return Ok(new StockItemDto { ItemDisplayId = record.Code, ItemDescription = record.Description });
+            return Ok(record);
 
         }
 
@@ -81,29 +77,28 @@ namespace PlayWebApp.Controllers
         public async Task<IActionResult> GetPreviousRecord(string currentRecord)
         {
             // select top 1, order by displayID descending, where displayID < currentRecord
-
-            var record = await GetPreviousRecord<StockItem>(currentRecord);
+            var record = await service.GetPrevious(new StockItemRequestDto { RefNbr = currentRecord });
             if (record == null) return NotFound();
+            return Ok(record);
 
-            return Ok(new StockItemDto { ItemDisplayId = record.Code, ItemDescription = record.Description });
         }
 
         [HttpGet()]
         [Route("first")]
         public async Task<IActionResult> GetFirst()
         {
-            var record = await GetTopRecord<StockItem>();
+            var record = await service.GetFirst();
             if (record == null) return NotFound();
-            return Ok(new StockItemDto { ItemDisplayId = record.Code, ItemDescription = record.Description });
+            return Ok(record);
         }
 
         [HttpGet()]
         [Route("last")]
         public async Task<IActionResult> GetLast()
         {
-            var record = await GetLastRecord<StockItem>();
+            var record = await service.GetLast();
             if (record == null) return NotFound();
-            return Ok(new StockItemDto { ItemDisplayId = record.Code, ItemDescription = record.Description });
+            return Ok(record);
         }
 
         [HttpDelete]
@@ -112,14 +107,12 @@ namespace PlayWebApp.Controllers
         {
             if (string.IsNullOrWhiteSpace(displayId)) return BadRequest();
 
-            var item = await GetRecord<StockItem>(displayId);
+            var item = await service.GetById(new StockItemRequestDto { RefNbr = displayId });
             if (item == null) return NotFound();
 
-            Delete(item);
-
-            await SaveChanges();
-
-            return Ok(new StockItemDto { ItemDisplayId = item.Code, ItemDescription = item.Description });
+            var del = await service.Delete(new StockItemRequestDto { RefNbr = displayId });
+            await service.SaveChanges();
+            return Ok(del);
         }
 
     }

@@ -4,7 +4,7 @@ using PlayWebApp.Services.JsonConverters;
 #nullable disable
 namespace PlayWebApp.Services.Logistics.ViewModels
 {
-    public class AddressUpdateVm
+    public class AddressUpdateVm : ViewModelBase
     {
 
         [Required]
@@ -40,24 +40,6 @@ namespace PlayWebApp.Services.Logistics.ViewModels
         [Display(Name = "Preferred address")]
         [JsonPropertyName("AddressVm.PreferredAddress")]
         [JsonConverter(typeof(StringToBooleanConverter))]
-        public bool PreferredAddress { get; set; }
-    }
-
-    public class AddressDto
-    {
-
-        public string Key { get; set; }
-
-        public string AddressCode { get; set; }
-
-        public string StreetAddress { get; set; }
-
-        public string City { get; set; }
-
-        public string PostalCode { get; set; }
-
-        public string Country { get; set; }
-
         public bool PreferredAddress { get; set; }
     }
 

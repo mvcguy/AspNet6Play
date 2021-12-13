@@ -2,44 +2,43 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using PlayWebApp.Services.Database;
 using PlayWebApp.Services.Database.Model;
+using PlayWebApp.Services.Logistics.LocationMgt;
 using PlayWebApp.Services.Logistics.ViewModels;
+using PlayWebApp.Services.Logistics.ViewModels.Requests;
 using PlayWebApp.Services.ModelExtentions;
 #nullable disable
 
 namespace PlayWebApp.Controllers
 {
     [Route("api/v1/addresses")]
-    public class AddressController : NavigationBaseController
+    public class AddressController : BaseController
     {
+        private readonly LocationService addressMgtService;
+
+        private string DefaultAddressId = "HOME";
+
         private bool IsDefaultAddress(Address address)
         {
             return address.Id == DefaultAddressId && !string.IsNullOrWhiteSpace(DefaultAddressId);
         }
 
-        public AddressController(ApplicationDbContext dbContext) : base(dbContext) { }
+        public AddressController(LocationService addressMgtService)
+        {
+            this.addressMgtService = addressMgtService;
+        }
 
         [HttpPut]
         public async Task<IActionResult> Put(AddressUpdateVm model)
         {
             if (!ModelState.IsValid) return BadRequest(ModelState);
 
-            var id = model.AddressCode;
+            var existingItem = await addressMgtService.GetById(new AddressRequestDto { RefNbr = model.AddressCode });
+            if (existingItem == null) return BadRequest($"Address with ID: {model.AddressCode} does not exist");
 
-            var existingItem = await GetRecord<Address>(id);
-            if (existingItem == null) return BadRequest($"Address with ID: {id} does not exist");
+            var item = addressMgtService.Update(model, UserId);
 
-            //
-            // update the db model
-            //
-            existingItem.StreetAddress = model.StreetAddress;
-            existingItem.City = model.City;
-            existingItem.PostalCode = model.PostalCode;
-            existingItem.Country = model.Country;
-
-            var item = Update(existingItem);
-
-            await SaveChanges();
-            return Ok(item.Entity.Id);
+            await addressMgtService.SaveChanges();
+            return Ok(item.AddressCode); // user need to verify the address code to diff; b/w OK and Redirects
         }
 
         [HttpPost]
@@ -47,24 +46,14 @@ namespace PlayWebApp.Controllers
         {
             if (!ModelState.IsValid) return BadRequest(ModelState);
             if (string.IsNullOrWhiteSpace(UserId)) return BadRequest("User not found");
-            var id = model.AddressCode;
+            
 
-            var exists = await GetRecord<Address>(id);
-            if (exists != null) return BadRequest($"Address with ID: {id} exists from before");
+            var exists = addressMgtService.GetById(new AddressRequestDto { RefNbr = model.AddressCode });
+            if (exists != null) return BadRequest($"Address with ID: {model.AddressCode} exists from before");
 
-            var item = Add(new Address
-            {
-                Id = Guid.NewGuid().ToString(),
-                Code = id,
-                StreetAddress = model.StreetAddress,
-                City = model.City,
-                PostalCode = model.PostalCode,
-                Country = model.Country,
-                UserId = UserId
-            });
-
-            await SaveChanges();
-            return Ok(item.Entity.Id);
+            var item = addressMgtService.Add(model, UserId);
+            await addressMgtService.SaveChanges();
+            return Ok(item.AddressCode); // TODO: need to return URI to the newly created item
         }
 
         [HttpGet()]
@@ -74,12 +63,10 @@ namespace PlayWebApp.Controllers
             if (string.IsNullOrWhiteSpace(id)) return BadRequest();
             if (string.IsNullOrWhiteSpace(UserId)) return BadRequest("User not found");
 
-            var record = await GetRecord<Address>(id);
-            if (record == null) return NotFound();
+            var item = await addressMgtService.GetById(new AddressRequestDto { RefNbr = id });
+            if (item == null) return NotFound();
 
-            var model = record.ToDto();
-            model.PreferredAddress = IsDefaultAddress(record);
-            return Ok(model);
+            return Ok(item);
         }
 
         [HttpGet()]
@@ -88,13 +75,7 @@ namespace PlayWebApp.Controllers
         {
 
             if (string.IsNullOrWhiteSpace(UserId)) return BadRequest("User not found");
-
-            var record = await GetNextRecord<Address>(currentRecord);
-
-            if (record == null) return NotFound();
-
-            var model = record.ToDto();
-            model.PreferredAddress = IsDefaultAddress(record);
+            var model = await addressMgtService.GetNext(new AddressRequestDto{RefNbr = currentRecord});
             return Ok(model);
 
         }
@@ -104,11 +85,7 @@ namespace PlayWebApp.Controllers
         public async Task<IActionResult> GetPreviousRecord(string currentRecord)
         {
             if (string.IsNullOrWhiteSpace(UserId)) return BadRequest("User not found");
-            var record = await GetPreviousRecord<Address>(currentRecord);
-            if (record == null) return NotFound();
-
-            var model = record.ToDto();
-            model.PreferredAddress = IsDefaultAddress(record);
+            var model = await addressMgtService.GetPrevious(new AddressRequestDto{RefNbr = currentRecord});
             return Ok(model);
         }
 
@@ -117,10 +94,8 @@ namespace PlayWebApp.Controllers
         public async Task<IActionResult> GetFirst()
         {
             if (string.IsNullOrWhiteSpace(UserId)) return BadRequest("User not found");
-            var record = await GetTopRecord<Address>();
-            if (record == null) return NotFound();
-            var model = record.ToDto();
-            model.PreferredAddress = IsDefaultAddress(record);
+            var model = await addressMgtService.GetFirst();
+            if (model == null) return NotFound();            
             return Ok(model);
         }
 
@@ -129,10 +104,8 @@ namespace PlayWebApp.Controllers
         public async Task<IActionResult> GetLast()
         {
             if (string.IsNullOrWhiteSpace(UserId)) return BadRequest("User not found");
-            var record = await GetLastRecord<Address>();
-            if (record == null) return NotFound();
-            var model = record.ToDto();
-            model.PreferredAddress = IsDefaultAddress(record);
+            var model = await addressMgtService.GetLast();
+            if (model == null) return NotFound();            
             return Ok(model);
         }
 
@@ -143,23 +116,19 @@ namespace PlayWebApp.Controllers
             if (string.IsNullOrWhiteSpace(addressCode)) return BadRequest();
             if (string.IsNullOrWhiteSpace(UserId)) return BadRequest("User not found");
 
-            var record = await GetRecord<Address>(addressCode);
+            var record = await addressMgtService.GetById(new AddressRequestDto { RefNbr = addressCode });
             if (record == null) return NotFound();
 
             //
             // default address cannot be deleted
             //    
-            if (IsDefaultAddress(record))
+            if (record.PreferredAddress)
             {
                 return BadRequest("Default address cannot be deleted. Please change the default address from the profile page first!");
             }
 
-            Delete(record);
-
-            await SaveChanges();
-
-            var model = record.ToDto();
-            model.PreferredAddress = IsDefaultAddress(record);
+            var model = await addressMgtService.Delete(new AddressRequestDto { RefNbr = addressCode });
+            await addressMgtService.SaveChanges();
             return Ok(model);
         }
 

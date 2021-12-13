@@ -1,21 +1,20 @@
-using System.Security.Claims;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using PlayWebApp.Services.Database;
-using PlayWebApp.Services.Database.Model;
+using PlayWebApp.Services.Logistics.BookingMgt;
 using PlayWebApp.Services.Logistics.ViewModels;
-using PlayWebApp.Services.ModelExtentions;
+using PlayWebApp.Services.Logistics.ViewModels.Requests;
 #nullable disable
 
 namespace PlayWebApp.Controllers
 {
 
     [Route("api/v1/bookings")]
-    public class BookingController : NavigationBaseController
+    public class BookingController : BaseController
     {
-        public BookingController(ApplicationDbContext dbContext) : base(dbContext)
+        private readonly BookingService bookingService;
+
+        public BookingController(BookingService bookingService)
         {
-            
+            this.bookingService = bookingService;
         }
 
         [HttpPut]
@@ -25,17 +24,13 @@ namespace PlayWebApp.Controllers
             if (string.IsNullOrWhiteSpace(UserId)) return BadRequest("User not found");
 
             var id = model.BookingNumber;
-            var existingItem = await GetRecord<Booking>(id);
+            var existingItem = await bookingService.GetById(new BookingRequestDto { RefNbr = id });
             if (existingItem == null) return BadRequest($"Booking with ID: {id} does not exist");
 
-            //
-            // update the db model
-            //
-            existingItem.Description = model.Description;
-            var item = Update(existingItem);
+            var item = bookingService.Update(model, UserId);
 
-            await SaveChanges();
-            return Ok(item.Entity.Id);
+            await bookingService.SaveChanges();
+            return Ok(item.BookingNumber);
         }
 
         [HttpPost]
@@ -45,22 +40,15 @@ namespace PlayWebApp.Controllers
             if (string.IsNullOrWhiteSpace(UserId)) return BadRequest("User not found");
 
             var id = model.BookingNumber;
-            var exists = await GetRecord<Booking>(id);
+            var exists = await bookingService.GetById(new BookingRequestDto { RefNbr = id });
             if (exists != null) return BadRequest($"Booking with ID: {id} exists from before");
 
-            
-            if (!Guid.TryParse(UserId, out var userGuid)) return BadRequest("User not found");
-            var item = Add(new Booking
-            {
-                Id = Guid.NewGuid().ToString(),
-                Code = id,
-                Description = model.Description,
-                UserId = UserId,
-                ShippingAddressId = DefaultAddressId
-            });
 
-            await SaveChanges();
-            return Ok(item.Entity.Id);
+            if (!Guid.TryParse(UserId, out var userGuid)) return BadRequest("User not found");
+
+            var item = bookingService.Add(model, UserId);
+            await bookingService.SaveChanges();
+            return Ok(item.BookingNumber); // TODO: return full URi
         }
 
         [HttpGet()]
@@ -70,10 +58,10 @@ namespace PlayWebApp.Controllers
             if (string.IsNullOrWhiteSpace(id)) return BadRequest();
             if (string.IsNullOrWhiteSpace(UserId)) return BadRequest("User not found");
 
-            var record = await GetRecord<Booking>(id);
+            var record = await bookingService.GetById(new BookingRequestDto { RefNbr = id });
             if (record == null) return NotFound();
 
-            return Ok(record.ToDto());
+            return Ok(record);
         }
 
         [HttpGet()]
@@ -82,9 +70,9 @@ namespace PlayWebApp.Controllers
         {
 
             if (string.IsNullOrWhiteSpace(UserId)) return BadRequest("User not found");
-            var record = await GetNextRecord<Booking>(currentRecord);
+            var record = await bookingService.GetNext(new BookingRequestDto { RefNbr = currentRecord });
             if (record == null) return NotFound();
-            return Ok(record.ToDto());
+            return Ok(record);
 
         }
 
@@ -93,11 +81,9 @@ namespace PlayWebApp.Controllers
         public async Task<IActionResult> GetPreviousRecord(string currentRecord)
         {
             if (string.IsNullOrWhiteSpace(UserId)) return BadRequest("User not found");
-            
-            var record = await GetPreviousRecord<Booking>(currentRecord);
+            var record = await bookingService.GetPrevious(new BookingRequestDto { RefNbr = currentRecord });
             if (record == null) return NotFound();
-
-            return Ok(record.ToDto());
+            return Ok(record);
         }
 
         [HttpGet()]
@@ -105,9 +91,9 @@ namespace PlayWebApp.Controllers
         public async Task<IActionResult> GetFirst()
         {
             if (string.IsNullOrWhiteSpace(UserId)) return BadRequest("User not found");
-            var record = await GetTopRecord<Booking>();
+            var record = await bookingService.GetFirst();
             if (record == null) return NotFound();
-            return Ok(record.ToDto());
+            return Ok(record);
         }
 
         [HttpGet()]
@@ -115,9 +101,9 @@ namespace PlayWebApp.Controllers
         public async Task<IActionResult> GetLast()
         {
             if (string.IsNullOrWhiteSpace(UserId)) return BadRequest("User not found");
-            var record = await GetLastRecord<Booking>();
+            var record = await bookingService.GetLast();
             if (record == null) return NotFound();
-            return Ok(record.ToDto());
+            return Ok(record);
         }
 
         [HttpDelete]
@@ -127,13 +113,13 @@ namespace PlayWebApp.Controllers
             if (string.IsNullOrWhiteSpace(UserId)) return BadRequest("User not found");
             if (string.IsNullOrWhiteSpace(bookingNumber)) return BadRequest();
 
-            var record = await GetRecord<Booking>(bookingNumber);
+            var record = await bookingService.GetById(new BookingRequestDto { RefNbr = bookingNumber });
             if (record == null) return NotFound();
 
-            Delete(record);
-            await SaveChanges();
+            var model = await bookingService.Delete(new BookingRequestDto { RefNbr = bookingNumber });
+            await bookingService.SaveChanges();
 
-            return Ok(record.ToDto());
+            return Ok(model);
         }
 
 

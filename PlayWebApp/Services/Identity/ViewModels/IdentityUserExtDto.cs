@@ -2,6 +2,7 @@
 
 using System.ComponentModel.DataAnnotations;
 using PlayWebApp.Services.Logistics.ViewModels;
+using PlayWebApp.Services.Logistics.ViewModels.Dtos;
 
 namespace PlayWebApp.Services.Identity.ViewModels
 {
