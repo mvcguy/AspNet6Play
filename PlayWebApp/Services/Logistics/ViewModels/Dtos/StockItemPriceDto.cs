@@ -6,6 +6,10 @@ namespace PlayWebApp.Services.Logistics.ViewModels.Dtos
 {
     public class StockItemPriceDto : BaseDto
     {
+
+
+        public virtual string Code { get; set; }
+
         public virtual string StockItemId { get; set; }
 
         public virtual decimal BreakQty { get; set; }

@@ -9,10 +9,6 @@ namespace PlayWebApp.Services.Logistics.ViewModels.Requests
 
         public string RefNbr { get; set; }
 
-        public string TenantId { get; set; }
-
-        public string UserId { get; set; }
-
         public bool ExpandLines { get; set; }
 
         public int PageNumber { get; set; }

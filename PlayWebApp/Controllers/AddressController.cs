@@ -13,18 +13,10 @@ namespace PlayWebApp.Controllers
     [Route("api/v1/addresses")]
     public class AddressController : BaseController
     {
-        private readonly LocationService addressMgtService;
-
-        private string DefaultAddressId = "HOME";
-
-        private bool IsDefaultAddress(Address address)
-        {
-            return address.Id == DefaultAddressId && !string.IsNullOrWhiteSpace(DefaultAddressId);
-        }
-
+        private readonly LocationService service;
         public AddressController(LocationService addressMgtService)
         {
-            this.addressMgtService = addressMgtService;
+            this.service = addressMgtService;
         }
 
         [HttpPut]
@@ -32,12 +24,12 @@ namespace PlayWebApp.Controllers
         {
             if (!ModelState.IsValid) return BadRequest(ModelState);
 
-            var existingItem = await addressMgtService.GetById(new AddressRequestDto { RefNbr = model.AddressCode });
+            var existingItem = await service.GetById(CreateRequest(model.AddressCode));
             if (existingItem == null) return BadRequest($"Address with ID: {model.AddressCode} does not exist");
 
-            var item = addressMgtService.Update(model, UserId);
+            var item = await service.Update(model);
 
-            await addressMgtService.SaveChanges();
+            await service.SaveChanges();
             return Ok(item.AddressCode); // user need to verify the address code to diff; b/w OK and Redirects
         }
 
@@ -45,14 +37,13 @@ namespace PlayWebApp.Controllers
         public async Task<IActionResult> Post(AddressUpdateVm model)
         {
             if (!ModelState.IsValid) return BadRequest(ModelState);
-            if (string.IsNullOrWhiteSpace(UserId)) return BadRequest("User not found");
-            
 
-            var exists = addressMgtService.GetById(new AddressRequestDto { RefNbr = model.AddressCode });
+
+            var exists = await service.GetById(CreateRequest(model.AddressCode));
             if (exists != null) return BadRequest($"Address with ID: {model.AddressCode} exists from before");
 
-            var item = addressMgtService.Add(model, UserId);
-            await addressMgtService.SaveChanges();
+            var item = await service.Add(model);
+            await service.SaveChanges();
             return Ok(item.AddressCode); // TODO: need to return URI to the newly created item
         }
 
@@ -61,9 +52,8 @@ namespace PlayWebApp.Controllers
         public async Task<IActionResult> GetById(string id)
         {
             if (string.IsNullOrWhiteSpace(id)) return BadRequest();
-            if (string.IsNullOrWhiteSpace(UserId)) return BadRequest("User not found");
 
-            var item = await addressMgtService.GetById(new AddressRequestDto { RefNbr = id });
+            var item = await service.GetById(CreateRequest(id));
             if (item == null) return NotFound();
 
             return Ok(item);
@@ -74,8 +64,7 @@ namespace PlayWebApp.Controllers
         public async Task<IActionResult> GetNextRecord(string currentRecord)
         {
 
-            if (string.IsNullOrWhiteSpace(UserId)) return BadRequest("User not found");
-            var model = await addressMgtService.GetNext(new AddressRequestDto{RefNbr = currentRecord});
+            var model = await service.GetNext(CreateRequest(currentRecord));
             return Ok(model);
 
         }
@@ -84,8 +73,7 @@ namespace PlayWebApp.Controllers
         [Route("{currentRecord}/previous")]
         public async Task<IActionResult> GetPreviousRecord(string currentRecord)
         {
-            if (string.IsNullOrWhiteSpace(UserId)) return BadRequest("User not found");
-            var model = await addressMgtService.GetPrevious(new AddressRequestDto{RefNbr = currentRecord});
+            var model = await service.GetPrevious(CreateRequest(currentRecord));
             return Ok(model);
         }
 
@@ -93,9 +81,8 @@ namespace PlayWebApp.Controllers
         [Route("first")]
         public async Task<IActionResult> GetFirst()
         {
-            if (string.IsNullOrWhiteSpace(UserId)) return BadRequest("User not found");
-            var model = await addressMgtService.GetFirst();
-            if (model == null) return NotFound();            
+            var model = await service.GetFirst(CreateRequest());
+            if (model == null) return NotFound();
             return Ok(model);
         }
 
@@ -103,9 +90,8 @@ namespace PlayWebApp.Controllers
         [Route("last")]
         public async Task<IActionResult> GetLast()
         {
-            if (string.IsNullOrWhiteSpace(UserId)) return BadRequest("User not found");
-            var model = await addressMgtService.GetLast();
-            if (model == null) return NotFound();            
+            var model = await service.GetLast(CreateRequest());
+            if (model == null) return NotFound();
             return Ok(model);
         }
 
@@ -114,9 +100,9 @@ namespace PlayWebApp.Controllers
         public async Task<IActionResult> Delete(string addressCode)
         {
             if (string.IsNullOrWhiteSpace(addressCode)) return BadRequest();
-            if (string.IsNullOrWhiteSpace(UserId)) return BadRequest("User not found");
 
-            var record = await addressMgtService.GetById(new AddressRequestDto { RefNbr = addressCode });
+            var req = CreateRequest(addressCode);
+            var record = await service.GetById(req);
             if (record == null) return NotFound();
 
             //
@@ -127,9 +113,14 @@ namespace PlayWebApp.Controllers
                 return BadRequest("Default address cannot be deleted. Please change the default address from the profile page first!");
             }
 
-            var model = await addressMgtService.Delete(new AddressRequestDto { RefNbr = addressCode });
-            await addressMgtService.SaveChanges();
+            var model = await service.Delete(req);
+            await service.SaveChanges();
             return Ok(model);
+        }
+
+        private AddressRequestDto CreateRequest(string refNbr = null)
+        {
+            return new AddressRequestDto { RefNbr = refNbr };
         }
 
     }

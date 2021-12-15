@@ -22,55 +22,45 @@ namespace PlayWebApp.Services.DataNavigation
 
         public abstract TDto ToDto(TDbModel model);
 
-        public abstract TDbModel ToDbModel(TViewModel vm);
-
         public virtual async Task<TDto> GetFirst(TRequest request = null)
         {
-            var record = await repository.GetFirst(request.TenantId);
+            var record = await repository.GetFirst();
             return ToDto(record);
         }
 
         public virtual async Task<TDto> GetLast(TRequest request = null)
         {
-            var record = await repository.GetLast(request.TenantId);
+            var record = await repository.GetLast();
             return ToDto(record);
         }
 
         public virtual async Task<TDto> GetNext(TRequest request = null)
         {
-            var record = await repository.GetNext(request.TenantId, request.RefNbr);
+            var record = await repository.GetNext(request.RefNbr);
             return ToDto(record);
         }
 
         public virtual async Task<TDto> GetPrevious(TRequest request = null)
         {
-            var record = await repository.GetPrevious(request.TenantId, request.RefNbr);
+            var record = await repository.GetPrevious(request.RefNbr);
             return ToDto(record);
         }
 
         public virtual async Task<TDto> GetById(TRequest request)
         {
-            var record = await repository.GetById(request.TenantId, request.RefNbr);
+            var record = await repository.GetById(request.RefNbr);
             return ToDto(record);
         }
 
-        public virtual TDto Add(TViewModel model, string userId)
-        {
-            var entity = repository.Add(ToDbModel(model), userId).Entity;
-            return ToDto(entity);
-        }
+        public abstract Task<TDto> Add(TViewModel model);
 
         public virtual async Task<TDto> Delete(TRequest model)
         {
-            var item = await repository.GetById(model.TenantId, model.RefNbr);
+            var item = await repository.GetById(model.RefNbr);
             return ToDto(repository.Delete(item).Entity);
         }
 
-        public virtual TDto Update(TViewModel model, string userId)
-        {
-            var entity = repository.Update(ToDbModel(model), userId).Entity;
-            return ToDto(entity);
-        }
+        public abstract Task<TDto> Update(TViewModel model);
 
         public virtual async Task<int> SaveChanges()
         {

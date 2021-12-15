@@ -13,53 +13,5 @@ namespace PlayWebApp.Controllers
     [ApiController]
     public class BaseController : Controller
     {
-        protected virtual string UserId
-        {
-            get
-            {
-                try
-                {
-                    return User.FindFirstValue(ClaimTypes.NameIdentifier);
-                }
-                catch
-                {
-                    return null;
-                }
-
-            }
-        }
-
-        protected virtual string TenantId
-        {
-            get
-            {
-                try
-                {
-                    return User.FindFirstValue(CustomClaimTypes.TenantId);
-                }
-                catch
-                {
-                    return null;
-                }
-            }
-        }
-
-
-        // protected virtual string DefaultAddressId
-        // {
-        //     get
-        //     {
-        //         try
-        //         {
-        //             var userExt = dbContext.Set<IdentityUserExt>().FirstOrDefault(x => x.UserId == UserId);
-        //             return userExt?.DefaultAddressId;
-        //         }
-        //         catch
-        //         {
-        //             return null;
-        //         }
-        //     }
-        // }
-
     }
 }

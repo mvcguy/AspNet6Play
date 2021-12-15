@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.ChangeTracking;
+using PlayWebApp.Services.AppManagement;
 using PlayWebApp.Services.Database;
 using PlayWebApp.Services.Database.Model;
 using PlayWebApp.Services.DataNavigation;
@@ -9,11 +10,11 @@ using PlayWebApp.Services.DataNavigation;
 namespace PlayWebApp.Services.Logistics.InventoryMgt.Repository
 {
     public class InventoryRepository : NavigationRepository<StockItem>
-    {        public InventoryRepository(ApplicationDbContext dbContext): base(dbContext){}
+    {        public InventoryRepository(ApplicationDbContext dbContext, IPlayAppContext context): base(dbContext, context){}
 
-        public override IQueryable<StockItem> GetTenantBasedQuery(string tenantId, bool includePrices = true)
+        public override IQueryable<StockItem> GetTenantBasedQuery(bool includePrices = true)
         {
-            var query = dbContext.Set<StockItem>().Where(x => x.TenantId == tenantId);
+            var query = dbContext.Set<StockItem>().Where(x => x.TenantId == context.TenantId);
             if (includePrices)
             {
                 return query.Include(x => x.StockItemPrices);

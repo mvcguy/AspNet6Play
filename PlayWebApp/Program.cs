@@ -66,6 +66,7 @@ builder.Services.AddScoped<InventoryService>();
 
 builder.Services.AddScoped<INavigationRepository<Booking>, BookingRepository>();
 builder.Services.AddScoped<BookingService>();
+builder.Services.AddScoped<IPlayAppContext, PlayAppContext>();
 
 
 var app = builder.Build();

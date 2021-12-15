@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.ChangeTracking;
+using PlayWebApp.Services.AppManagement;
 using PlayWebApp.Services.Database;
 using PlayWebApp.Services.Database.Model;
 #nullable disable
@@ -8,36 +9,41 @@ namespace PlayWebApp.Services.DataNavigation
 {
     public abstract class NavigationRepository<TModel> : INavigationRepository<TModel> where TModel : EntityBase
     {
-         protected readonly ApplicationDbContext dbContext;
+        protected readonly ApplicationDbContext dbContext;
+        protected readonly IPlayAppContext context;
 
-        public NavigationRepository(ApplicationDbContext dbContext)
+        public NavigationRepository(ApplicationDbContext dbContext, IPlayAppContext context)
         {
             this.dbContext = dbContext;
+            this.context = context;
+
+            if (string.IsNullOrWhiteSpace(context.TenantId) || string.IsNullOrWhiteSpace(context.UserId))
+                throw new Exception("Failed to access tenant or user info");
         }
 
-        public abstract IQueryable<TModel> GetTenantBasedQuery(string tenantId, bool includeSubItems = true);
+        public abstract IQueryable<TModel> GetTenantBasedQuery(bool includeSubItems = true);
 
-        public virtual async Task<TModel> GetFirst(string tenantId)
+        public virtual async Task<TModel> GetFirst()
         {
-            return await GetTenantBasedQuery(tenantId).OrderBy(x => x.Code).FirstOrDefaultAsync(x => x.TenantId == tenantId);
+            return await GetTenantBasedQuery().OrderBy(x => x.Code).FirstOrDefaultAsync();
         }
 
-        public virtual async Task<TModel> GetLast(string tenantId)
+        public virtual async Task<TModel> GetLast()
         {
-            return await GetTenantBasedQuery(tenantId).OrderByDescending(x => x.Code).FirstOrDefaultAsync(x => x.TenantId == tenantId);
+            return await GetTenantBasedQuery().OrderByDescending(x => x.Code).FirstOrDefaultAsync();
         }
 
-        public virtual async Task<TModel> GetNext(string tenantId, string refNbr)
+        public virtual async Task<TModel> GetNext(string refNbr)
         {
             TModel record;
 
             if (string.IsNullOrWhiteSpace(refNbr))
             {
-                record = await GetTenantBasedQuery(tenantId).OrderBy(x => x.Code).Take(1).FirstOrDefaultAsync();
+                record = await GetTenantBasedQuery().OrderBy(x => x.Code).Take(1).FirstOrDefaultAsync();
             }
             else
             {
-                record = await GetTenantBasedQuery(tenantId).OrderBy(x => x.Code)
+                record = await GetTenantBasedQuery().OrderBy(x => x.Code)
                             .Where(x => x.Code.CompareTo(refNbr) > 0).
                             Take(1).FirstOrDefaultAsync();
             }
@@ -45,17 +51,17 @@ namespace PlayWebApp.Services.DataNavigation
             return record;
         }
 
-        public virtual async Task<TModel> GetPrevious(string tenantId, string refNbr)
+        public virtual async Task<TModel> GetPrevious(string refNbr)
         {
             TModel record;
 
             if (string.IsNullOrWhiteSpace(refNbr))
             {
-                record = await GetTenantBasedQuery(tenantId).OrderByDescending(x => x.Code).Take(1).FirstOrDefaultAsync();
+                record = await GetTenantBasedQuery().OrderByDescending(x => x.Code).Take(1).FirstOrDefaultAsync();
             }
             else
             {
-                record = await GetTenantBasedQuery(tenantId).OrderByDescending(x => x.Code)
+                record = await GetTenantBasedQuery().OrderByDescending(x => x.Code)
                             .Where(x => x.Code.CompareTo(refNbr) < 0).
                             Take(1).FirstOrDefaultAsync();
             }
@@ -63,20 +69,21 @@ namespace PlayWebApp.Services.DataNavigation
             return record;
         }
 
-        public virtual async Task<TModel> GetById(string tenantId, string refNbr)
+        public virtual async Task<TModel> GetById(string refNbr)
         {
-            return await GetTenantBasedQuery(tenantId).FirstOrDefaultAsync(x => x.Code == refNbr);
+            return await GetTenantBasedQuery().FirstOrDefaultAsync(x => x.Code == refNbr);
         }
 
-        public virtual EntityEntry<TModel> Update(TModel model, string userId)
+        public virtual EntityEntry<TModel> Update(TModel model)
         {
-            UpdateAuditData(model, userId);
+            UpdateAuditData(model);
             return dbContext.Set<TModel>().Update(model);
         }
 
-        public virtual EntityEntry<TModel> Add(TModel model, string userId)
+        public virtual EntityEntry<TModel> Add(TModel model)
         {
-            AddAuditData(model, userId);
+            AddAuditData(model);
+            model.Id = Guid.NewGuid().ToString();
             return dbContext.Set<TModel>().Add(model);
         }
 
@@ -90,19 +97,19 @@ namespace PlayWebApp.Services.DataNavigation
             return await dbContext.SaveChangesAsync();
         }
 
-        protected virtual void AddAuditData(TModel model, string userId)
+        protected virtual void AddAuditData(TModel model)
         {
             model.ModifiedOn = DateTime.UtcNow;
-            model.UserId = userId;
-            model.ModifiedBy = userId;
+            model.ModifiedBy = context.UserId;
             model.CreatedOn = DateTime.UtcNow;
+            model.UserId = context.UserId;
+            model.TenantId = context.TenantId;
         }
 
-        protected virtual void UpdateAuditData(TModel model, string userId)
+        protected virtual void UpdateAuditData(TModel model)
         {
-
             model.ModifiedOn = DateTime.UtcNow;
-            model.ModifiedBy = userId;
+            model.ModifiedBy = context.UserId;
         }
 
 

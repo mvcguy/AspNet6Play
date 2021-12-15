@@ -27,7 +27,8 @@ namespace PlayWebApp.Controllers
             var id = model.ItemDisplayId;
             var existingItem = await service.GetById(new StockItemRequestDto { RefNbr = id });
             if (existingItem == null) return BadRequest($"Stock item with ID: {id} does not exist");
-            var item = service.Update(model, UserId);
+
+            var item = await service.Update(model);
 
             await service.SaveChanges();
             return Ok(item.ItemDisplayId);
@@ -42,7 +43,7 @@ namespace PlayWebApp.Controllers
             var exists = await service.GetById(new StockItemRequestDto { RefNbr = id });
             if (exists != null) return BadRequest($"Stock item with ID: {id} exists from before");
 
-            var item = service.Add(model, UserId);
+            var item = await service.Add(model);
 
             await service.SaveChanges();
             return Ok(item.ItemDisplayId);

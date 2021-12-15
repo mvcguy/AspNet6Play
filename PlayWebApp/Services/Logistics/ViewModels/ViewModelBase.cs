@@ -4,7 +4,6 @@ namespace PlayWebApp.Services.Logistics.ViewModels
 {
     public class ViewModelBase
     {
-
     }
 
 

@@ -28,7 +28,13 @@ namespace PlayWebApp.Services.ModelExtentions
 
             return new StockItemPriceDto
             {   
-
+                BreakQty = model.BreakQty,
+                EffectiveFrom = model.EffectiveFrom,
+                ExpiresAt = model.ExpiresAt,
+                UnitCost = model.UnitCost,
+                UnitOfMeasure = model.UnitOfMeasure,
+                StockItemId = model.StockItemId,
+                Code = model.Code
             };
         }
 
@@ -39,7 +45,7 @@ namespace PlayWebApp.Services.ModelExtentions
             {
                 Code = model.ItemDisplayId,
                 Description = model.ItemDescription,
-                StockItemPrices = model.ItemPrices?.Select(x=>x.ToModel()).ToList()
+                StockItemPrices = model.ItemPrices?.Select(x=>x.ToModel()).ToList(),                
             };
         }
 
@@ -53,7 +59,8 @@ namespace PlayWebApp.Services.ModelExtentions
                 EffectiveFrom = model.EffectiveFrom,
                 ExpiresAt = model.ExpiresAt,
                 UnitCost = model.UnitCost,
-                UnitOfMeasure = model.UnitOfMeasure 
+                UnitOfMeasure = model.UnitOfMeasure,
+                
             };
         }
 
@@ -80,7 +87,8 @@ namespace PlayWebApp.Services.ModelExtentions
                 Code = model.AddressCode,
                 Country = model.Country,
                 PostalCode = model.PostalCode,
-                StreetAddress = model.StreetAddress
+                StreetAddress = model.StreetAddress,
+                
             };
         }
 
@@ -102,7 +110,8 @@ namespace PlayWebApp.Services.ModelExtentions
             {
                 Code = model.BookingNumber,
                 Description = model.Description,
-                BookingItems = model.Lines?.Select(x => x.ToModel()).ToList()
+                BookingItems = model.Lines?.Select(x => x.ToModel()).ToList(),
+                
             };
         }
 
@@ -134,7 +143,7 @@ namespace PlayWebApp.Services.ModelExtentions
                 ExtCost = model.ExtCost,
                 Quantity = model.Quantity,
                 StockItemId = model.StockItemId,
-                TenantId = model.TenantId,
+                
                 UnitCost = model.UnitCost,
                 UserId = model.UserId,
 
