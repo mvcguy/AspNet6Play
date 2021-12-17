@@ -62,11 +62,9 @@ namespace PlayWebApp.Controllers
         [Route("{currentRecord}/next")]
         public async Task<IActionResult> GetNextRecord(string currentRecord)
         {
-
             var record = await bookingService.GetNext(new BookingRequestDto { RefNbr = currentRecord });
             if (record == null) return NotFound();
             return Ok(record);
-
         }
 
         [HttpGet()]

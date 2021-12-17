@@ -1,6 +1,9 @@
 using System.Text.Json.Serialization;
+using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
 using PlayWebApp.Services.AppManagement;
 using PlayWebApp.Services.AppManagement.Repository;
 using PlayWebApp.Services.Database;
@@ -28,6 +31,36 @@ builder.Services.AddDatabaseDeveloperPageExceptionFilter();
 
 builder.Services.AddDefaultIdentity<IdentityUser>(options => options.SignIn.RequireConfirmedAccount = true)
     .AddEntityFrameworkStores<ApplicationDbContext>().AddDefaultTokenProviders();
+
+// tag start
+// builder.Services.AddAuthentication(o =>
+// {
+//     o.DefaultScheme = IdentityConstants.ApplicationScheme;
+//     o.DefaultSignInScheme = IdentityConstants.ExternalScheme;    
+// })
+// .AddIdentityCookies(o => { });
+
+// var identityService = builder.Services.AddIdentityCore<IdentityUser>(o =>
+// {
+//     o.Stores.MaxLengthForKeys = 128;
+//     o.SignIn.RequireConfirmedAccount = true;
+
+// })
+//     .AddDefaultTokenProviders()
+//     .AddEntityFrameworkStores<ApplicationDbContext>();
+
+// identityService.AddSignInManager();
+// tag ends
+
+builder.Services.AddAuthentication().AddJwtBearer(options =>
+{
+    options.Authority = "https://localhost:5001";
+    options.TokenValidationParameters = new TokenValidationParameters
+    {
+        ValidateIssuer = false,
+        ValidateAudience= false,
+    };
+});
 
 builder.Services.AddScoped<IUserClaimsPrincipalFactory<IdentityUser>, AdditionalUserClaimsPrincipalFactory>();
 
@@ -68,7 +101,6 @@ builder.Services.AddScoped<INavigationRepository<Booking>, BookingRepository>();
 builder.Services.AddScoped<BookingService>();
 builder.Services.AddScoped<IPlayAppContext, PlayAppContext>();
 
-
 var app = builder.Build();
 
 using (var scope = app.Services.CreateScope())
@@ -102,7 +134,6 @@ app.UseAuthentication();
 app.UseAuthorization();
 app.UseEndpoints(options =>
 {
-
     options.MapControllers();
     options.MapRazorPages();
 });

@@ -2,10 +2,33 @@
     "version": "0.2.0",
     "configurations": [
         {
+            "name": "PlayConnectServer",
+            "type": "coreclr",
+            "request": "launch",
+            "preLaunchTask": "build-idserver",
+            "launchBrowser": {
+                "enabled": false
+            },
+            "program": "${workspaceFolder}/PlayConnectServer/bin/Debug/net6.0/PlayConnectServer.dll",
+            "args": [],
+            "cwd": "${workspaceFolder}/PlayConnectServer",
+            "stopAtEntry": false,
+            "serverReadyAction": {
+                "action": "openExternally",
+                "pattern": "\\bNow listening on:\\s+(https?://\\S+)"
+            },
+            "env": {
+                "ASPNETCORE_ENVIRONMENT": "Development"
+            },
+            "sourceFileMap": {
+                "/Views": "${workspaceFolder}/Views"
+            }
+        },
+        {
             // Use IntelliSense to find out which attributes exist for C# debugging
             // Use hover for the description of the existing attributes
             // For further information visit https://github.com/OmniSharp/omnisharp-vscode/blob/master/debugger-launchjson.md
-            "name": ".NET Core Launch (web)",
+            "name": "PlayWebApp",
             "type": "coreclr",
             "request": "launch",
             "preLaunchTask": "build",
@@ -27,12 +50,22 @@
             },
             "sourceFileMap": {
                 "/Views": "${workspaceFolder}/Views"
-            }
+            },
         },
         {
             "name": ".NET Core Attach",
             "type": "coreclr",
-            "request": "attach"
+            "request": "attach",
+            "processId": "${command:pickProcess}"
+        }
+    ],
+    "compounds": [
+        {
+            "name": "Compound",
+            "configurations": [
+                "PlayConnectServer",
+                "PlayWebApp"
+            ],
         }
     ]
 }

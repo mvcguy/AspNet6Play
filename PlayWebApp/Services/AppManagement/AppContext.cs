@@ -6,8 +6,7 @@ namespace PlayWebApp.Services.AppManagement
 {
     public class PlayAppContext : IPlayAppContext
     {
-        private readonly IHttpContextAccessor contextAccessor;
-
+        
         public string UserId { get; private set; }
         public string TenantId { get; private set; }
 

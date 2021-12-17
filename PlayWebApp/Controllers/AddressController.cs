@@ -63,8 +63,8 @@ namespace PlayWebApp.Controllers
         [Route("{currentRecord}/next")]
         public async Task<IActionResult> GetNextRecord(string currentRecord)
         {
-
             var model = await service.GetNext(CreateRequest(currentRecord));
+            if(model == null) return NotFound();
             return Ok(model);
 
         }
@@ -74,6 +74,7 @@ namespace PlayWebApp.Controllers
         public async Task<IActionResult> GetPreviousRecord(string currentRecord)
         {
             var model = await service.GetPrevious(CreateRequest(currentRecord));
+            if(model == null) return NotFound();
             return Ok(model);
         }
 
