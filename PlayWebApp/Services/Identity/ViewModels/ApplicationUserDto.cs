@@ -6,7 +6,7 @@ using PlayWebApp.Services.Logistics.ViewModels.Dtos;
 
 namespace PlayWebApp.Services.Identity.ViewModels
 {
-    public class IdentityUserExtDto
+    public class ApplicationUserDto
     {
 
         public virtual string Key { get; set; }
@@ -22,10 +22,14 @@ namespace PlayWebApp.Services.Identity.ViewModels
         public virtual AddressDto DefaultAddress { get; set; }
     }
 
-    public class IdentityUserUpdateVm
+    public class ApplicationUserUpdateVm
     {
 
         public virtual string UserId { get; set; }
+
+        public virtual string UserName { get; set; }
+
+        public virtual string Email{ get; set; }
 
         [Required]
         public virtual string TenantCode { get; set; }

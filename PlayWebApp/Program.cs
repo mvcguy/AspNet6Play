@@ -1,7 +1,5 @@
 using System.Text.Json.Serialization;
-using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Identity;
-using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using PlayWebApp.Services.AppManagement;
@@ -20,27 +18,50 @@ using PlayWebApp.Services.Logistics.LocationMgt;
 using PlayWebApp.Services.Logistics.LocationMgt.Repository;
 
 var builder = WebApplication.CreateBuilder(args);
+var services = builder.Services;
 
 // Add services to the container.
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
-// builder.Services.AddDbContext<ApplicationDbContext>(options =>
+// services.AddDbContext<ApplicationDbContext>(options =>
 //     options.UseSqlServer(connectionString));
-builder.Services.AddDbContext<ApplicationDbContext>(options =>
+services.AddDbContext<ApplicationDbContext>(options =>
 options.UseSqlite(connectionString));
-builder.Services.AddDatabaseDeveloperPageExceptionFilter();
+services.AddDatabaseDeveloperPageExceptionFilter();
+services.AddHttpContextAccessor();
 
-builder.Services.AddDefaultIdentity<IdentityUser>(options => options.SignIn.RequireConfirmedAccount = true)
-    .AddEntityFrameworkStores<ApplicationDbContext>().AddDefaultTokenProviders();
+services.AddAuthentication(options =>
+{
+    options.DefaultScheme = "Cookies";
+    options.DefaultChallengeScheme = "oidc";
+}).AddCookie("Cookies")
+.AddOpenIdConnect("oidc", options =>
+{
+    options.Authority = "https://localhost:5001";
+    options.ClientId = "mvc";
+    options.ClientSecret = "secret";
+    options.ResponseType = "code";
+    options.SaveTokens = true;
+    options.Scope.Add("profile");
+    options.GetClaimsFromUserInfoEndpoint = true;
+}).AddJwtBearer(options =>
+{
+    options.Authority = "https://localhost:5001";
+    options.TokenValidationParameters = new TokenValidationParameters
+    {
+        ValidateIssuer = false,
+        ValidateAudience = false,
+    };
+});
 
 // tag start
-// builder.Services.AddAuthentication(o =>
+// services.AddAuthentication(o =>
 // {
 //     o.DefaultScheme = IdentityConstants.ApplicationScheme;
 //     o.DefaultSignInScheme = IdentityConstants.ExternalScheme;    
 // })
 // .AddIdentityCookies(o => { });
 
-// var identityService = builder.Services.AddIdentityCore<IdentityUser>(o =>
+// var identityService = services.AddIdentityCore<ApplicationUser>(o =>
 // {
 //     o.Stores.MaxLengthForKeys = 128;
 //     o.SignIn.RequireConfirmedAccount = true;
@@ -52,64 +73,54 @@ builder.Services.AddDefaultIdentity<IdentityUser>(options => options.SignIn.Requ
 // identityService.AddSignInManager();
 // tag ends
 
-builder.Services.AddAuthentication().AddJwtBearer(options =>
-{
-    options.Authority = "https://localhost:5001";
-    options.TokenValidationParameters = new TokenValidationParameters
-    {
-        ValidateIssuer = false,
-        ValidateAudience= false,
-    };
-});
-
-builder.Services.AddScoped<IUserClaimsPrincipalFactory<IdentityUser>, AdditionalUserClaimsPrincipalFactory>();
+// services.AddScoped<IUserClaimsPrincipalFactory<ApplicationUser>, AdditionalUserClaimsPrincipalFactory>();
 
 
-builder.Services.AddRazorPages(options =>
+services.AddRazorPages(options =>
 {
     options.Conventions.AuthorizeAreaFolder("Logistics", "/");
 });
 
-builder.Services.AddLogging((options) =>
+services.AddLogging((options) =>
 {
     options.AddConsole();
     options.AddDebug();
 });
 
-builder.Services.AddMvcCore(options =>
+services.AddMvcCore(options =>
 {
     options.Filters.Add<CustomExceptionFilter>();
 });
 
-builder.Services.AddControllers().AddJsonOptions(options =>
+services.AddControllers().AddJsonOptions(options =>
 {
     options.JsonSerializerOptions.NumberHandling = JsonNumberHandling.AllowReadingFromString | JsonNumberHandling.WriteAsString;
 });
 
-builder.Services.AddScoped<UserManagementRepository>();
-builder.Services.AddScoped<UserManagementService>();
-builder.Services.AddScoped<AppMgtRepository>();
-builder.Services.AddScoped<AppMgtService>();
+services.AddScoped<UserManagementRepository>();
+services.AddScoped<UserManagementService>();
+services.AddScoped<AppMgtRepository>();
+services.AddScoped<AppMgtService>();
 
-builder.Services.AddScoped<INavigationRepository<Address>, LocationRepository>();
-builder.Services.AddScoped<LocationService>();
+services.AddScoped<INavigationRepository<Address>, LocationRepository>();
+services.AddScoped<LocationService>();
 
-builder.Services.AddScoped<INavigationRepository<StockItem>, InventoryRepository>();
-builder.Services.AddScoped<InventoryService>();
+services.AddScoped<INavigationRepository<StockItem>, InventoryRepository>();
+services.AddScoped<InventoryService>();
 
-builder.Services.AddScoped<INavigationRepository<Booking>, BookingRepository>();
-builder.Services.AddScoped<BookingService>();
-builder.Services.AddScoped<IPlayAppContext, PlayAppContext>();
+services.AddScoped<INavigationRepository<Booking>, BookingRepository>();
+services.AddScoped<BookingService>();
+services.AddScoped<IPlayAppContext, PlayAppContext>();
 
 var app = builder.Build();
 
 using (var scope = app.Services.CreateScope())
 {
     var ctx = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-    var usrMgr = scope.ServiceProvider.GetRequiredService<UserManager<IdentityUser>>();
+    
     var usrMgtSrv = scope.ServiceProvider.GetRequiredService<UserManagementService>();
 
-    SeedDatabase.Seed(ctx, usrMgr, usrMgtSrv);
+    SeedDatabase.Seed(ctx, usrMgtSrv);
 
 }
 

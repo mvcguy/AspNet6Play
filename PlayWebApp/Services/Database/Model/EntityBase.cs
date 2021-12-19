@@ -12,7 +12,7 @@ public interface IAuditInfo
 
     public DateTime? ModifiedOn { get; set; }
 
-    public string UserId { get; set; }
+    public string CreatedBy { get; set; }
 
     public string ModifiedBy { get; set; }
 
@@ -27,7 +27,7 @@ public class AuditInfo : IAuditInfo
     [DatabaseGenerated(DatabaseGeneratedOption.Computed)]
     public DateTime? ModifiedOn { get; set; }
 
-    [ForeignKey("IdentityUser")]
+    [ForeignKey("ApplicationUser")]
     public string ModifiedBy { get; set; }
 
     [Timestamp]
@@ -36,9 +36,7 @@ public class AuditInfo : IAuditInfo
     [Required]
     [Column(TypeName = "nvarchar")]
     [MaxLength(128)]
-    public virtual string UserId { get; set; }
-
-    public virtual IdentityUser User { get; set; } = null!;
+    public virtual string CreatedBy { get; set; }
 }
 
 public class EntityBase : AuditInfo

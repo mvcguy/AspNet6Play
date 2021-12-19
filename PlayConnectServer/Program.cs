@@ -47,6 +47,14 @@ services.AddAuthentication()
 var app = builder.Build();
 
 app.UseDeveloperExceptionPage();
+
+app.UseStaticFiles();
+
+app.UseRouting();
 app.UseIdentityServer();
 app.UseAuthorization();
+app.UseEndpoints(endpoints =>
+{
+    endpoints.MapDefaultControllerRoute();
+});
 app.Run();

@@ -11,13 +11,13 @@ namespace PlayWebApp.Services.Identity.Repository
     {
         private readonly ApplicationDbContext dbContext;
 
-        private DbSet<IdentityUserExt> AppUsers;
+        private DbSet<ApplicationUser> AppUsers;
         private DbSet<Address> Addresses;
 
         public UserManagementRepository(ApplicationDbContext dbContext)
         {
             this.dbContext = dbContext;
-            AppUsers = this.dbContext.Set<IdentityUserExt>();
+            AppUsers = this.dbContext.Set<ApplicationUser>();
             Addresses = this.dbContext.Set<Address>();
         }
 
@@ -30,11 +30,11 @@ namespace PlayWebApp.Services.Identity.Repository
 
         #region User operations
 
-        public OperationResult CreateUserExt(IdentityUserExt userExt)
+        public OperationResult CreateUser(ApplicationUser appUser)
         {
             try
             {
-                AppUsers.Add(userExt);
+                AppUsers.Add(appUser);
                 return OperationResult.Success;
             }
             catch (Exception e)
@@ -44,12 +44,12 @@ namespace PlayWebApp.Services.Identity.Repository
 
         }
 
-        public OperationResult UpdateUserExt(IdentityUserExt userExt)
+        public OperationResult UpdateUser(ApplicationUser appUser)
         {
             try
             {
-                userExt.ModifiedOn = DateTime.UtcNow;
-                AppUsers.Update(userExt);
+                appUser.ModifiedOn = DateTime.UtcNow;
+                AppUsers.Update(appUser);
                 return OperationResult.Success;
             }
             catch (Exception e)
@@ -59,9 +59,9 @@ namespace PlayWebApp.Services.Identity.Repository
 
         }
 
-        public async Task<IdentityUserExt> GetUserExt(string userId)
+        public async Task<ApplicationUser> GetUser(string userId)
         {
-            return await AppUsers.FirstOrDefaultAsync(x => x.UserId == userId);
+            return await AppUsers.FirstOrDefaultAsync(x => x.Id == userId);
         }
 
         #endregion User Operations
@@ -71,9 +71,9 @@ namespace PlayWebApp.Services.Identity.Repository
         public async Task<IEnumerable<Address>> GetAllUserAddresses(string userId)
         {
             var query = from u in AppUsers
-                        join a in Addresses on new { k1 = u.TenantId, k2 = u.UserId }
-                        equals new { k1 = a.TenantId, k2 = a.UserId}
-                        where u.UserId == userId
+                        join a in Addresses on new { k1 = u.TenantId, k2 = u.CreatedBy }
+                        equals new { k1 = a.TenantId, k2 = a.CreatedBy}
+                        where u.CreatedBy == userId
                         select a;
             return await query.ToListAsync();
         }
@@ -82,9 +82,9 @@ namespace PlayWebApp.Services.Identity.Repository
         {
 
             var query = from u in AppUsers
-                        join a in Addresses on new { k1 = u.TenantId, k2 = u.UserId, k3 = u.DefaultAddressId }
-                        equals new { k1 = a.TenantId, k2 = a.UserId, k3 = a.Id }
-                        where u.UserId == userId
+                        join a in Addresses on new { k1 = u.TenantId, k2 = u.CreatedBy, k3 = u.DefaultAddressId }
+                        equals new { k1 = a.TenantId, k2 = a.CreatedBy, k3 = a.Id }
+                        where u.CreatedBy == userId
                         select a;
 
 
@@ -94,7 +94,7 @@ namespace PlayWebApp.Services.Identity.Repository
 
         public async Task<Address> GetUserAddressById(string userId, string addressId)
         {
-            return await Addresses.FirstOrDefaultAsync(x => x.Id == addressId && x.UserId == userId);
+            return await Addresses.FirstOrDefaultAsync(x => x.Id == addressId && x.CreatedBy == userId);
         }
 
         public OperationResult UpdateUserAddress(Address address)
@@ -126,7 +126,7 @@ namespace PlayWebApp.Services.Identity.Repository
 
         public async Task<Address> GetUserAddressByCode(string userId, string addressCode)
         {
-            return await Addresses.FirstOrDefaultAsync(x => x.Code == addressCode && x.UserId == userId);
+            return await Addresses.FirstOrDefaultAsync(x => x.Code == addressCode && x.CreatedBy == userId);
         }
     }
     #endregion User Address Operations

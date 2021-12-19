@@ -102,7 +102,7 @@ namespace PlayWebApp.Services.DataNavigation
             model.ModifiedOn = DateTime.UtcNow;
             model.ModifiedBy = context.UserId;
             model.CreatedOn = DateTime.UtcNow;
-            model.UserId = context.UserId;
+            model.CreatedBy = context.UserId;
             model.TenantId = context.TenantId;
         }
 

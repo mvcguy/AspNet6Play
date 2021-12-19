@@ -1,22 +1,23 @@
 ﻿using Microsoft.AspNetCore.Identity;
-using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using PlayWebApp.Services.Database.Model;
 
 namespace PlayWebApp.Services.Database;
 
-public class ApplicationDbContext : IdentityDbContext
+public class ApplicationDbContext : DbContext
 {
 
-    public DbSet<Booking> Bookings { get; set; } = null!;
+    public DbSet<ApplicationUser> Users { get; set; }
 
-    public DbSet<StockItem> StockItems { get; set; } = null!;
+    public DbSet<Booking> Bookings { get; set; }
 
-    public DbSet<StockItemPrice> StockItemPrices { get; set; } = null!;
+    public DbSet<StockItem> StockItems { get; set; }
 
-    public DbSet<Address> Addresses { get; set; } = null!;
+    public DbSet<StockItemPrice> StockItemPrices { get; set; }
 
-    public DbSet<Tenant> Tenants { get; set; } = null!;
+    public DbSet<Address> Addresses { get; set; }
+
+    public DbSet<Tenant> Tenants { get; set; }
 
 
     public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options)
@@ -34,14 +35,12 @@ public class ApplicationDbContext : IdentityDbContext
         var bookingItem = builder.Entity<BookingItem>().ToTable(nameof(BookingItem));
         var address = builder.Entity<Address>().ToTable(nameof(Address));
         var stockPrice = builder.Entity<StockItemPrice>().ToTable(nameof(StockItemPrice));
-        var user = builder.Entity<IdentityUser>();
-
-        var userExt = builder.Entity<IdentityUserExt>().ToTable("UserExt");
+        var applicationUser = builder.Entity<ApplicationUser>().ToTable("User");
         
-        userExt.Property(x => x.FirstName).HasColumnType("nvarchar").HasMaxLength(128).IsRequired();
-        userExt.Property(x => x.LastName).HasColumnType("nvarchar").HasMaxLength(128).IsRequired();
-        userExt.Property(x => x.TenantId).IsRequired(false);
-        builder.Entity<IdentityUserExt>().Ignore(x => x.Code);
+        applicationUser.Property(x => x.FirstName).HasColumnType("nvarchar").HasMaxLength(128).IsRequired();
+        applicationUser.Property(x => x.LastName).HasColumnType("nvarchar").HasMaxLength(128).IsRequired();
+        applicationUser.Property(x => x.TenantId).IsRequired(false);
+        builder.Entity<ApplicationUser>().Ignore(x => x.Code);
 
         stockItem.Property(x => x.Description).HasColumnType("nvarchar").HasMaxLength(128);
 
@@ -54,14 +53,6 @@ public class ApplicationDbContext : IdentityDbContext
         address.Property(x => x.PostalCode).HasColumnType("nvarchar").HasMaxLength(128);
         address.Property(x => x.StreetAddress).HasColumnType("nvarchar").HasMaxLength(128);
         
-        user.HasOne(typeof(IdentityUserExt)).WithOne("User").OnDelete(DeleteBehavior.Cascade);
-        user.HasMany(typeof(Address)).WithOne("User").OnDelete(DeleteBehavior.Cascade);
-        user.HasMany(typeof(Booking)).WithOne("User").OnDelete(DeleteBehavior.Cascade);
-        user.HasMany(typeof(BookingItem)).WithOne("User").OnDelete(DeleteBehavior.Cascade);
-        user.HasMany(typeof(StockItem)).WithOne("User").OnDelete(DeleteBehavior.Cascade);
-        user.HasMany(typeof(StockItemPrice)).WithOne("User").OnDelete(DeleteBehavior.Cascade);
-
-
         //
         // booking has many booking items
         // one booking item appears in only one booking
@@ -69,7 +60,7 @@ public class ApplicationDbContext : IdentityDbContext
         booking.HasMany(b => b.BookingItems).WithOne(s => s.Booking).HasForeignKey(x => x.BookingId);
         booking.HasOne(x => x.ShippingAddress);
         booking.Property(x => x.ShippingAddressId).IsRequired();
-        booking.Property(x => x.UserId).IsRequired();
+        booking.Property(x => x.CreatedBy).IsRequired();
 
         //
         // stockitem has many prices

@@ -20,14 +20,14 @@ namespace PlayWebApp.Services.Identity
             this.appMgtService = appMgtService;
         }
 
-        public async Task<IdentityUserExtDto> GetIdentityUserExt(string userId)
+        public async Task<ApplicationUserDto> GetUser(string userId)
         {
-            var record = await repository.GetUserExt(userId);
+            var record = await repository.GetUser(userId);
             return record.ToDto();
         }
 
 
-        public async Task<OperationResult> CreateIdentityUserExt(IdentityUserUpdateVm model)
+        public async Task<OperationResult> CreateUser(ApplicationUserUpdateVm model)
         {
             try
             {
@@ -36,8 +36,10 @@ namespace PlayWebApp.Services.Identity
                 if (tenant == null)
                     return OperationResult.Failure(new Exception("Tenant not found"));
 
-                var userExt = await repository.GetUserExt(model.UserId);
-                if (userExt != null) return OperationResult.Success;
+                var appUser = await repository.GetUser(model.UserId);
+                if (appUser != null) return OperationResult.Success;
+
+                var userId = Guid.NewGuid().ToString();
 
                 var address = await repository.GetUserAddressByCode(model.UserId, model.DefaultAddress.AddressCode);
                 if (address == null)
@@ -45,7 +47,7 @@ namespace PlayWebApp.Services.Identity
                     address = new Address
                     {
                         Id = Guid.NewGuid().ToString(),
-                        UserId = model.UserId,
+                        CreatedBy = model.UserId,
                         Code = model.DefaultAddress.AddressCode,
                         StreetAddress = model.DefaultAddress.StreetAddress,
                         City = model.DefaultAddress.City,
@@ -53,25 +55,25 @@ namespace PlayWebApp.Services.Identity
                         Country = model.DefaultAddress.Country,
                     };
 
-                    address.AddAuditData(tenant.Key, model.UserId);
+                    address.AddAuditData(tenant.Key, userId);
                     var result = repository.CreateUserAddress(address);
                     if (!result.Succeeded)
                         return OperationResult.Failure(new Exception("Cannot create user default address"));
                 }
 
-                userExt = new IdentityUserExt
+                appUser = new ApplicationUser
                 {
-                    Id = Guid.NewGuid().ToString(),
-                    UserId = model.UserId,
+                    Id = userId,
+                    CreatedBy = model.UserId,
                     FirstName = model.FirstName,
                     LastName = model.LastName,
                     DefaultAddressId = address?.Id,
                 };
 
-                userExt.AddAuditData(tenant.Key, model.UserId);
-                var usrResult = repository.CreateUserExt(userExt);
+                appUser.AddAuditData(tenant.Key, userId);
+                var usrResult = repository.CreateUser(appUser);
                 if (!usrResult.Succeeded)
-                    return OperationResult.Failure(new Exception("Cannot create user ext"));
+                    return OperationResult.Failure(new Exception("Cannot create application user"));
 
                 //
                 // save changes
@@ -86,17 +88,17 @@ namespace PlayWebApp.Services.Identity
             }
         }
 
-        public async Task<OperationResult> UpdateIdentityUserExt(IdentityUserUpdateVm model)
+        public async Task<OperationResult> UpdateUser(ApplicationUserUpdateVm model)
         {
             try
             {
-                var userExt = await repository.GetUserExt(model.UserId);
-                if (userExt == null)
+                var appUser = await repository.GetUser(model.UserId);
+                if (appUser == null)
                     return OperationResult.Failure(new Exception("Record not found"));
 
-                userExt.FirstName = model.FirstName;
-                userExt.LastName = model.LastName;
-                repository.UpdateUserExt(userExt);
+                appUser.FirstName = model.FirstName;
+                appUser.LastName = model.LastName;
+                repository.UpdateUser(appUser);
 
                 if (!string.IsNullOrWhiteSpace(model.DefaultAddress?.AddressCode))
                 {
@@ -111,7 +113,7 @@ namespace PlayWebApp.Services.Identity
                     address.Country = model.DefaultAddress.Country;
 
                     repository.UpdateUserAddress(address);
-                    userExt.DefaultAddressId = address.Id;
+                    appUser.DefaultAddressId = address.Id;
 
                 }
 

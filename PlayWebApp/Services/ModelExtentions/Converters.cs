@@ -145,20 +145,20 @@ namespace PlayWebApp.Services.ModelExtentions
                 StockItemId = model.StockItemId,
                 
                 UnitCost = model.UnitCost,
-                UserId = model.UserId,
+                CreatedBy = model.UserId,
 
             };
         }
 
-        public static IdentityUserExtDto ToDto(this IdentityUserExt model)
+        public static ApplicationUserDto ToDto(this ApplicationUser model)
         {
             if (model == null) return null;
-            return new IdentityUserExtDto
+            return new ApplicationUserDto
             {
                 FirstName = model.FirstName,
                 LastName = model.LastName,
                 DefaultAddressId = model.DefaultAddressId,
-                Key = model.UserId,
+                Key = model.CreatedBy,
                 TenantId = model.TenantId
             };
         }
@@ -180,7 +180,7 @@ namespace PlayWebApp.Services.ModelExtentions
         {
             model.TenantId = tenantId;
             model.ModifiedOn = DateTime.UtcNow;
-            model.UserId = userId;
+            model.CreatedBy = userId;
             model.ModifiedBy = userId;
             model.CreatedOn = DateTime.UtcNow;
         }

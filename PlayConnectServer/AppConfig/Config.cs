@@ -75,9 +75,9 @@ namespace PlayConnectServer.AppConfig
                     ClientSecrets = { new Secret("secret".Sha256()) },
                     AllowedGrantTypes = GrantTypes.Code,
                     // where to redirect to after login
-                    RedirectUris = { "https://localhost:5030/signin-oidc" },
+                    RedirectUris = { "https://localhost:7096/signin-oidc" },
                     // where to redirect to after logout
-                    PostLogoutRedirectUris = { "https://localhost:5030/signout-callback-oidc" },
+                    PostLogoutRedirectUris = { "https://localhost:7096/signout-callback-oidc" },
                     AllowedScopes = new List<string>
                     {
                         IdentityServerConstants.StandardScopes.OpenId,

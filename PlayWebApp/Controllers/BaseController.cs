@@ -18,6 +18,6 @@ namespace PlayWebApp.Controllers
     {
         // private const string fk = CookieAuthenticationDefaults.AuthenticationScheme + "," +
         // JwtBearerDefaults.AuthenticationScheme;      
-        private const string fk = "Identity.Application" + "," + JwtBearerDefaults.AuthenticationScheme;
+        private const string fk = CookieAuthenticationDefaults.AuthenticationScheme + "," + JwtBearerDefaults.AuthenticationScheme + "," + "oidc";
     }
 }
