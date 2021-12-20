@@ -1,4 +1,6 @@
 using System.Text.Json.Serialization;
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.OpenIdConnect;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
@@ -43,6 +45,8 @@ services.AddAuthentication(options =>
     options.SaveTokens = true;
     options.Scope.Add("profile");
     options.GetClaimsFromUserInfoEndpoint = true;
+    options.ClaimActions.MapJsonKey(CustomClaimTypes.TenantId, CustomClaimTypes.TenantId);
+
 }).AddJwtBearer(options =>
 {
     options.Authority = "https://localhost:5001";
@@ -52,6 +56,7 @@ services.AddAuthentication(options =>
         ValidateAudience = false,
     };
 });
+
 
 // tag start
 // services.AddAuthentication(o =>
@@ -117,7 +122,7 @@ var app = builder.Build();
 using (var scope = app.Services.CreateScope())
 {
     var ctx = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-    
+
     var usrMgtSrv = scope.ServiceProvider.GetRequiredService<UserManagementService>();
 
     SeedDatabase.Seed(ctx, usrMgtSrv);
@@ -145,8 +150,8 @@ app.UseAuthentication();
 app.UseAuthorization();
 app.UseEndpoints(options =>
 {
-    options.MapControllers();
-    options.MapRazorPages();
+    options.MapControllers().RequireAuthorization();
+    options.MapRazorPages().RequireAuthorization();
 });
 
 

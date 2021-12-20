@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 
 namespace PlayWebApp.Pages;
@@ -12,8 +13,22 @@ public class IndexModel : PageModel
         _logger = logger;
     }
 
-    public void OnGet()
+    public IActionResult OnGet()
     {
+        if (!User.Identity.IsAuthenticated)
+        {
+            return Challenge(new AuthenticationProperties
+            {
+                RedirectUri = "/"
+            });
+        }
+        else
+            return Page();
 
+    }
+
+    public IActionResult OnPost()
+    {
+        return SignOut("Cookies", "oidc");
     }
 }

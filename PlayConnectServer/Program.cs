@@ -20,7 +20,6 @@ var builderX = services.AddIdentityServer(options =>
     options.EmitStaticAudienceClaim = true;
     //options.Cors.CorsPolicyName = "mg.services";
 
-
 }).AddTestUsers(TestUsers.Users);
 
 // in-memory, code config

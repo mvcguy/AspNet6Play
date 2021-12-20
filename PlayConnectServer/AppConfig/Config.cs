@@ -10,12 +10,17 @@ namespace PlayConnectServer.AppConfig
 {
     public static class Config
     {
-        public static IEnumerable<IdentityResource> IdentityResources =>
-            new IdentityResource[]
+        public static IEnumerable<IdentityResource> IdentityResources
+        {
+            get
             {
-                new IdentityResources.OpenId(),
-                new IdentityResources.Profile(),
-            };
+                var prof = new IdentityResources.Profile();
+                var oid = new IdentityResources.OpenId();
+                prof.UserClaims.Add("PlayWebApp.TenantId");
+                return new IdentityResource[] { oid, prof };
+            }
+        }
+
 
         //
         // used to verify the audience

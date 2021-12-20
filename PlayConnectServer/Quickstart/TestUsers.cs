@@ -45,11 +45,12 @@ namespace PlayConnectServer.Quickstart
                     },
                     new TestUser
                     {
-                        SubjectId = "88421113",
+                        SubjectId = "6a790cce-2124-4c58-8c77-af1a36daf0cd",
                         Username = "bob",
                         Password = "bob",
                         Claims =
                         {
+                            new Claim("PlayWebApp.TenantId", "a6d7b444-3bde-40fb-92c8-de3f07debeb3"),
                             new Claim(JwtClaimTypes.Name, "Bob Smith"),
                             new Claim(JwtClaimTypes.GivenName, "Bob"),
                             new Claim(JwtClaimTypes.FamilyName, "Smith"),
@@ -57,7 +58,7 @@ namespace PlayConnectServer.Quickstart
                             new Claim(JwtClaimTypes.EmailVerified, "true", ClaimValueTypes.Boolean),
                             new Claim(JwtClaimTypes.WebSite, "http://bob.com"),
                             new Claim(JwtClaimTypes.Address, JsonSerializer.Serialize(address), IdentityServerConstants.ClaimValueTypes.Json)
-                        }
+                        },
                     }
                 };
             }
