@@ -23,11 +23,21 @@ var builder = WebApplication.CreateBuilder(args);
 var services = builder.Services;
 
 // Add services to the container.
-var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
-// services.AddDbContext<ApplicationDbContext>(options =>
-//     options.UseSqlServer(connectionString));
-services.AddDbContext<ApplicationDbContext>(options =>
-options.UseSqlite(connectionString));
+
+bool.TryParse(builder.Configuration["ConnectionStrings:UseSqlServer"], out var useSqlServer);
+
+if (useSqlServer)
+{
+    var connectionString = builder.Configuration.GetConnectionString("DefaultConnectionSqlServer");
+    services.AddDbContext<ApplicationDbContext>(options => options.UseSqlServer(connectionString));
+}
+else
+{
+    var connectionString = builder.Configuration.GetConnectionString("DefaultConnectionSqlLite");
+    services.AddDbContext<ApplicationDbContext>(options => options.UseSqlite(connectionString));
+}
+
+
 services.AddDatabaseDeveloperPageExceptionFilter();
 services.AddHttpContextAccessor();
 

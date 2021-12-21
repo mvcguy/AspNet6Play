@@ -18,7 +18,7 @@ namespace PlayWebApp.Services.ModelExtentions
             {
                 ItemDescription = model.Description,
                 ItemDisplayId = model.Code,
-                Prices = model.StockItemPrices.Select(x=>x.ToDto()).ToList()               
+                Prices = model.StockItemPrices?.Select(x=>x.ToDto()).ToList()               
             };
         }
 
@@ -99,7 +99,7 @@ namespace PlayWebApp.Services.ModelExtentions
             {
                 BookingNumber = model.Code,
                 Description = model.Description,
-                Lines = model?.BookingItems.Select(x => x.ToDto()).ToList()
+                Lines = model.BookingItems?.Select(x => x.ToDto()).ToList()
             };
         }
 

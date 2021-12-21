@@ -67,6 +67,8 @@ namespace PlayWebApp.Services.Identity
                     CreatedBy = model.UserId,
                     FirstName = model.FirstName,
                     LastName = model.LastName,
+                    UserName = model.UserName,
+                    Email = model.Email,
                     DefaultAddressId = address?.Id,
                 };
 
