@@ -117,8 +117,11 @@ services.AddScoped<UserManagementService>();
 services.AddScoped<AppMgtRepository>();
 services.AddScoped<AppMgtService>();
 
-services.AddScoped<INavigationRepository<Address>, LocationRepository>();
-services.AddScoped<LocationService>();
+services.AddScoped<INavigationRepository<SupplierAddress>, SupplierLocationRepository>();
+services.AddScoped<INavigationRepository<CustomerAddress>, CustomerLocationRepository>();
+
+services.AddScoped<CustomerLocationService>();
+services.AddScoped<SupplierLocationService>();
 
 services.AddScoped<INavigationRepository<StockItem>, InventoryRepository>();
 services.AddScoped<InventoryService>();
@@ -135,7 +138,7 @@ using (var scope = app.Services.CreateScope())
 
     var usrMgtSrv = scope.ServiceProvider.GetRequiredService<UserManagementService>();
 
-    SeedDatabase.Seed(ctx, usrMgtSrv);
+    SeedDatabase.Seed(ctx);
 
 }
 

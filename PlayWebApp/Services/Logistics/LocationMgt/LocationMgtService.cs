@@ -8,9 +8,9 @@ using PlayWebApp.Services.ModelExtentions;
 
 namespace PlayWebApp.Services.Logistics.LocationMgt
 {
-    public class LocationService : NavigationService<Address, AddressRequestDto, AddressUpdateVm, AddressDto>
+    public class CustomerLocationService : NavigationService<CustomerAddress, AddressRequestDto, AddressUpdateVm, AddressDto>
     {
-        public LocationService(INavigationRepository<Address> repository) : base(repository)
+        public CustomerLocationService(INavigationRepository<CustomerAddress> repository) : base(repository)
         {
         }
 
@@ -19,13 +19,13 @@ namespace PlayWebApp.Services.Logistics.LocationMgt
             var record = await repository.GetById(model.AddressCode);
             if (record == null)
             {
-                record = new Address
+                record = new CustomerAddress
                 {
                     Country = model.Country,
                     City = model.City,
                     StreetAddress = model.StreetAddress,
                     PostalCode = model.PostalCode,
-                    Code = model.AddressCode,
+                    RefNbr = model.AddressCode,
                 };
                 var item = repository.Add(record);
                 return item.Entity.ToDto();
@@ -34,7 +34,56 @@ namespace PlayWebApp.Services.Logistics.LocationMgt
             throw new Exception("Record exist from before");
         }
 
-        public override AddressDto ToDto(Address model)
+        public override AddressDto ToDto(CustomerAddress model)
+        {
+            return model.ToDto();
+        }
+
+        public async override Task<AddressDto> Update(AddressUpdateVm model)
+        {
+            var record = await repository.GetById(model.AddressCode);
+            if (record != null)
+            {
+                record.Country = model.Country;
+                record.City = model.City;
+                record.StreetAddress = model.StreetAddress;
+                record.PostalCode = model.PostalCode;
+
+                var item = repository.Update(record);
+                return item.Entity.ToDto();
+            }
+
+            throw new Exception("Record cannot be found");
+        }
+    }
+
+    public class SupplierLocationService : NavigationService<SupplierAddress, AddressRequestDto, AddressUpdateVm, AddressDto>
+    {
+        public SupplierLocationService(INavigationRepository<SupplierAddress> repository) : base(repository)
+        {
+        }
+
+        public async override Task<AddressDto> Add(AddressUpdateVm model)
+        {
+            var record = await repository.GetById(model.AddressCode);
+            if (record == null)
+            {
+                record = new SupplierAddress
+                {
+                    Country = model.Country,
+                    City = model.City,
+                    StreetAddress = model.StreetAddress,
+                    PostalCode = model.PostalCode,
+                    RefNbr = model.AddressCode,
+                };
+                var item = repository.Add(record);
+                return item.Entity.ToDto();
+            }
+
+            throw new Exception("Record exist from before");
+        }
+
+        public override AddressDto ToDto(SupplierAddress model)
         {
             return model.ToDto();
         }

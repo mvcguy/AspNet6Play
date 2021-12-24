@@ -15,7 +15,10 @@ namespace PlayWebApp.Services.GenericModels
 
         public List<Exception> Errors { get; set; }
 
-        public static OperationResult Success => new OperationResult { Succeeded = true };
+        public static OperationResult Success(string entityId = null)
+        {
+            return new OperationResult { Succeeded = true, EntityId = entityId};
+        }
 
         public static OperationResult Failure(params Exception[] errors)
         {
@@ -25,6 +28,8 @@ namespace PlayWebApp.Services.GenericModels
                 Errors = errors?.ToList()
             };
         }
+
+        public string EntityId { get; set; }
     }
 
 }

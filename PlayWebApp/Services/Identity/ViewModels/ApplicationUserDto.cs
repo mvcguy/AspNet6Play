@@ -16,10 +16,6 @@ namespace PlayWebApp.Services.Identity.ViewModels
         public virtual string FirstName { get; set; }
 
         public virtual string LastName { get; set; }
-
-        public virtual string DefaultAddressId { get; set; }
-
-        public virtual AddressDto DefaultAddress { get; set; }
     }
 
     public class ApplicationUserUpdateVm
@@ -43,8 +39,6 @@ namespace PlayWebApp.Services.Identity.ViewModels
         [Display(Name = "Last name")]
         [StringLength(10, ErrorMessage = "The {0} must be at least {2} and at max {1} characters long.", MinimumLength = 3)]
         public virtual string LastName { get; set; }
-
-        public virtual AddressUpdateVm DefaultAddress { get; set; }
 
     }
 }

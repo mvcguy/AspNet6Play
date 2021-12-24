@@ -7,7 +7,8 @@ using PlayWebApp.Services.Database.Model;
 
 namespace PlayWebApp.Services.DataNavigation
 {
-    public abstract class NavigationRepository<TModel> : INavigationRepository<TModel> where TModel : EntityBase
+    public abstract class NavigationRepository<TModel> : INavigationRepository<TModel> 
+    where TModel : EntityBase, new()
     {
         protected readonly ApplicationDbContext dbContext;
         protected readonly IPlayAppContext context;
@@ -25,12 +26,12 @@ namespace PlayWebApp.Services.DataNavigation
 
         public virtual async Task<TModel> GetFirst()
         {
-            return await GetTenantBasedQuery().OrderBy(x => x.Code).FirstOrDefaultAsync();
+            return await GetTenantBasedQuery().OrderBy(x => x.RefNbr).FirstOrDefaultAsync();
         }
 
         public virtual async Task<TModel> GetLast()
         {
-            return await GetTenantBasedQuery().OrderByDescending(x => x.Code).FirstOrDefaultAsync();
+            return await GetTenantBasedQuery().OrderByDescending(x => x.RefNbr).FirstOrDefaultAsync();
         }
 
         public virtual async Task<TModel> GetNext(string refNbr)
@@ -39,12 +40,12 @@ namespace PlayWebApp.Services.DataNavigation
 
             if (string.IsNullOrWhiteSpace(refNbr))
             {
-                record = await GetTenantBasedQuery().OrderBy(x => x.Code).Take(1).FirstOrDefaultAsync();
+                record = await GetTenantBasedQuery().OrderBy(x => x.RefNbr).Take(1).FirstOrDefaultAsync();
             }
             else
             {
-                record = await GetTenantBasedQuery().OrderBy(x => x.Code)
-                            .Where(x => x.Code.CompareTo(refNbr) > 0).
+                record = await GetTenantBasedQuery().OrderBy(x => x.RefNbr)
+                            .Where(x => x.RefNbr.CompareTo(refNbr) > 0).
                             Take(1).FirstOrDefaultAsync();
             }
 
@@ -57,12 +58,12 @@ namespace PlayWebApp.Services.DataNavigation
 
             if (string.IsNullOrWhiteSpace(refNbr))
             {
-                record = await GetTenantBasedQuery().OrderByDescending(x => x.Code).Take(1).FirstOrDefaultAsync();
+                record = await GetTenantBasedQuery().OrderByDescending(x => x.RefNbr).Take(1).FirstOrDefaultAsync();
             }
             else
             {
-                record = await GetTenantBasedQuery().OrderByDescending(x => x.Code)
-                            .Where(x => x.Code.CompareTo(refNbr) < 0).
+                record = await GetTenantBasedQuery().OrderByDescending(x => x.RefNbr)
+                            .Where(x => x.RefNbr.CompareTo(refNbr) < 0).
                             Take(1).FirstOrDefaultAsync();
             }
 
@@ -71,7 +72,7 @@ namespace PlayWebApp.Services.DataNavigation
 
         public virtual async Task<TModel> GetById(string refNbr)
         {
-            return await GetTenantBasedQuery().FirstOrDefaultAsync(x => x.Code == refNbr);
+            return await GetTenantBasedQuery().FirstOrDefaultAsync(x => x.RefNbr == refNbr);
         }
 
         public virtual EntityEntry<TModel> Update(TModel model)

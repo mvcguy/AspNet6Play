@@ -8,6 +8,9 @@ public class ApplicationDbContext : DbContext
 {
 
     public DbSet<ApplicationUser> Users { get; set; }
+    public DbSet<Customer> Customers { get; set; }
+
+    public DbSet<Supplier> Suppliers { get; set; }
 
     public DbSet<Booking> Bookings { get; set; }
 
@@ -15,7 +18,10 @@ public class ApplicationDbContext : DbContext
 
     public DbSet<StockItemPrice> StockItemPrices { get; set; }
 
-    public DbSet<Address> Addresses { get; set; }
+    public DbSet<CustomerAddress> CustomerAddresses { get; set; }
+
+    public DbSet<SupplierAddress> SupplierAddresses { get; set; }
+
 
     public DbSet<Tenant> Tenants { get; set; }
 
@@ -33,31 +39,21 @@ public class ApplicationDbContext : DbContext
         var booking = builder.Entity<Booking>().ToTable(nameof(Booking));
         var stockItem = builder.Entity<StockItem>().ToTable(nameof(StockItem));
         var bookingItem = builder.Entity<BookingItem>().ToTable(nameof(BookingItem));
-        var address = builder.Entity<Address>().ToTable(nameof(Address));
+        var customerAddress = builder.Entity<CustomerAddress>().ToTable("CustomerAddress");
+        var supplierAddress = builder.Entity<SupplierAddress>().ToTable("SupplierAddress");
+
         var stockPrice = builder.Entity<StockItemPrice>().ToTable(nameof(StockItemPrice));
         var applicationUser = builder.Entity<ApplicationUser>().ToTable("User");
-        
-        applicationUser.Property(x => x.FirstName).HasColumnType("nvarchar").HasMaxLength(128).IsRequired();
-        applicationUser.Property(x => x.LastName).HasColumnType("nvarchar").HasMaxLength(128).IsRequired();
+        var customer = builder.Entity<Customer>().ToTable("Customer");
+        var supplier = builder.Entity<Supplier>().ToTable("Supplier");
+
         applicationUser.Property(x => x.TenantId).IsRequired(false);
-        builder.Entity<ApplicationUser>().Ignore(x => x.Code);
+        builder.Entity<ApplicationUser>().Ignore(x => x.RefNbr);
 
-        stockItem.Property(x => x.Description).HasColumnType("nvarchar").HasMaxLength(128);
-
-        booking.Property(x => x.Description).HasColumnType("nvarchar").HasMaxLength(128);
-
-        bookingItem.Property(x => x.Description).HasColumnType("nvarchar").HasMaxLength(128);
-
-        address.Property(x => x.City).HasColumnType("nvarchar").HasMaxLength(128);
-        address.Property(x => x.Country).HasColumnType("nvarchar").HasMaxLength(128);
-        address.Property(x => x.PostalCode).HasColumnType("nvarchar").HasMaxLength(128);
-        address.Property(x => x.StreetAddress).HasColumnType("nvarchar").HasMaxLength(128);
-        
-        //
         // booking has many booking items
         // one booking item appears in only one booking
         //
-        booking.HasMany(b => b.BookingItems).WithOne(s => s.Booking).HasForeignKey(x => x.BookingId);
+        booking.HasMany(b => b.BookingItems).WithOne(s => s.Booking).HasForeignKey(x => x.BookingId).IsRequired(false);
         booking.HasOne(x => x.ShippingAddress);
         booking.Property(x => x.ShippingAddressId).IsRequired();
         booking.Property(x => x.CreatedBy).IsRequired();
@@ -66,13 +62,20 @@ public class ApplicationDbContext : DbContext
         // stockitem has many prices
         // one price is only meant for one particular stock item
         //
-        stockItem.HasMany(s => s.StockItemPrices).WithOne(sp => sp.StockItem).HasForeignKey(x => x.StockItemId);
+        stockItem.HasMany(s => s.StockItemPrices).WithOne(sp => sp.StockItem).HasForeignKey(x => x.StockItemId).IsRequired(false);
 
         //
         // stockitem appear in many bookings
         // one booking item is related to only one stock item
         //
-        stockItem.HasMany(s => s.BookingItems).WithOne(b => b.StockItem).HasForeignKey(x => x.StockItemId);
+        stockItem.HasMany(s => s.BookingItems).WithOne(b => b.StockItem).HasForeignKey(x => x.StockItemId).IsRequired(false);
+
+        //
+        // business entities
+        //
+        customer.HasMany(x => x.Addresses).WithOne(b => b.Customer).HasForeignKey(x => x.CustomerId).IsRequired(false);
+        supplier.HasMany(x => x.Addresses).WithOne(b => b.Supplier).HasForeignKey(x => x.SupplierId).IsRequired(false);
+       
 
     }
 }

@@ -8,7 +8,7 @@ namespace PlayWebApp.Services.Logistics.ViewModels.Dtos
     {
 
 
-        public virtual string Code { get; set; }
+        public virtual string RefNbr { get; set; }
 
         public virtual string StockItemId { get; set; }
 

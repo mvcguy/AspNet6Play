@@ -36,11 +36,6 @@ namespace PlayWebApp.Services.Logistics.ViewModels
         [JsonPropertyName("AddressVm.Country")]
         [StringLength(128, ErrorMessage = "The {0} must be at least {2} and at max {1} characters long.", MinimumLength = 2)]
         public string Country { get; set; }
-
-        [Display(Name = "Preferred address")]
-        [JsonPropertyName("AddressVm.PreferredAddress")]
-        [JsonConverter(typeof(StringToBooleanConverter))]
-        public bool PreferredAddress { get; set; }
     }
 
 }

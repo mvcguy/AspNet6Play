@@ -27,13 +27,13 @@ namespace PlayWebApp.Areas.Logistics.Pages.StockItems
 
         public async Task OnGetAsync()
         {
-            StockItemsList = await dbContext.StockItems.OrderBy(x => x.Code).ToListAsync();
-            var item = await dbContext.StockItems.OrderBy(x => x.Code).Take(1).FirstOrDefaultAsync();
+            StockItemsList = await dbContext.StockItems.OrderBy(x => x.RefNbr).ToListAsync();
+            var item = await dbContext.StockItems.OrderBy(x => x.RefNbr).Take(1).FirstOrDefaultAsync();
             if (item != null)
             {
                 StockItemVm = new StockItemUpdateVm
                 {
-                    ItemDisplayId = item.Code,
+                    ItemDisplayId = item.RefNbr,
                     ItemDescription = item.Description
                 };
             }

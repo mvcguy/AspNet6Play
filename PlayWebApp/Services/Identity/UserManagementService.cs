@@ -37,29 +37,9 @@ namespace PlayWebApp.Services.Identity
                     return OperationResult.Failure(new Exception("Tenant not found"));
 
                 var appUser = await repository.GetUser(model.UserId);
-                if (appUser != null) return OperationResult.Success;
+                if (appUser != null) return OperationResult.Success(appUser.Id);
 
                 var userId = Guid.NewGuid().ToString();
-
-                var address = await repository.GetUserAddressByCode(model.UserId, model.DefaultAddress.AddressCode);
-                if (address == null)
-                {
-                    address = new Address
-                    {
-                        Id = Guid.NewGuid().ToString(),
-                        CreatedBy = model.UserId,
-                        Code = model.DefaultAddress.AddressCode,
-                        StreetAddress = model.DefaultAddress.StreetAddress,
-                        City = model.DefaultAddress.City,
-                        PostalCode = model.DefaultAddress.PostalCode,
-                        Country = model.DefaultAddress.Country,
-                    };
-
-                    address.AddAuditData(tenant.Key, userId);
-                    var result = repository.CreateUserAddress(address);
-                    if (!result.Succeeded)
-                        return OperationResult.Failure(new Exception("Cannot create user default address"));
-                }
 
                 appUser = new ApplicationUser
                 {
@@ -69,7 +49,6 @@ namespace PlayWebApp.Services.Identity
                     LastName = model.LastName,
                     UserName = model.UserName,
                     Email = model.Email,
-                    DefaultAddressId = address?.Id,
                 };
 
                 appUser.AddAuditData(tenant.Key, userId);
@@ -77,12 +56,7 @@ namespace PlayWebApp.Services.Identity
                 if (!usrResult.Succeeded)
                     return OperationResult.Failure(new Exception("Cannot create application user"));
 
-                //
-                // save changes
-                // Changes are ATOMIC
-                // ALL or NONE succeed!!!
-                //
-                return await repository.SaveChanges();
+                return usrResult;
             }
             catch (Exception e)
             {
@@ -100,31 +74,8 @@ namespace PlayWebApp.Services.Identity
 
                 appUser.FirstName = model.FirstName;
                 appUser.LastName = model.LastName;
-                repository.UpdateUser(appUser);
+                return repository.UpdateUser(appUser);
 
-                if (!string.IsNullOrWhiteSpace(model.DefaultAddress?.AddressCode))
-                {
-                    var address = await repository.GetUserAddressByCode(model.UserId, model.DefaultAddress.AddressCode);
-                    if (address == null)
-                    {
-                        return OperationResult.Failure(new Exception("User default address does not exist"));
-                    }
-                    address.StreetAddress = model.DefaultAddress.StreetAddress;
-                    address.City = model.DefaultAddress.City;
-                    address.PostalCode = model.DefaultAddress.PostalCode;
-                    address.Country = model.DefaultAddress.Country;
-
-                    repository.UpdateUserAddress(address);
-                    appUser.DefaultAddressId = address.Id;
-
-                }
-
-                //
-                // save changes
-                // Changes are ATOMIC
-                // ALL or NONE succeed!!!
-                //
-                return await repository.SaveChanges();
             }
             catch (Exception e)
             {
@@ -133,27 +84,9 @@ namespace PlayWebApp.Services.Identity
 
         }
 
-        public async Task<IEnumerable<AddressDto>> GetAllUserAddresses(string userId)
+        public async Task<OperationResult> SaveChanges()
         {
-            return (await repository.GetAllUserAddresses(userId)).Select(x => x.ToDto());
-        }
-
-        public async Task<AddressDto> GetUserDefaultAddress(string userId)
-        {
-            var record = await repository.GetUserDefaultAddress(userId);
-            return record.ToDto();
-        }
-
-        public async Task<AddressDto> GetUserAddressById(string userId, string addressId)
-        {
-            var record = await repository.GetUserAddressById(userId, addressId);
-            return record.ToDto();
-        }
-
-        public async Task<AddressDto> GetUserAddressByCode(string userId, string addressCode)
-        {
-            var record = await repository.GetUserAddressByCode(userId, addressCode);
-            return record.ToDto();
+            return await repository.SaveChanges();
         }
 
     }

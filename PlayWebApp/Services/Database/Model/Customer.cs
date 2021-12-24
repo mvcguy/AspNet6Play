@@ -1,9 +1,32 @@
+using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
+
 namespace PlayWebApp.Services.Database.Model
 {
-    public class Customer : EntityBase
+    
+    public abstract class BusinessEntity : EntityBase
     {
-        public string Name { get; set; }
+        [Required]
+        [StringLength(128)]
+        [Column(TypeName = "nvarchar")]
+        public virtual string Name { get; set; }
 
-        public bool Active { get; set; }
+        [Column(TypeName = "bit")]
+        public virtual bool Active { get; set; }
+
     }
+
+    public class Customer : BusinessEntity
+    {        
+        public virtual ICollection<Booking> Bookings { get; set; }
+
+        public virtual ICollection<CustomerAddress> Addresses { get; set; }
+
+    }
+
+    public class Supplier : BusinessEntity
+    {
+        public virtual ICollection<SupplierAddress> Addresses { get; set; }
+    }
+
 }

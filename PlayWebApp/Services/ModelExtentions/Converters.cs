@@ -17,7 +17,7 @@ namespace PlayWebApp.Services.ModelExtentions
             return new StockItemDto
             {
                 ItemDescription = model.Description,
-                ItemDisplayId = model.Code,
+                ItemDisplayId = model.RefNbr,
                 Prices = model.StockItemPrices?.Select(x=>x.ToDto()).ToList()               
             };
         }
@@ -34,7 +34,7 @@ namespace PlayWebApp.Services.ModelExtentions
                 UnitCost = model.UnitCost,
                 UnitOfMeasure = model.UnitOfMeasure,
                 StockItemId = model.StockItemId,
-                Code = model.Code
+                RefNbr = model.RefNbr
             };
         }
 
@@ -43,7 +43,7 @@ namespace PlayWebApp.Services.ModelExtentions
             if (model == null) return null;
             return new StockItem
             {
-                Code = model.ItemDisplayId,
+                RefNbr = model.ItemDisplayId,
                 Description = model.ItemDescription,
                 StockItemPrices = model.ItemPrices?.Select(x=>x.ToModel()).ToList(),                
             };
@@ -55,7 +55,7 @@ namespace PlayWebApp.Services.ModelExtentions
             return new StockItemPrice
             {
                 BreakQty = model.BreakQty,
-                Code = model.Code,
+                RefNbr = model.Code,
                 EffectiveFrom = model.EffectiveFrom,
                 ExpiresAt = model.ExpiresAt,
                 UnitCost = model.UnitCost,
@@ -69,7 +69,7 @@ namespace PlayWebApp.Services.ModelExtentions
             if (model == null) return null;
             return new AddressDto
             {
-                AddressCode = model.Code,
+                AddressCode = model.RefNbr,
                 StreetAddress = model.StreetAddress,
                 City = model.City,
                 PostalCode = model.PostalCode,
@@ -78,13 +78,13 @@ namespace PlayWebApp.Services.ModelExtentions
             };
         }
 
-        public static Address ToModel(this AddressUpdateVm model)
+        public static CustomerAddress ToModel(this AddressUpdateVm model)
         {
             if (model == null) return null;
-            return new Address
+            return new CustomerAddress
             {
                 City = model.City,
-                Code = model.AddressCode,
+                RefNbr = model.AddressCode,
                 Country = model.Country,
                 PostalCode = model.PostalCode,
                 StreetAddress = model.StreetAddress,
@@ -97,7 +97,7 @@ namespace PlayWebApp.Services.ModelExtentions
             if (model == null) return null;
             return new BookingDto
             {
-                BookingNumber = model.Code,
+                BookingNumber = model.RefNbr,
                 Description = model.Description,
                 Lines = model.BookingItems?.Select(x => x.ToDto()).ToList()
             };
@@ -108,7 +108,7 @@ namespace PlayWebApp.Services.ModelExtentions
             if (model == null) return null;
             return new Booking
             {
-                Code = model.BookingNumber,
+                RefNbr = model.BookingNumber,
                 Description = model.Description,
                 BookingItems = model.Lines?.Select(x => x.ToModel()).ToList(),
                 
@@ -121,7 +121,7 @@ namespace PlayWebApp.Services.ModelExtentions
             return new BookingItemDto
             {
                 BookingId = model.BookingId,
-                BookingNbr = model.Code,
+                BookingNbr = model.RefNbr,
                 Description = model.Description,
                 Discount = model.Discount ?? 0,
                 ExtCost = model.ExtCost ?? 0,
@@ -137,7 +137,7 @@ namespace PlayWebApp.Services.ModelExtentions
             return new BookingItem
             {
                 BookingId = model.BookingId,
-                Code = model.BookingNbr,
+                RefNbr = model.RefNbr,
                 Description = model.Description,
                 Discount = model.Discount,
                 ExtCost = model.ExtCost,
@@ -157,7 +157,6 @@ namespace PlayWebApp.Services.ModelExtentions
             {
                 FirstName = model.FirstName,
                 LastName = model.LastName,
-                DefaultAddressId = model.DefaultAddressId,
                 Key = model.CreatedBy,
                 TenantId = model.TenantId
             };

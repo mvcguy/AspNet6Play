@@ -5,52 +5,23 @@ using Microsoft.AspNetCore.Identity;
 
 namespace PlayWebApp.Services.Database.Model;
 
-
-public interface IAuditInfo
-{
-    public DateTime? CreatedOn { get; set; }
-
-    public DateTime? ModifiedOn { get; set; }
-
-    public string CreatedBy { get; set; }
-
-    public string ModifiedBy { get; set; }
-
-    public byte[] Timestamp { get; set; }
-}
-
-public class AuditInfo : IAuditInfo
-{
-    [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
-    public DateTime? CreatedOn { get; set; }
-
-    [DatabaseGenerated(DatabaseGeneratedOption.Computed)]
-    public DateTime? ModifiedOn { get; set; }
-
-    [ForeignKey("ApplicationUser")]
-    public string ModifiedBy { get; set; }
-
-    [Timestamp]
-    public virtual byte[] Timestamp { get; set; }
-
-    [Required]
-    [Column(TypeName = "nvarchar")]
-    [MaxLength(128)]
-    public virtual string CreatedBy { get; set; }
-}
-
-public class EntityBase : AuditInfo
+public abstract class EntityBase : AuditInfo
 {
 
     [Key]
+    [Required]
+    [MaxLength(128)]
+    [Column(TypeName = "nvarchar")]
     public virtual string Id { get; set; }
 
     [Required]
     [MaxLength(10)]
     [Column(TypeName = "nvarchar")]
-    public virtual string Code { get; set; }
+    public virtual string RefNbr { get; set; }
 
     [Required]
+    [MaxLength(128)]
+    [Column(TypeName = "nvarchar")]
     public virtual string TenantId { get; set; }
 
 }

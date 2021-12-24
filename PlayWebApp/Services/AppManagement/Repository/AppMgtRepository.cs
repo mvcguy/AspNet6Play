@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using PlayWebApp.Services.Database;
 using PlayWebApp.Services.Database.Model;
+using PlayWebApp.Services.GenericModels;
 #nullable disable
 
 namespace PlayWebApp.Services.AppManagement.Repository
@@ -26,6 +27,19 @@ namespace PlayWebApp.Services.AppManagement.Repository
         public async Task<Tenant> GetTenantByCode(string code)
         {
             return await Tenants.FirstOrDefaultAsync(x => x.TenantCode == code);
+        }
+
+        public OperationResult CreateTenant(Tenant tenant)
+        {
+            try
+            {
+                Tenants.Add(tenant);
+                return OperationResult.Success(tenant.Id);
+            }
+            catch (Exception e)
+            {
+                return OperationResult.Failure(e);
+            }
         }
     }
 }

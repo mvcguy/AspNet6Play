@@ -13,8 +13,8 @@ namespace PlayWebApp.Controllers
     [Route("api/v1/addresses")]
     public class AddressController : BaseController
     {
-        private readonly LocationService service;
-        public AddressController(LocationService addressMgtService)
+        private readonly CustomerLocationService service;
+        public AddressController(CustomerLocationService addressMgtService)
         {
             this.service = addressMgtService;
         }

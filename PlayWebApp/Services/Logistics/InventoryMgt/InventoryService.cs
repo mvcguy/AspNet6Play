@@ -28,12 +28,12 @@ namespace PlayWebApp.Services.Logistics.InventoryMgt
             {
                 record = new StockItem
                 {
-                    Code = vm.ItemDisplayId,
+                    RefNbr = vm.ItemDisplayId,
                     Description = vm.ItemDescription,
                     StockItemPrices = vm.ItemPrices?.Select(x => new StockItemPrice
                     {
                         BreakQty = x.BreakQty,
-                        Code = x.Code,
+                        RefNbr = x.Code,
                         EffectiveFrom = x.EffectiveFrom,
                         ExpiresAt = x.ExpiresAt,
                         UnitCost = x.UnitCost,
@@ -63,7 +63,7 @@ namespace PlayWebApp.Services.Logistics.InventoryMgt
 
                 foreach (var item in model.ItemPrices)
                 {
-                    var line = record.StockItemPrices.FirstOrDefault(x => x.Code == item.Code);
+                    var line = record.StockItemPrices.FirstOrDefault(x => x.RefNbr == item.Code);
                     if (line == null) continue;
 
                     line.BreakQty = item.BreakQty;

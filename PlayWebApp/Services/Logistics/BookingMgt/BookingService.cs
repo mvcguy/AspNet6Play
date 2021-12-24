@@ -22,12 +22,12 @@ namespace PlayWebApp.Services.Logistics.BookingMgt
             {
                 record = new Booking
                 {
-                    Code = model.BookingNumber,
+                    RefNbr = model.BookingNumber,
                     Description = model.Description,
                     BookingItems = model.Lines?.Select(x => new BookingItem
                     {
                         BookingId = x.BookingId,
-                        Code = x.BookingNbr,
+                        RefNbr = x.RefNbr,
                         Description = x.Description,
                         Discount = x.Discount,
                         ExtCost = x.ExtCost,
@@ -59,7 +59,7 @@ namespace PlayWebApp.Services.Logistics.BookingMgt
 
                 foreach (var item in model.Lines)
                 {
-                    var line = record.BookingItems.FirstOrDefault(x => x.Code == item.Code);
+                    var line = record.BookingItems.FirstOrDefault(x => x.RefNbr == item.RefNbr);
                     if (line == null) continue;
 
                     line.Description = item.Description;
