@@ -10,12 +10,14 @@ namespace PlayWebApp.Migrations
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.CreateTable(
-                name: "BusinessEntity",
+                name: "Address",
                 columns: table => new
                 {
                     Id = table.Column<string>(type: "nvarchar", maxLength: 128, nullable: false),
-                    Name = table.Column<string>(type: "nvarchar", maxLength: 128, nullable: false),
-                    Active = table.Column<bool>(type: "bit", nullable: false),
+                    StreetAddress = table.Column<string>(type: "nvarchar", maxLength: 128, nullable: false),
+                    PostalCode = table.Column<string>(type: "nvarchar", maxLength: 128, nullable: false),
+                    City = table.Column<string>(type: "nvarchar", maxLength: 128, nullable: false),
+                    Country = table.Column<string>(type: "char", maxLength: 2, nullable: false),
                     CreatedOn = table.Column<DateTime>(type: "TEXT", nullable: true),
                     ModifiedOn = table.Column<DateTime>(type: "TEXT", nullable: true),
                     ModifiedBy = table.Column<string>(type: "nvarchar", maxLength: 128, nullable: false),
@@ -26,7 +28,27 @@ namespace PlayWebApp.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_BusinessEntity", x => x.Id);
+                    table.PrimaryKey("PK_Address", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "Customer",
+                columns: table => new
+                {
+                    Id = table.Column<string>(type: "nvarchar", maxLength: 128, nullable: false),
+                    CreatedOn = table.Column<DateTime>(type: "TEXT", nullable: true),
+                    ModifiedOn = table.Column<DateTime>(type: "TEXT", nullable: true),
+                    ModifiedBy = table.Column<string>(type: "nvarchar", maxLength: 128, nullable: false),
+                    Timestamp = table.Column<byte[]>(type: "BLOB", rowVersion: true, nullable: true),
+                    CreatedBy = table.Column<string>(type: "nvarchar", maxLength: 128, nullable: false),
+                    RefNbr = table.Column<string>(type: "nvarchar", maxLength: 10, nullable: false),
+                    TenantId = table.Column<string>(type: "nvarchar", maxLength: 128, nullable: false),
+                    Name = table.Column<string>(type: "nvarchar", maxLength: 128, nullable: false),
+                    Active = table.Column<bool>(type: "bit", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Customer", x => x.Id);
                 });
 
             migrationBuilder.CreateTable(
@@ -46,6 +68,26 @@ namespace PlayWebApp.Migrations
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_StockItem", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "Supplier",
+                columns: table => new
+                {
+                    Id = table.Column<string>(type: "nvarchar", maxLength: 128, nullable: false),
+                    CreatedOn = table.Column<DateTime>(type: "TEXT", nullable: true),
+                    ModifiedOn = table.Column<DateTime>(type: "TEXT", nullable: true),
+                    ModifiedBy = table.Column<string>(type: "nvarchar", maxLength: 128, nullable: false),
+                    Timestamp = table.Column<byte[]>(type: "BLOB", rowVersion: true, nullable: true),
+                    CreatedBy = table.Column<string>(type: "nvarchar", maxLength: 128, nullable: false),
+                    RefNbr = table.Column<string>(type: "nvarchar", maxLength: 10, nullable: false),
+                    TenantId = table.Column<string>(type: "nvarchar", maxLength: 128, nullable: false),
+                    Name = table.Column<string>(type: "nvarchar", maxLength: 128, nullable: false),
+                    Active = table.Column<bool>(type: "bit", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Supplier", x => x.Id);
                 });
 
             migrationBuilder.CreateTable(
@@ -87,15 +129,14 @@ namespace PlayWebApp.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "Address",
+                name: "Booking",
                 columns: table => new
                 {
                     Id = table.Column<string>(type: "nvarchar", maxLength: 128, nullable: false),
-                    StreetAddress = table.Column<string>(type: "nvarchar", maxLength: 128, nullable: false),
-                    PostalCode = table.Column<string>(type: "nvarchar", maxLength: 128, nullable: false),
-                    City = table.Column<string>(type: "nvarchar", maxLength: 128, nullable: false),
-                    Country = table.Column<string>(type: "char", maxLength: 2, nullable: false),
-                    BEntityId = table.Column<string>(type: "nvarchar", nullable: true),
+                    Description = table.Column<string>(type: "nvarchar", maxLength: 128, nullable: false),
+                    BookingDate = table.Column<DateTime>(type: "TEXT", nullable: false),
+                    ShippingAddressId = table.Column<string>(type: "nvarchar", maxLength: 128, nullable: false),
+                    CustomerId = table.Column<string>(type: "nvarchar", nullable: true),
                     CreatedOn = table.Column<DateTime>(type: "TEXT", nullable: true),
                     ModifiedOn = table.Column<DateTime>(type: "TEXT", nullable: true),
                     ModifiedBy = table.Column<string>(type: "nvarchar", maxLength: 128, nullable: false),
@@ -106,46 +147,41 @@ namespace PlayWebApp.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_Address", x => x.Id);
+                    table.PrimaryKey("PK_Booking", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_Address_BusinessEntity_BEntityId",
-                        column: x => x.BEntityId,
-                        principalTable: "BusinessEntity",
+                        name: "FK_Booking_Address_ShippingAddressId",
+                        column: x => x.ShippingAddressId,
+                        principalTable: "Address",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_Booking_Customer_CustomerId",
+                        column: x => x.CustomerId,
+                        principalTable: "Customer",
                         principalColumn: "Id");
                 });
 
             migrationBuilder.CreateTable(
-                name: "Customer",
+                name: "CustomerAddress",
                 columns: table => new
                 {
-                    BEntityId = table.Column<string>(type: "nvarchar", nullable: false)
+                    Id = table.Column<string>(type: "nvarchar", maxLength: 128, nullable: false),
+                    CustomerId = table.Column<string>(type: "nvarchar", nullable: true)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_Customer", x => x.BEntityId);
+                    table.PrimaryKey("PK_CustomerAddress", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_Customer_BusinessEntity_BEntityId",
-                        column: x => x.BEntityId,
-                        principalTable: "BusinessEntity",
+                        name: "FK_CustomerAddress_Address_Id",
+                        column: x => x.Id,
+                        principalTable: "Address",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
-                });
-
-            migrationBuilder.CreateTable(
-                name: "Supplier",
-                columns: table => new
-                {
-                    BEntityId = table.Column<string>(type: "nvarchar", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_Supplier", x => x.BEntityId);
                     table.ForeignKey(
-                        name: "FK_Supplier_BusinessEntity_BEntityId",
-                        column: x => x.BEntityId,
-                        principalTable: "BusinessEntity",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
+                        name: "FK_CustomerAddress_Customer_CustomerId",
+                        column: x => x.CustomerId,
+                        principalTable: "Customer",
+                        principalColumn: "Id");
                 });
 
             migrationBuilder.CreateTable(
@@ -178,36 +214,26 @@ namespace PlayWebApp.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "Booking",
+                name: "SupplierAddress",
                 columns: table => new
                 {
                     Id = table.Column<string>(type: "nvarchar", maxLength: 128, nullable: false),
-                    Description = table.Column<string>(type: "nvarchar", maxLength: 128, nullable: false),
-                    BookingDate = table.Column<DateTime>(type: "TEXT", nullable: false),
-                    ShippingAddressId = table.Column<string>(type: "nvarchar", maxLength: 128, nullable: false),
-                    CustomerId = table.Column<string>(type: "nvarchar", nullable: true),
-                    CreatedOn = table.Column<DateTime>(type: "TEXT", nullable: true),
-                    ModifiedOn = table.Column<DateTime>(type: "TEXT", nullable: true),
-                    ModifiedBy = table.Column<string>(type: "nvarchar", maxLength: 128, nullable: false),
-                    Timestamp = table.Column<byte[]>(type: "BLOB", rowVersion: true, nullable: true),
-                    CreatedBy = table.Column<string>(type: "nvarchar", maxLength: 128, nullable: false),
-                    RefNbr = table.Column<string>(type: "nvarchar", maxLength: 10, nullable: false),
-                    TenantId = table.Column<string>(type: "nvarchar", maxLength: 128, nullable: false)
+                    SupplierId = table.Column<string>(type: "nvarchar", nullable: true)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_Booking", x => x.Id);
+                    table.PrimaryKey("PK_SupplierAddress", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_Booking_Address_ShippingAddressId",
-                        column: x => x.ShippingAddressId,
+                        name: "FK_SupplierAddress_Address_Id",
+                        column: x => x.Id,
                         principalTable: "Address",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
-                        name: "FK_Booking_Customer_CustomerId",
-                        column: x => x.CustomerId,
-                        principalTable: "Customer",
-                        principalColumn: "BEntityId");
+                        name: "FK_SupplierAddress_Supplier_SupplierId",
+                        column: x => x.SupplierId,
+                        principalTable: "Supplier",
+                        principalColumn: "Id");
                 });
 
             migrationBuilder.CreateTable(
@@ -246,11 +272,6 @@ namespace PlayWebApp.Migrations
                 });
 
             migrationBuilder.CreateIndex(
-                name: "IX_Address_BEntityId",
-                table: "Address",
-                column: "BEntityId");
-
-            migrationBuilder.CreateIndex(
                 name: "IX_Booking_CustomerId",
                 table: "Booking",
                 column: "CustomerId");
@@ -271,9 +292,19 @@ namespace PlayWebApp.Migrations
                 column: "StockItemId");
 
             migrationBuilder.CreateIndex(
+                name: "IX_CustomerAddress_CustomerId",
+                table: "CustomerAddress",
+                column: "CustomerId");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_StockItemPrice_StockItemId",
                 table: "StockItemPrice",
                 column: "StockItemId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_SupplierAddress_SupplierId",
+                table: "SupplierAddress",
+                column: "SupplierId");
         }
 
         protected override void Down(MigrationBuilder migrationBuilder)
@@ -282,10 +313,13 @@ namespace PlayWebApp.Migrations
                 name: "BookingItem");
 
             migrationBuilder.DropTable(
+                name: "CustomerAddress");
+
+            migrationBuilder.DropTable(
                 name: "StockItemPrice");
 
             migrationBuilder.DropTable(
-                name: "Supplier");
+                name: "SupplierAddress");
 
             migrationBuilder.DropTable(
                 name: "Tenant");
@@ -300,13 +334,13 @@ namespace PlayWebApp.Migrations
                 name: "StockItem");
 
             migrationBuilder.DropTable(
+                name: "Supplier");
+
+            migrationBuilder.DropTable(
                 name: "Address");
 
             migrationBuilder.DropTable(
                 name: "Customer");
-
-            migrationBuilder.DropTable(
-                name: "BusinessEntity");
         }
     }
 }
