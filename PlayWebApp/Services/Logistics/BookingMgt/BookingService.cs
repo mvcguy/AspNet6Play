@@ -17,16 +17,16 @@ namespace PlayWebApp.Services.Logistics.BookingMgt
 
         public async override Task<BookingDto> Add(BookingUpdateVm model)
         {
-            var record = await repository.GetById(model.BookingNumber);
+            var record = await repository.GetById(model.RefNbr);
             if (record == null)
             {
                 record = new Booking
                 {
-                    RefNbr = model.BookingNumber,
+                    RefNbr = model.RefNbr,
                     Description = model.Description,
                     BookingItems = model.Lines?.Select(x => new BookingItem
                     {
-                        BookingId = x.BookingId,
+                        BookingId = x.BookingRefNbr,
                         RefNbr = x.RefNbr,
                         Description = x.Description,
                         Discount = x.Discount,
@@ -51,7 +51,7 @@ namespace PlayWebApp.Services.Logistics.BookingMgt
 
         public async override Task<BookingDto> Update(BookingUpdateVm model)
         {
-            var record = await repository.GetById(model.BookingNumber);
+            var record = await repository.GetById(model.RefNbr);
             if (record != null)
             {
 

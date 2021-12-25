@@ -22,14 +22,14 @@ namespace PlayWebApp.Controllers
         {
             if (!ModelState.IsValid) return BadRequest(ModelState);
 
-            var id = model.BookingNumber;
+            var id = model.RefNbr;
             var existingItem = await bookingService.GetById(new BookingRequestDto { RefNbr = id });
             if (existingItem == null) return BadRequest($"Booking with ID: {id} does not exist");
 
             var item = await bookingService.Update(model);
 
             await bookingService.SaveChanges();
-            return Ok(item.BookingNumber);
+            return Ok(item.RefNbr);
         }
 
         [HttpPost]
@@ -37,13 +37,13 @@ namespace PlayWebApp.Controllers
         {
             if (!ModelState.IsValid) return BadRequest(ModelState);
 
-            var id = model.BookingNumber;
+            var id = model.RefNbr;
             var exists = await bookingService.GetById(new BookingRequestDto { RefNbr = id });
             if (exists != null) return BadRequest($"Booking with ID: {id} exists from before");
             
             var item = await bookingService.Add(model);
             await bookingService.SaveChanges();
-            return Ok(item.BookingNumber); // TODO: return full URi
+            return Ok(item.RefNbr); // TODO: return full URi
         }
 
         [HttpGet()]

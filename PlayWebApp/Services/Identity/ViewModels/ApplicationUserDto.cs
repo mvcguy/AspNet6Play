@@ -28,7 +28,7 @@ namespace PlayWebApp.Services.Identity.ViewModels
         public virtual string Email{ get; set; }
 
         [Required]
-        public virtual string TenantCode { get; set; }
+        public virtual string TenantId { get; set; }
 
         [Required]
         [Display(Name = "First name")]

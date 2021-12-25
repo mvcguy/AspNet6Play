@@ -24,9 +24,9 @@
 {
     <form class="row g-1" id="frmBooking" method="post">
         <div class="col-12">
-            <label asp-for="BookingVm.BookingNumber"></label>
-            <input asp-for="BookingVm.BookingNumber" class="form-control" aria-required="true" />
-            <span asp-validation-for="BookingVm.BookingNumber" class="text-danger"></span>
+            <label asp-for="BookingVm.RefNbr"></label>
+            <input asp-for="BookingVm.RefNbr" class="form-control" aria-required="true" />
+            <span asp-validation-for="BookingVm.RefNbr" class="text-danger"></span>
         </div>
         <div class="col-12">
             <label asp-for="BookingVm.Description"></label>
@@ -67,33 +67,33 @@
         var srv = new persistenceService({
             url: "https://localhost:7096/api/v1/Bookings/",
             formId: "frmBooking",
-            idField: 'BookingVm_BookingNumber',
+            idField: 'BookingVm_RefNbr',
             msgContainer: "serverMessages",
             getIdCallback: function () {
-                return $('#BookingVm_BookingNumber').val();
+                return $('#BookingVm_RefNbr').val();
             },
             nextEndpoint: function () {
-                return $('#BookingVm_BookingNumber').val() + "/next";
+                return $('#BookingVm_RefNbr').val() + "/next";
             },
             prevEndpoint: function () {
-                return $('#BookingVm_BookingNumber').val() + "/previous";
+                return $('#BookingVm_RefNbr').val() + "/previous";
             },
             onAdd: function (id) {
-                $('#BookingVm_BookingNumber').val('');
+                $('#BookingVm_RefNbr').val('');
                 $('#BookingVm_Description').val('');
 
                 if (id && id !== '')
-                    $('#BookingVm_BookingNumber').val(id);
+                    $('#BookingVm_RefNbr').val(id);
 
             },
             lastEndpoint: "last",
             firstEndpoint: "first",
             onGetResponse: function (response) {
-                $('#BookingVm_BookingNumber').val(response.bookingNumber);
+                $('#BookingVm_RefNbr').val(response.bookingNumber);
                 $('#BookingVm_Description').val(response.description);
             },
             deleteEndpoint: function () {
-                return $('#BookingVm_BookingNumber').val();
+                return $('#BookingVm_RefNbr').val();
             },
             onDeleteResponse: function (response) {
 

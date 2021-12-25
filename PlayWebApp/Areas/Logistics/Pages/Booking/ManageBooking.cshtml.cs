@@ -22,7 +22,7 @@ namespace PlayWebApp.Areas.Logistics.Pages.Booking
             var top1 = await dbContext.Bookings.OrderBy(x => x.RefNbr).FirstOrDefaultAsync();
             if (top1 != null)
             {
-                BookingVm = new BookingUpdateVm { BookingNumber = top1.RefNbr, Description = top1.Description };
+                BookingVm = new BookingUpdateVm { RefNbr = top1.RefNbr, Description = top1.Description };
             }
         }
     }

@@ -33,7 +33,7 @@ namespace PlayWebApp.Areas.Logistics.Pages.StockItems
             {
                 StockItemVm = new StockItemUpdateVm
                 {
-                    ItemDisplayId = item.RefNbr,
+                    RefNbr = item.RefNbr,
                     ItemDescription = item.Description
                 };
             }

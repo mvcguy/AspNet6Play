@@ -22,11 +22,15 @@ namespace PlayWebApp.Services.Database.Model
 
         public virtual ICollection<CustomerAddress> Addresses { get; set; }
 
+        public string PaymentMethod { get; set; }
+
     }
 
     public class Supplier : BusinessEntity
     {
         public virtual ICollection<SupplierAddress> Addresses { get; set; }
+
+        public string ExpenseAccount { get; set; }
     }
 
 }

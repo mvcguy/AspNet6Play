@@ -29,6 +29,16 @@ namespace PlayWebApp.Services.AppManagement.Repository
             return await Tenants.FirstOrDefaultAsync(x => x.TenantCode == code);
         }
 
+        public async Task<Tenant> GetTenantById(string id)
+        {            
+            var item = await Tenants.FirstOrDefaultAsync(x => x.Id == id);
+            if(item == null)
+            {
+                item = Tenants.Local.FirstOrDefault(x => x.Id == id);
+            }
+            return item;
+        }
+
         public OperationResult CreateTenant(Tenant tenant)
         {
             try

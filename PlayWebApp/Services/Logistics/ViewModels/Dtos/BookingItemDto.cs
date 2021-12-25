@@ -6,13 +6,11 @@ namespace PlayWebApp.Services.Logistics.ViewModels.Dtos
 {
     public class BookingItemDto : BaseDto
     {
-        public virtual string BookingNbr { get; set; }
+        public virtual string BookingRefNbr { get; set; }
 
-        public virtual string StockItemId { get; set; }
+        public virtual string StockItemRefNbr { get; set; }
 
         public virtual string Description { get; set; }
-
-        public virtual string BookingId { get; set; }
 
         public virtual decimal Quantity { get; set; }
 

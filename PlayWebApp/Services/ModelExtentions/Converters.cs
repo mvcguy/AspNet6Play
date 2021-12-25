@@ -1,4 +1,5 @@
 using PlayWebApp.Services.AppManagement.ViewModels;
+using PlayWebApp.Services.CustomerManagement.ViewModels;
 using PlayWebApp.Services.Database.Model;
 using PlayWebApp.Services.Identity.ViewModels;
 using PlayWebApp.Services.Logistics.ViewModels;
@@ -17,8 +18,8 @@ namespace PlayWebApp.Services.ModelExtentions
             return new StockItemDto
             {
                 ItemDescription = model.Description,
-                ItemDisplayId = model.RefNbr,
-                Prices = model.StockItemPrices?.Select(x=>x.ToDto()).ToList()               
+                RefNbr = model.RefNbr,
+                Prices = model.StockItemPrices?.Select(x => x.ToDto()).ToList()
             };
         }
 
@@ -27,13 +28,13 @@ namespace PlayWebApp.Services.ModelExtentions
             if (model == null) return null;
 
             return new StockItemPriceDto
-            {   
+            {
                 BreakQty = model.BreakQty,
                 EffectiveFrom = model.EffectiveFrom,
                 ExpiresAt = model.ExpiresAt,
                 UnitCost = model.UnitCost,
                 UnitOfMeasure = model.UnitOfMeasure,
-                StockItemId = model.StockItemId,
+                StockItemRefNbr = model.StockItemId,
                 RefNbr = model.RefNbr
             };
         }
@@ -43,9 +44,9 @@ namespace PlayWebApp.Services.ModelExtentions
             if (model == null) return null;
             return new StockItem
             {
-                RefNbr = model.ItemDisplayId,
+                RefNbr = model.RefNbr,
                 Description = model.ItemDescription,
-                StockItemPrices = model.ItemPrices?.Select(x=>x.ToModel()).ToList(),                
+                StockItemPrices = model.ItemPrices?.Select(x => x.ToModel()).ToList(),
             };
         }
 
@@ -60,7 +61,7 @@ namespace PlayWebApp.Services.ModelExtentions
                 ExpiresAt = model.ExpiresAt,
                 UnitCost = model.UnitCost,
                 UnitOfMeasure = model.UnitOfMeasure,
-                
+
             };
         }
 
@@ -88,7 +89,7 @@ namespace PlayWebApp.Services.ModelExtentions
                 Country = model.Country,
                 PostalCode = model.PostalCode,
                 StreetAddress = model.StreetAddress,
-                
+
             };
         }
 
@@ -97,7 +98,7 @@ namespace PlayWebApp.Services.ModelExtentions
             if (model == null) return null;
             return new BookingDto
             {
-                BookingNumber = model.RefNbr,
+                RefNbr = model.RefNbr,
                 Description = model.Description,
                 Lines = model.BookingItems?.Select(x => x.ToDto()).ToList()
             };
@@ -108,10 +109,10 @@ namespace PlayWebApp.Services.ModelExtentions
             if (model == null) return null;
             return new Booking
             {
-                RefNbr = model.BookingNumber,
+                RefNbr = model.RefNbr,
                 Description = model.Description,
                 BookingItems = model.Lines?.Select(x => x.ToModel()).ToList(),
-                
+
             };
         }
 
@@ -120,13 +121,13 @@ namespace PlayWebApp.Services.ModelExtentions
             if (model == null) return null;
             return new BookingItemDto
             {
-                BookingId = model.BookingId,
-                BookingNbr = model.RefNbr,
+                RefNbr = model.RefNbr,
+                BookingRefNbr = model.RefNbr,
                 Description = model.Description,
                 Discount = model.Discount ?? 0,
                 ExtCost = model.ExtCost ?? 0,
                 Quantity = model.Quantity ?? 0,
-                StockItemId = model.StockItemId,
+                StockItemRefNbr = model.StockItemId,
                 UnitCost = model.UnitCost ?? 0,
             };
         }
@@ -136,14 +137,14 @@ namespace PlayWebApp.Services.ModelExtentions
             if (model == null) return null;
             return new BookingItem
             {
-                BookingId = model.BookingId,
+                BookingId = model.BookingRefNbr,
                 RefNbr = model.RefNbr,
                 Description = model.Description,
                 Discount = model.Discount,
                 ExtCost = model.ExtCost,
                 Quantity = model.Quantity,
                 StockItemId = model.StockItemId,
-                
+
                 UnitCost = model.UnitCost,
                 CreatedBy = model.UserId,
 
@@ -172,6 +173,18 @@ namespace PlayWebApp.Services.ModelExtentions
                 Code = model.TenantCode,
                 Name = model.TenantName,
                 Country = model.Country
+            };
+        }
+
+        public static CustomerDto ToDto(this Customer model)
+        {
+            if (model == null) return null;
+
+            return new CustomerDto
+            {
+                RefNbr = model.RefNbr,
+                Active = model.Active,
+                Name = model.Name,
             };
         }
 

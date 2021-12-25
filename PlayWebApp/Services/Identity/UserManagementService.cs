@@ -31,7 +31,7 @@ namespace PlayWebApp.Services.Identity
         {
             try
             {
-                var tenant = await appMgtService.GetTenantByCode(model.TenantCode);
+                var tenant = await appMgtService.GetTenantById(model.TenantId);
 
                 if (tenant == null)
                     return OperationResult.Failure(new Exception("Tenant not found"));

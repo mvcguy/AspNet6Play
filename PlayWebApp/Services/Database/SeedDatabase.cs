@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Identity;
 using PlayWebApp.Services.AppManagement;
 using PlayWebApp.Services.AppManagement.Repository;
 using PlayWebApp.Services.CustomerManagement;
+using PlayWebApp.Services.CustomerManagement.ViewModels;
 using PlayWebApp.Services.Database.Model;
 using PlayWebApp.Services.Identity;
 using PlayWebApp.Services.Identity.Repository;
@@ -37,13 +38,6 @@ public class SeedDatabase
         var appRepo = new AppMgtRepository(context);
         var appSrv = new AppMgtService(appRepo);
         var userSrv = new UserManagementService(userRepo, appSrv);
-        var appContext = new StartupAppContext { TenantId = "", UserId = "" };
-
-        var inRepo = new InventoryRepository(context, appContext);
-        var inSrv = new InventoryService(inRepo);
-
-        var cusRepo = new CustomerRepository(context, appContext);
-        var cusSrv = new CustomerService(cusRepo);
 
         var tenantId = string.Empty;
         var userId = string.Empty;
@@ -65,19 +59,25 @@ public class SeedDatabase
         {
             userId = context.Users.FirstOrDefault()?.Id;
         }
+        var appContext = new StartupAppContext { TenantId = tenantId, UserId = userId };
 
-        appContext.UserId = userId;
-        appContext.TenantId = tenantId;
+        var inRepo = new InventoryRepository(context, appContext);
+        var inSrv = new InventoryService(inRepo);
+
+        var cusRepo = new CustomerRepository(context, appContext);
+        var cusSrv = new CustomerService(cusRepo);
 
         if (context.StockItems.Count() == 0)
         {
             AddStockItems(inSrv);
         }
 
-        if(context.Customers.Count() == 0)
+        if (context.Customers.Count() == 0)
         {
             AddCustomers(cusSrv);
         }
+
+        context.SaveChanges();
     }
 
     public static string AddTenant(ApplicationDbContext context)
@@ -102,20 +102,50 @@ public class SeedDatabase
             Email = "shahid.ali@play.com",
             FirstName = "Shahid",
             LastName = "Khan",
-            TenantCode = tenantId,
+            TenantId = tenantId,
         };
         var result = srv.CreateUser(uvm).Result;
+        if (!result.Succeeded) throw new Exception("User cannot be added");
         return result.EntityId;
     }
 
     public static void AddStockItems(InventoryService srv)
     {
+        var items = new List<StockItemUpdateVm>
+        {
+            new StockItemUpdateVm
+            {
+                RefNbr = "001",
+                ItemDescription = "office chairs"
+            }
+        };
 
+        // TODO: add support for adding multiple items with one call
+
+        foreach (var item in items)
+        {
+            var res = srv.Add(item).Result;
+        }
     }
 
     public static void AddCustomers(CustomerService srv)
     {
+        var items = new List<CustomerUpdateVm>
+        {
+            new CustomerUpdateVm
+            {
+                RefNbr = "C001",
+                Name = "Shahid Ali AS",
+                Active = true,
+            }
+        };
 
+        // TODO: add support for adding multiple items with one call
+
+        foreach (var item in items)
+        {
+            var res = srv.Add(item).Result;
+        }
     }
 }
 

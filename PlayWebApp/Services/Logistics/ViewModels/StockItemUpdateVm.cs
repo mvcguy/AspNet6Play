@@ -9,7 +9,7 @@ namespace PlayWebApp.Services.Logistics.ViewModels
         [Display(Name = "Item ID:")]
         [JsonPropertyName("StockItemVm.ItemDisplayId")]
         [StringLength(10, ErrorMessage = "The {0} must be at least {2} and at max {1} characters long.", MinimumLength = 3)]
-        public string ItemDisplayId { get; set; }
+        public new string RefNbr { get; set; }
 
         [Required]
         [Display(Name = "Description")]

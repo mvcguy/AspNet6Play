@@ -25,6 +25,11 @@ namespace PlayWebApp.Services.AppManagement
             return (await repository.GetTenantByCode(code)).ToDto();
         }
 
+        public async Task<TenantDto> GetTenantById(string id)
+        {
+            return (await repository.GetTenantById(id)).ToDto();
+        }
+
         public string CreateTenant(TenantUpdateVm model)
         {
             var tenant = new Tenant

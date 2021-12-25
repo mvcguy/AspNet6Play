@@ -24,14 +24,14 @@ namespace PlayWebApp.Controllers
         {
             if (!ModelState.IsValid) return BadRequest(ModelState);
 
-            var id = model.ItemDisplayId;
+            var id = model.RefNbr;
             var existingItem = await service.GetById(new StockItemRequestDto { RefNbr = id });
             if (existingItem == null) return BadRequest($"Stock item with ID: {id} does not exist");
 
             var item = await service.Update(model);
 
             await service.SaveChanges();
-            return Ok(item.ItemDisplayId);
+            return Ok(item.RefNbr);
         }
 
         [HttpPost]
@@ -39,14 +39,14 @@ namespace PlayWebApp.Controllers
         {
             if (!ModelState.IsValid) return BadRequest(ModelState);
 
-            var id = model.ItemDisplayId;
+            var id = model.RefNbr;
             var exists = await service.GetById(new StockItemRequestDto { RefNbr = id });
             if (exists != null) return BadRequest($"Stock item with ID: {id} exists from before");
 
             var item = await service.Add(model);
 
             await service.SaveChanges();
-            return Ok(item.ItemDisplayId);
+            return Ok(item.RefNbr);
         }
 
         [HttpGet()]

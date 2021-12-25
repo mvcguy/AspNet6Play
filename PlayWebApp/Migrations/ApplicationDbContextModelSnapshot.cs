@@ -280,7 +280,7 @@ namespace PlayWebApp.Migrations
                     b.ToTable("BookingItem", (string)null);
                 });
 
-            modelBuilder.Entity("PlayWebApp.Services.Database.Model.Customer", b =>
+            modelBuilder.Entity("PlayWebApp.Services.Database.Model.BusinessEntity", b =>
                 {
                     b.Property<string>("Id")
                         .HasMaxLength(128)
@@ -329,7 +329,7 @@ namespace PlayWebApp.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Customer", (string)null);
+                    b.ToTable("BEntity", (string)null);
                 });
 
             modelBuilder.Entity("PlayWebApp.Services.Database.Model.StockItem", b =>
@@ -449,58 +449,6 @@ namespace PlayWebApp.Migrations
                     b.ToTable("StockItemPrice", (string)null);
                 });
 
-            modelBuilder.Entity("PlayWebApp.Services.Database.Model.Supplier", b =>
-                {
-                    b.Property<string>("Id")
-                        .HasMaxLength(128)
-                        .HasColumnType("nvarchar");
-
-                    b.Property<bool>("Active")
-                        .HasColumnType("bit");
-
-                    b.Property<string>("CreatedBy")
-                        .IsRequired()
-                        .HasMaxLength(128)
-                        .HasColumnType("nvarchar");
-
-                    b.Property<DateTime?>("CreatedOn")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("ModifiedBy")
-                        .IsRequired()
-                        .HasMaxLength(128)
-                        .HasColumnType("nvarchar");
-
-                    b.Property<DateTime?>("ModifiedOn")
-                        .ValueGeneratedOnAddOrUpdate()
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasMaxLength(128)
-                        .HasColumnType("nvarchar");
-
-                    b.Property<string>("RefNbr")
-                        .IsRequired()
-                        .HasMaxLength(10)
-                        .HasColumnType("nvarchar");
-
-                    b.Property<string>("TenantId")
-                        .IsRequired()
-                        .HasMaxLength(128)
-                        .HasColumnType("nvarchar");
-
-                    b.Property<byte[]>("Timestamp")
-                        .IsConcurrencyToken()
-                        .ValueGeneratedOnAddOrUpdate()
-                        .HasColumnType("BLOB");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("Supplier", (string)null);
-                });
-
             modelBuilder.Entity("PlayWebApp.Services.Database.Model.Tenant", b =>
                 {
                     b.Property<string>("Id")
@@ -540,6 +488,16 @@ namespace PlayWebApp.Migrations
                     b.ToTable("Tenant");
                 });
 
+            modelBuilder.Entity("PlayWebApp.Services.Database.Model.Customer", b =>
+                {
+                    b.HasBaseType("PlayWebApp.Services.Database.Model.BusinessEntity");
+
+                    b.Property<string>("PaymentMethod")
+                        .HasColumnType("TEXT");
+
+                    b.ToTable("Customer", (string)null);
+                });
+
             modelBuilder.Entity("PlayWebApp.Services.Database.Model.CustomerAddress", b =>
                 {
                     b.HasBaseType("PlayWebApp.Services.Database.Model.Address");
@@ -550,6 +508,16 @@ namespace PlayWebApp.Migrations
                     b.HasIndex("CustomerId");
 
                     b.ToTable("CustomerAddress", (string)null);
+                });
+
+            modelBuilder.Entity("PlayWebApp.Services.Database.Model.Supplier", b =>
+                {
+                    b.HasBaseType("PlayWebApp.Services.Database.Model.BusinessEntity");
+
+                    b.Property<string>("ExpenseAccount")
+                        .HasColumnType("TEXT");
+
+                    b.ToTable("Supplier", (string)null);
                 });
 
             modelBuilder.Entity("PlayWebApp.Services.Database.Model.SupplierAddress", b =>
@@ -605,6 +573,15 @@ namespace PlayWebApp.Migrations
                     b.Navigation("StockItem");
                 });
 
+            modelBuilder.Entity("PlayWebApp.Services.Database.Model.Customer", b =>
+                {
+                    b.HasOne("PlayWebApp.Services.Database.Model.BusinessEntity", null)
+                        .WithOne()
+                        .HasForeignKey("PlayWebApp.Services.Database.Model.Customer", "Id")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("PlayWebApp.Services.Database.Model.CustomerAddress", b =>
                 {
                     b.HasOne("PlayWebApp.Services.Database.Model.Customer", "Customer")
@@ -618,6 +595,15 @@ namespace PlayWebApp.Migrations
                         .IsRequired();
 
                     b.Navigation("Customer");
+                });
+
+            modelBuilder.Entity("PlayWebApp.Services.Database.Model.Supplier", b =>
+                {
+                    b.HasOne("PlayWebApp.Services.Database.Model.BusinessEntity", null)
+                        .WithOne()
+                        .HasForeignKey("PlayWebApp.Services.Database.Model.Supplier", "Id")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("PlayWebApp.Services.Database.Model.SupplierAddress", b =>
@@ -640,18 +626,18 @@ namespace PlayWebApp.Migrations
                     b.Navigation("BookingItems");
                 });
 
-            modelBuilder.Entity("PlayWebApp.Services.Database.Model.Customer", b =>
-                {
-                    b.Navigation("Addresses");
-
-                    b.Navigation("Bookings");
-                });
-
             modelBuilder.Entity("PlayWebApp.Services.Database.Model.StockItem", b =>
                 {
                     b.Navigation("BookingItems");
 
                     b.Navigation("StockItemPrices");
+                });
+
+            modelBuilder.Entity("PlayWebApp.Services.Database.Model.Customer", b =>
+                {
+                    b.Navigation("Addresses");
+
+                    b.Navigation("Bookings");
                 });
 
             modelBuilder.Entity("PlayWebApp.Services.Database.Model.Supplier", b =>

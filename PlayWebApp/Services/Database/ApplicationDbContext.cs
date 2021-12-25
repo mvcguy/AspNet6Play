@@ -22,6 +22,8 @@ public class ApplicationDbContext : DbContext
 
     public DbSet<SupplierAddress> SupplierAddresses { get; set; }
 
+    public DbSet<BusinessEntity> BusinessEntities{ get; set; }
+
 
     public DbSet<Tenant> Tenants { get; set; }
 
@@ -46,6 +48,7 @@ public class ApplicationDbContext : DbContext
         var applicationUser = builder.Entity<ApplicationUser>().ToTable("User");
         var customer = builder.Entity<Customer>().ToTable("Customer");
         var supplier = builder.Entity<Supplier>().ToTable("Supplier");
+        var bEntity = builder.Entity<BusinessEntity>().ToTable("BEntity");
 
         applicationUser.Property(x => x.TenantId).IsRequired(false);
         builder.Entity<ApplicationUser>().Ignore(x => x.RefNbr);

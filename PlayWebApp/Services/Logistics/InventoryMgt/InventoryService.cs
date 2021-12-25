@@ -23,12 +23,12 @@ namespace PlayWebApp.Services.Logistics.InventoryMgt
 
             // TODO: do not allow to add two lines with same CODE
 
-            var record = await repository.GetById(vm.ItemDisplayId);
+            var record = await repository.GetById(vm.RefNbr);
             if (record == null)
             {
                 record = new StockItem
                 {
-                    RefNbr = vm.ItemDisplayId,
+                    RefNbr = vm.RefNbr,
                     Description = vm.ItemDescription,
                     StockItemPrices = vm.ItemPrices?.Select(x => new StockItemPrice
                     {
@@ -56,7 +56,7 @@ namespace PlayWebApp.Services.Logistics.InventoryMgt
 
         public async override Task<StockItemDto> Update(StockItemUpdateVm model)
         {
-            var record = await repository.GetById(model.ItemDisplayId);
+            var record = await repository.GetById(model.RefNbr);
             if (record != null)
             {
                 record.Description = model.ItemDescription;
