@@ -101,8 +101,8 @@ namespace PlayWebApp.Services.ModelExtentions
 
             return new TenantDto
             {
-                Key = model.Id,
-                Code = model.TenantCode,
+                InternalId = model.Id,
+                RefNbr = model.RefNbr,
                 Name = model.TenantName,
                 Country = model.Country
             };

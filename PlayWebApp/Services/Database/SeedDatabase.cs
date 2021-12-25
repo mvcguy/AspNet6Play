@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Identity;
 using PlayWebApp.Services.AppManagement;
 using PlayWebApp.Services.AppManagement.Repository;
+using PlayWebApp.Services.AppManagement.ViewModels;
 using PlayWebApp.Services.CustomerManagement;
 using PlayWebApp.Services.CustomerManagement.ViewModels;
 using PlayWebApp.Services.Database.Model;
@@ -34,38 +35,17 @@ public class SeedDatabase
     public static void Seed(ApplicationDbContext context)
     {
 
+        var tenantRepo = new TenantRepository(context, new StartupAppContext { TenantId = "", UserId = "" });
+        var tenantSrv = new TenantService(tenantRepo);
+        var tenantId = CreateTenant(context, tenantSrv);
 
-        var appRepo = new AppMgtRepository(context);
-        var appSrv = new AppMgtService(appRepo);
-
-
-        var tenantId = string.Empty;
-        var userId = string.Empty;
-
-        if (context.Tenants.Count() == 0)
-        {
-            tenantId = AddTenant(context);
-        }
-        else
-        {
-            tenantId = context.Tenants.FirstOrDefault()?.Id;
-        }
-        
-        var userRepo = new UserRepository(context, new StartupAppContext(){TenantId = tenantId});
+        var userRepo = new UserRepository(context, new StartupAppContext() { TenantId = tenantId });
         var userSrv = new UserService(userRepo);
-        if (context.Users.Count() == 0)
-        {
-            userId = AddUser(userSrv, tenantId);
-        }
-        else
-        {
-            userId = context.Users.FirstOrDefault()?.RefNbr;
-        }
-        var appContext = new StartupAppContext { TenantId = tenantId, UserId = userId };
+        var userId = CreateUser(context, tenantId, userSrv);
 
+        var appContext = new StartupAppContext { TenantId = tenantId, UserId = userId };
         var inRepo = new InventoryRepository(context, appContext);
         var inSrv = new InventoryService(inRepo);
-
         var cusRepo = new CustomerRepository(context, appContext);
         var cusSrv = new CustomerService(cusRepo);
 
@@ -82,18 +62,47 @@ public class SeedDatabase
         context.SaveChanges();
     }
 
-    public static string AddTenant(ApplicationDbContext context)
+    private static string CreateUser(ApplicationDbContext context, string tenantId, UserService userSrv)
     {
-        var tenant = context.Tenants.Add(new Tenant
+        string userId;
+        if (context.Users.Count() == 0)
         {
-            Id = Guid.NewGuid().ToString(),
+            userId = AddUser(userSrv, tenantId);
+        }
+        else
+        {
+            userId = context.Users.FirstOrDefault()?.RefNbr;
+        }
+
+        return userId;
+    }
+
+    private static string CreateTenant(ApplicationDbContext context, TenantService srv)
+    {
+        string tenantId;
+        if (context.Tenants.Count() == 0)
+        {
+            tenantId = AddTenant(srv);
+        }
+        else
+        {
+            tenantId = context.Tenants.FirstOrDefault()?.Id;
+        }
+
+        return tenantId;
+    }
+
+    public static string AddTenant(TenantService srv)
+    {
+        var vm = new TenantUpdateVm
+        {
             Country = "PK",
-            TenantCode = "SH-TEST-01",
-            TenantName = "Shahid Test company 01",
-            CreatedOn = DateTime.UtcNow,
-            ModifiedOn = DateTime.UtcNow,
-        });
-        return tenant.Entity.Id;
+            RefNbr = "SH-TEST-01",
+            Name = "Shahid Test company 01",
+        };
+
+        var result = srv.Add(vm).Result;
+        return result.InternalId;
     }
 
     public static string AddUser(UserService srv, string tenantId)

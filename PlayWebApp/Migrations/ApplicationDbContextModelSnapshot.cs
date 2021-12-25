@@ -120,6 +120,11 @@ namespace PlayWebApp.Migrations
                         .ValueGeneratedOnAddOrUpdate()
                         .HasColumnType("TEXT");
 
+                    b.Property<string>("RefNbr")
+                        .IsRequired()
+                        .HasMaxLength(10)
+                        .HasColumnType("nvarchar");
+
                     b.Property<string>("TenantId")
                         .HasMaxLength(128)
                         .HasColumnType("nvarchar");
@@ -460,15 +465,23 @@ namespace PlayWebApp.Migrations
                         .HasMaxLength(2)
                         .HasColumnType("char");
 
+                    b.Property<string>("CreatedBy")
+                        .HasMaxLength(128)
+                        .HasColumnType("nvarchar");
+
                     b.Property<DateTime?>("CreatedOn")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("TEXT");
+
+                    b.Property<string>("ModifiedBy")
+                        .HasMaxLength(128)
+                        .HasColumnType("nvarchar");
 
                     b.Property<DateTime?>("ModifiedOn")
                         .ValueGeneratedOnAddOrUpdate()
                         .HasColumnType("TEXT");
 
-                    b.Property<string>("TenantCode")
+                    b.Property<string>("RefNbr")
                         .IsRequired()
                         .HasMaxLength(10)
                         .HasColumnType("nvarchar");

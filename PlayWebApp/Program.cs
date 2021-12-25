@@ -112,21 +112,21 @@ services.AddControllers().AddJsonOptions(options =>
     options.JsonSerializerOptions.NumberHandling = JsonNumberHandling.AllowReadingFromString | JsonNumberHandling.WriteAsString;
 });
 
-services.AddScoped<UserRepository>();
-services.AddScoped<UserService>();
-services.AddScoped<AppMgtRepository>();
-services.AddScoped<AppMgtService>();
+
+
 
 services.AddScoped<INavigationRepository<SupplierAddress>, SupplierLocationRepository>();
 services.AddScoped<INavigationRepository<CustomerAddress>, CustomerLocationRepository>();
+services.AddScoped<INavigationRepository<ApplicationUser>, UserRepository>();
+services.AddScoped<INavigationRepository<Tenant>, TenantRepository>();
+services.AddScoped<INavigationRepository<StockItem>, InventoryRepository>();
+services.AddScoped<INavigationRepository<Booking>, BookingRepository>();
 
+services.AddScoped<UserService>();
+services.AddScoped<TenantService>();
 services.AddScoped<CustomerLocationService>();
 services.AddScoped<SupplierLocationService>();
-
-services.AddScoped<INavigationRepository<StockItem>, InventoryRepository>();
 services.AddScoped<InventoryService>();
-
-services.AddScoped<INavigationRepository<Booking>, BookingRepository>();
 services.AddScoped<BookingService>();
 services.AddScoped<IPlayAppContext, PlayAppContext>();
 
@@ -135,11 +135,7 @@ var app = builder.Build();
 using (var scope = app.Services.CreateScope())
 {
     var ctx = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-
-    var usrMgtSrv = scope.ServiceProvider.GetRequiredService<UserService>();
-
     SeedDatabase.Seed(ctx);
-
 }
 
 // Configure the HTTP request pipeline.

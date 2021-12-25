@@ -1,14 +1,17 @@
 using System.ComponentModel.DataAnnotations;
+using PlayWebApp.Services.Logistics.ViewModels;
+using PlayWebApp.Services.Logistics.ViewModels.Dtos;
+using PlayWebApp.Services.Logistics.ViewModels.Requests;
 #nullable disable
 
 namespace PlayWebApp.Services.AppManagement.ViewModels
 {
-    public class TenantUpdateVm
+    public class TenantUpdateVm : ViewModelBase
     {
         [Required]
         [Display(Name = "Tenant code")]
         [StringLength(10, ErrorMessage = "The {0} must be at least {2} and at max {1} characters long.", MinimumLength = 3)]
-        public string RefNbr { get; set; }
+        public new string RefNbr { get; set; }
 
         [Required]
         [Display(Name = "Name")]
@@ -21,15 +24,15 @@ namespace PlayWebApp.Services.AppManagement.ViewModels
         public string Country { get; set; }
     }
 
-    public class TenantDto
-    {       
-
-        public string Key { get; set; }
-
-        public string Code { get; set; }
-        
+    public class TenantDto : BaseDto
+    {
         public string Name { get; set; }
-       
+
         public string Country { get; set; }
+    }
+
+    public class TenantRequestDto : RequestBase
+    {
+        
     }
 }

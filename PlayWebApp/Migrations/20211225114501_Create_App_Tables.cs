@@ -75,12 +75,14 @@ namespace PlayWebApp.Migrations
                 columns: table => new
                 {
                     Id = table.Column<string>(type: "nvarchar", maxLength: 128, nullable: false),
-                    TenantCode = table.Column<string>(type: "nvarchar", maxLength: 10, nullable: false),
                     TenantName = table.Column<string>(type: "nvarchar", maxLength: 128, nullable: false),
                     Country = table.Column<string>(type: "char", maxLength: 2, nullable: false),
                     CreatedOn = table.Column<DateTime>(type: "TEXT", nullable: true),
                     ModifiedOn = table.Column<DateTime>(type: "TEXT", nullable: true),
-                    Timestamp = table.Column<byte[]>(type: "BLOB", rowVersion: true, nullable: true)
+                    ModifiedBy = table.Column<string>(type: "nvarchar", maxLength: 128, nullable: true),
+                    Timestamp = table.Column<byte[]>(type: "BLOB", rowVersion: true, nullable: true),
+                    CreatedBy = table.Column<string>(type: "nvarchar", maxLength: 128, nullable: true),
+                    RefNbr = table.Column<string>(type: "nvarchar", maxLength: 10, nullable: false)
                 },
                 constraints: table =>
                 {
@@ -101,6 +103,7 @@ namespace PlayWebApp.Migrations
                     ModifiedBy = table.Column<string>(type: "nvarchar", maxLength: 128, nullable: false),
                     Timestamp = table.Column<byte[]>(type: "BLOB", rowVersion: true, nullable: true),
                     CreatedBy = table.Column<string>(type: "nvarchar", maxLength: 128, nullable: false),
+                    RefNbr = table.Column<string>(type: "nvarchar", maxLength: 10, nullable: false),
                     TenantId = table.Column<string>(type: "nvarchar", maxLength: 128, nullable: true)
                 },
                 constraints: table =>

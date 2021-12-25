@@ -11,7 +11,7 @@ using PlayWebApp.Services.Database;
 namespace PlayWebApp.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20211225001139_Create_App_Tables")]
+    [Migration("20211225114501_Create_App_Tables")]
     partial class Create_App_Tables
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -121,6 +121,11 @@ namespace PlayWebApp.Migrations
                     b.Property<DateTime?>("ModifiedOn")
                         .ValueGeneratedOnAddOrUpdate()
                         .HasColumnType("TEXT");
+
+                    b.Property<string>("RefNbr")
+                        .IsRequired()
+                        .HasMaxLength(10)
+                        .HasColumnType("nvarchar");
 
                     b.Property<string>("TenantId")
                         .HasMaxLength(128)
@@ -462,15 +467,23 @@ namespace PlayWebApp.Migrations
                         .HasMaxLength(2)
                         .HasColumnType("char");
 
+                    b.Property<string>("CreatedBy")
+                        .HasMaxLength(128)
+                        .HasColumnType("nvarchar");
+
                     b.Property<DateTime?>("CreatedOn")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("TEXT");
+
+                    b.Property<string>("ModifiedBy")
+                        .HasMaxLength(128)
+                        .HasColumnType("nvarchar");
 
                     b.Property<DateTime?>("ModifiedOn")
                         .ValueGeneratedOnAddOrUpdate()
                         .HasColumnType("TEXT");
 
-                    b.Property<string>("TenantCode")
+                    b.Property<string>("RefNbr")
                         .IsRequired()
                         .HasMaxLength(10)
                         .HasColumnType("nvarchar");
