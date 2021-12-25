@@ -29,6 +29,11 @@
             <span asp-validation-for="BookingVm.RefNbr" class="text-danger"></span>
         </div>
         <div class="col-12">
+            <select asp-for="BookingVm.CustomerRefNbr" asp-items="Model.Customers" class="form-control"></select>
+            <label asp-for="BookingVm.CustomerRefNbr" class="form-label"></label>
+            <span asp-validation-for="BookingVm.CustomerRefNbr" class="text-danger"></span>
+        </div>
+        <div class="col-12">
             <label asp-for="BookingVm.Description"></label>
             <input asp-for="BookingVm.Description" class="form-control" aria-required="true" />
             <span asp-validation-for="BookingVm.Description" class="text-danger"></span>
@@ -36,8 +41,9 @@
 
         <ul class="nav nav-tabs" id="tabsBooking" role="tablist">
             <li class="nav-item" role="presentation">
-                <button class="nav-link active" id="tabBookingDetails" data-bs-toggle="tab" data-bs-target="#tabBookingItemsContent"
-                type="button" role="tab" aria-controls="tabBookingItemsContent" aria-selected="true">Details</button>
+                <button class="nav-link active" id="tabBookingDetails" data-bs-toggle="tab"
+                data-bs-target="#tabBookingItemsContent" type="button" role="tab" aria-controls="tabBookingItemsContent"
+                aria-selected="true">Details</button>
             </li>
         </ul>
         <div class="tab-content" id="myTabContent">

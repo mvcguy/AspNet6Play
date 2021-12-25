@@ -13,6 +13,8 @@ namespace PlayWebApp.Services.DataNavigation
         Task<TModel> GetLast();
         Task<TModel> GetNext(string refNbr);
         Task<TModel> GetPrevious(string refNbr);
+
+        Task<IEnumerable<TModel>> GetAll(int take, int skip);
         IQueryable<TModel> GetTenantBasedQuery(bool includeSubItems = true);
         Task<int> SaveChanges();
         EntityEntry<TModel> Update(TModel model);

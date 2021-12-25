@@ -93,6 +93,11 @@ namespace PlayWebApp.Services.DataNavigation
             return dbContext.Set<TModel>().Remove(model);
         }
 
+        public virtual async Task<IEnumerable<TModel>> GetAll(int take, int skip)
+        {
+            return await GetTenantBasedQuery().OrderBy(x => x.RefNbr).Skip(skip).Take(take).ToListAsync();
+        }
+
         public virtual async Task<int> SaveChanges()
         {
             return await dbContext.SaveChangesAsync();

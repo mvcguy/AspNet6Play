@@ -15,6 +15,10 @@ namespace PlayWebApp.Services.DataNavigation
     {
         protected readonly INavigationRepository<TDbModel> repository;
 
+        public virtual int MaxPerPage { get; set; }
+
+        private int DefaultMaxPerPage = 100;
+
         public NavigationService(INavigationRepository<TDbModel> repository)
         {
             this.repository = repository;
@@ -65,6 +69,30 @@ namespace PlayWebApp.Services.DataNavigation
         public virtual async Task<int> SaveChanges()
         {
             return await repository.SaveChanges();
+        }
+
+        public virtual async Task<IEnumerable<TDto>> GetAll(int page = 1)
+        {
+            if (page <= 0)
+            {
+                page = 1;
+            }
+
+            if (MaxPerPage <= 0)
+            {
+                MaxPerPage = DefaultMaxPerPage;
+            }
+
+            var take = MaxPerPage;
+            var skip = 0;
+
+            if (page > 1)
+            {
+                skip = (page - 1) * MaxPerPage;
+            }
+
+            var items = await repository.GetAll(take, skip);
+            return items.Select(x => ToDto(x));
         }
 
 

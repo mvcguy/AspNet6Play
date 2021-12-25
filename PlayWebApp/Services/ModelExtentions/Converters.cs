@@ -104,25 +104,13 @@ namespace PlayWebApp.Services.ModelExtentions
             };
         }
 
-        public static Booking ToModel(this BookingUpdateVm model)
-        {
-            if (model == null) return null;
-            return new Booking
-            {
-                RefNbr = model.RefNbr,
-                Description = model.Description,
-                BookingItems = model.Lines?.Select(x => x.ToModel()).ToList(),
-
-            };
-        }
-
         public static BookingItemDto ToDto(this BookingItem model)
         {
             if (model == null) return null;
             return new BookingItemDto
             {
                 RefNbr = model.RefNbr,
-                BookingRefNbr = model.RefNbr,
+                BookingRefNbr = model.RefNbr, // TODO: need a fix!!!
                 Description = model.Description,
                 Discount = model.Discount ?? 0,
                 ExtCost = model.ExtCost ?? 0,
