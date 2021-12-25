@@ -19,6 +19,7 @@ namespace PlayWebApp.Services.ModelExtentions
             {
                 ItemDescription = model.Description,
                 RefNbr = model.RefNbr,
+                InternalId = model.Id,
                 Prices = model.StockItemPrices?.Select(x => x.ToDto()).ToList()
             };
         }
@@ -35,33 +36,8 @@ namespace PlayWebApp.Services.ModelExtentions
                 UnitCost = model.UnitCost,
                 UnitOfMeasure = model.UnitOfMeasure,
                 StockItemRefNbr = model.StockItemId,
+                InternalId = model.Id,
                 RefNbr = model.RefNbr
-            };
-        }
-
-        public static StockItem ToModel(this StockItemUpdateVm model)
-        {
-            if (model == null) return null;
-            return new StockItem
-            {
-                RefNbr = model.RefNbr,
-                Description = model.ItemDescription,
-                StockItemPrices = model.ItemPrices?.Select(x => x.ToModel()).ToList(),
-            };
-        }
-
-        public static StockItemPrice ToModel(this StockItemPriceUpdateVm model)
-        {
-            if (model == null) return null;
-            return new StockItemPrice
-            {
-                BreakQty = model.BreakQty,
-                RefNbr = model.Code,
-                EffectiveFrom = model.EffectiveFrom,
-                ExpiresAt = model.ExpiresAt,
-                UnitCost = model.UnitCost,
-                UnitOfMeasure = model.UnitOfMeasure,
-
             };
         }
 
@@ -70,26 +46,12 @@ namespace PlayWebApp.Services.ModelExtentions
             if (model == null) return null;
             return new AddressDto
             {
-                AddressCode = model.RefNbr,
+                RefNbr = model.RefNbr,
                 StreetAddress = model.StreetAddress,
                 City = model.City,
                 PostalCode = model.PostalCode,
+                InternalId = model.Id,
                 Country = model.Country,
-                Key = model.Id,
-            };
-        }
-
-        public static CustomerAddress ToModel(this AddressUpdateVm model)
-        {
-            if (model == null) return null;
-            return new CustomerAddress
-            {
-                City = model.City,
-                RefNbr = model.AddressCode,
-                Country = model.Country,
-                PostalCode = model.PostalCode,
-                StreetAddress = model.StreetAddress,
-
             };
         }
 
@@ -100,6 +62,7 @@ namespace PlayWebApp.Services.ModelExtentions
             {
                 RefNbr = model.RefNbr,
                 Description = model.Description,
+                InternalId = model.Id,
                 Lines = model.BookingItems?.Select(x => x.ToDto()).ToList()
             };
         }
@@ -110,6 +73,7 @@ namespace PlayWebApp.Services.ModelExtentions
             return new BookingItemDto
             {
                 RefNbr = model.RefNbr,
+                InternalId = model.Id,
                 BookingRefNbr = model.RefNbr, // TODO: need a fix!!!
                 Description = model.Description,
                 Discount = model.Discount ?? 0,
@@ -119,35 +83,15 @@ namespace PlayWebApp.Services.ModelExtentions
                 UnitCost = model.UnitCost ?? 0,
             };
         }
-
-        public static BookingItem ToModel(this BookingItemUpdateVm model)
+        public static AppUserDto ToDto(this ApplicationUser model)
         {
             if (model == null) return null;
-            return new BookingItem
+            return new AppUserDto
             {
-                BookingId = model.BookingRefNbr,
                 RefNbr = model.RefNbr,
-                Description = model.Description,
-                Discount = model.Discount,
-                ExtCost = model.ExtCost,
-                Quantity = model.Quantity,
-                StockItemId = model.StockItemId,
-
-                UnitCost = model.UnitCost,
-                CreatedBy = model.UserId,
-
-            };
-        }
-
-        public static ApplicationUserDto ToDto(this ApplicationUser model)
-        {
-            if (model == null) return null;
-            return new ApplicationUserDto
-            {
+                InternalId = model.Id,
                 FirstName = model.FirstName,
                 LastName = model.LastName,
-                Key = model.CreatedBy,
-                TenantId = model.TenantId
             };
         }
 
@@ -171,6 +115,7 @@ namespace PlayWebApp.Services.ModelExtentions
             return new CustomerDto
             {
                 RefNbr = model.RefNbr,
+                InternalId = model.Id,
                 Active = model.Active,
                 Name = model.Name,
             };

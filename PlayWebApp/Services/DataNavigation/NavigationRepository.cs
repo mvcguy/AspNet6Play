@@ -17,7 +17,11 @@ namespace PlayWebApp.Services.DataNavigation
         {
             this.dbContext = dbContext;
             this.context = context;
+            ThrowOnEmptyContext();
+        }
 
+        public virtual void ThrowOnEmptyContext()
+        {
             if (string.IsNullOrWhiteSpace(context.TenantId) || string.IsNullOrWhiteSpace(context.UserId))
                 throw new Exception("Failed to access tenant or user info");
         }

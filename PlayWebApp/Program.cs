@@ -112,8 +112,8 @@ services.AddControllers().AddJsonOptions(options =>
     options.JsonSerializerOptions.NumberHandling = JsonNumberHandling.AllowReadingFromString | JsonNumberHandling.WriteAsString;
 });
 
-services.AddScoped<UserManagementRepository>();
-services.AddScoped<UserManagementService>();
+services.AddScoped<UserRepository>();
+services.AddScoped<UserService>();
 services.AddScoped<AppMgtRepository>();
 services.AddScoped<AppMgtService>();
 
@@ -136,7 +136,7 @@ using (var scope = app.Services.CreateScope())
 {
     var ctx = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
 
-    var usrMgtSrv = scope.ServiceProvider.GetRequiredService<UserManagementService>();
+    var usrMgtSrv = scope.ServiceProvider.GetRequiredService<UserService>();
 
     SeedDatabase.Seed(ctx);
 

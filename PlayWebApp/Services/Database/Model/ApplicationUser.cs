@@ -21,5 +21,4 @@ public class ApplicationUser : EntityBase
     [MaxLength(128)]
     public virtual string UserName { get; set; }
 
-    public virtual new string RefNbr { get; }
 }

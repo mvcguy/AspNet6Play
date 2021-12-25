@@ -34,10 +34,10 @@ public class SeedDatabase
     public static void Seed(ApplicationDbContext context)
     {
 
-        var userRepo = new UserManagementRepository(context);
+
         var appRepo = new AppMgtRepository(context);
         var appSrv = new AppMgtService(appRepo);
-        var userSrv = new UserManagementService(userRepo, appSrv);
+
 
         var tenantId = string.Empty;
         var userId = string.Empty;
@@ -50,14 +50,16 @@ public class SeedDatabase
         {
             tenantId = context.Tenants.FirstOrDefault()?.Id;
         }
-
+        
+        var userRepo = new UserRepository(context, new StartupAppContext(){TenantId = tenantId});
+        var userSrv = new UserService(userRepo);
         if (context.Users.Count() == 0)
         {
             userId = AddUser(userSrv, tenantId);
         }
         else
         {
-            userId = context.Users.FirstOrDefault()?.Id;
+            userId = context.Users.FirstOrDefault()?.RefNbr;
         }
         var appContext = new StartupAppContext { TenantId = tenantId, UserId = userId };
 
@@ -94,19 +96,17 @@ public class SeedDatabase
         return tenant.Entity.Id;
     }
 
-    public static string AddUser(UserManagementService srv, string tenantId)
+    public static string AddUser(UserService srv, string tenantId)
     {
-        var uvm = new ApplicationUserUpdateVm()
+        var uvm = new AppUserUpdateVm()
         {
             UserName = "shahid.ali",
             Email = "shahid.ali@play.com",
             FirstName = "Shahid",
             LastName = "Khan",
-            TenantId = tenantId,
         };
-        var result = srv.CreateUser(uvm).Result;
-        if (!result.Succeeded) throw new Exception("User cannot be added");
-        return result.EntityId;
+        var result = srv.Add(uvm).Result;
+        return result.InternalId;
     }
 
     public static void AddStockItems(InventoryService srv)

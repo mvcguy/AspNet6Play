@@ -21,7 +21,6 @@ namespace PlayWebApp.Services.CustomerManagement
                 Name = model.Name,
                 Active = model.Active,
                 RefNbr = model.RefNbr,
-                Id = Guid.NewGuid().ToString()
             };
             var entry = repository.Add(item);
             return entry.Entity.ToDto();

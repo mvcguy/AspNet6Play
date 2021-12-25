@@ -51,7 +51,6 @@ public class ApplicationDbContext : DbContext
         var bEntity = builder.Entity<BusinessEntity>().ToTable("BEntity");
 
         applicationUser.Property(x => x.TenantId).IsRequired(false);
-        builder.Entity<ApplicationUser>().Ignore(x => x.RefNbr);
 
         // booking has many booking items
         // one booking item appears in only one booking

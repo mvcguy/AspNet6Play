@@ -1,5 +1,6 @@
 using PlayWebApp.Services.AppManagement;
 using PlayWebApp.Services.Database.Model;
+using PlayWebApp.Services.DataNavigation;
 using PlayWebApp.Services.GenericModels;
 using PlayWebApp.Services.Identity.Repository;
 using PlayWebApp.Services.Identity.ViewModels;
@@ -9,85 +10,47 @@ using PlayWebApp.Services.ModelExtentions;
 
 namespace PlayWebApp.Services.Identity
 {
-    public class UserManagementService
+    public class UserService : NavigationService<ApplicationUser, AppUserRequestDto, AppUserUpdateVm, AppUserDto>
     {
-        private readonly UserManagementRepository repository;
-        private readonly AppMgtService appMgtService;
-
-        public UserManagementService(UserManagementRepository repository, AppMgtService appMgtService)
+        public UserService(INavigationRepository<ApplicationUser> repository) : base(repository)
         {
-            this.repository = repository;
-            this.appMgtService = appMgtService;
         }
 
-        public async Task<ApplicationUserDto> GetUser(string userId)
+        public override async Task<AppUserDto> Add(AppUserUpdateVm model)
         {
-            var record = await repository.GetUser(userId);
-            return record.ToDto();
-        }
+            var item = await repository.GetById(model.RefNbr);
+            if (item != null) throw new Exception("Record exist from before");
 
-
-        public async Task<OperationResult> CreateUser(ApplicationUserUpdateVm model)
-        {
-            try
+            item = new ApplicationUser
             {
-                var tenant = await appMgtService.GetTenantById(model.TenantId);
+                RefNbr = model.RefNbr,
+                Email = model.Email,
+                FirstName = model.RefNbr,
+                LastName = model.LastName,
+                UserName = model.UserName
+            };
 
-                if (tenant == null)
-                    return OperationResult.Failure(new Exception("Tenant not found"));
-
-                var appUser = await repository.GetUser(model.UserId);
-                if (appUser != null) return OperationResult.Success(appUser.Id);
-
-                var userId = Guid.NewGuid().ToString();
-
-                appUser = new ApplicationUser
-                {
-                    Id = userId,
-                    CreatedBy = model.UserId,
-                    FirstName = model.FirstName,
-                    LastName = model.LastName,
-                    UserName = model.UserName,
-                    Email = model.Email,
-                };
-
-                appUser.AddAuditData(tenant.Key, userId);
-                var usrResult = repository.CreateUser(appUser);
-                if (!usrResult.Succeeded)
-                    return OperationResult.Failure(new Exception("Cannot create application user"));
-
-                return usrResult;
-            }
-            catch (Exception e)
-            {
-                return OperationResult.Failure(e);
-            }
+            var record = repository.Add(item);
+            return record.Entity.ToDto();
         }
 
-        public async Task<OperationResult> UpdateUser(ApplicationUserUpdateVm model)
+        public override AppUserDto ToDto(ApplicationUser model)
         {
-            try
-            {
-                var appUser = await repository.GetUser(model.UserId);
-                if (appUser == null)
-                    return OperationResult.Failure(new Exception("Record not found"));
-
-                appUser.FirstName = model.FirstName;
-                appUser.LastName = model.LastName;
-                return repository.UpdateUser(appUser);
-
-            }
-            catch (Exception e)
-            {
-                return OperationResult.Failure(e);
-            }
-
+            return model.ToDto();
         }
 
-        public async Task<OperationResult> SaveChanges()
+        public override async Task<AppUserDto> Update(AppUserUpdateVm model)
         {
-            return await repository.SaveChanges();
-        }
+            var item = await repository.GetById(model.RefNbr);
+            if (item == null) throw new Exception("Record does not exist");
 
+            item.FirstName = model.FirstName;
+            item.LastName = model.LastName;
+            item.UserName = model.UserName;
+            item.Email = model.Email;
+
+            var record = repository.Update(item);
+            return record.Entity.ToDto();
+        }
     }
 }

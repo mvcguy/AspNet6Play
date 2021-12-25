@@ -1,69 +1,28 @@
 using Microsoft.EntityFrameworkCore;
+using PlayWebApp.Services.AppManagement;
 using PlayWebApp.Services.Database;
 using PlayWebApp.Services.Database.Model;
+using PlayWebApp.Services.DataNavigation;
 using PlayWebApp.Services.GenericModels;
 #nullable disable
 
 namespace PlayWebApp.Services.Identity.Repository
 {
 
-    public class UserManagementRepository
+    public class UserRepository : NavigationRepository<ApplicationUser>
     {
-        private readonly ApplicationDbContext dbContext;
-
-        private DbSet<ApplicationUser> AppUsers;
-        private DbSet<Address> Addresses;
-
-        public UserManagementRepository(ApplicationDbContext dbContext)
+        public UserRepository(ApplicationDbContext dbContext, IPlayAppContext context) : base(dbContext, context)
         {
-            this.dbContext = dbContext;
-            AppUsers = this.dbContext.Set<ApplicationUser>();
-            Addresses = this.dbContext.Set<Address>();
         }
 
-        public async Task<OperationResult> SaveChanges()
+        public override IQueryable<ApplicationUser> GetTenantBasedQuery(bool includeSubItems = true)
         {
-            var result = await dbContext.SaveChangesAsync();
-            if (result > 0) return OperationResult.Success();
-            return OperationResult.Failure(new Exception("The update did not affect any rows"));
+            return dbContext.Users.Where(x => x.TenantId == context.TenantId);
         }
 
-        public OperationResult CreateUser(ApplicationUser appUser)
+        public override void ThrowOnEmptyContext()
         {
-            try
-            {
-                AppUsers.Add(appUser);
-                return OperationResult.Success(appUser.Id);
-            }
-            catch (Exception e)
-            {
-                return OperationResult.Failure(e);
-            }
-
+            /*ignore*/
         }
-
-        public OperationResult UpdateUser(ApplicationUser appUser)
-        {
-            try
-            {
-                appUser.ModifiedOn = DateTime.UtcNow;
-                AppUsers.Update(appUser);
-                return OperationResult.Success(appUser.Id);
-            }
-            catch (Exception e)
-            {
-                return OperationResult.Failure(e);
-            }
-
-        }
-
-        public async Task<ApplicationUser> GetUser(string userId)
-        {
-            return await AppUsers.FirstOrDefaultAsync(x => x.Id == userId);
-        }
-
-
     }
-
-
 }

@@ -30,7 +30,7 @@ namespace PlayWebApp.Controllers
             var item = await service.Update(model);
 
             await service.SaveChanges();
-            return Ok(item.AddressCode); // user need to verify the address code to diff; b/w OK and Redirects
+            return Ok(item.RefNbr); // user need to verify the address code to diff; b/w OK and Redirects
         }
 
         [HttpPost]
@@ -44,7 +44,7 @@ namespace PlayWebApp.Controllers
 
             var item = await service.Add(model);
             await service.SaveChanges();
-            return Ok(item.AddressCode); // TODO: need to return URI to the newly created item
+            return Ok(item.RefNbr); // TODO: need to return URI to the newly created item
         }
 
         [HttpGet()]
