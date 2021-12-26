@@ -10,7 +10,7 @@ using PlayWebApp.Services.ModelExtentions;
 
 namespace PlayWebApp.Controllers
 {
-    [Route("api/v1/addresses")]
+    [Route("api/v1/customers/address")]
     public class AddressController : BaseController
     {
         private readonly CustomerLocationService service;

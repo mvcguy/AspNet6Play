@@ -43,29 +43,13 @@
         </ul>
         <div class="tab-content" id="myTabContent">
             <div class="tab-pane fade show active" id="tabCustomerItemsContent" role="tabpanel" aria-labelledby="tabPrices">
-                <div class="table-responsive">
+                <div class="table-responsive" style="min-height: 250px;">
                     <div>
-                        <button class="btn btn-sm btn-primary">+</button>
+                        <button type="button" class="btn btn-sm btn-primary">+</button>
+                        <button type="button" class="btn btn-sm btn-danger">-</button>
                     </div>
-                    <table class="table table-bordered">
-                        <thead>
-                            <tr>
-                                <th scope="col">Reference</th>
-                                <th scope="col">Street</th>
-                                <th scope="col">Postal Code</th>
-                                <th scope="col">City</th>
-                                <th scope="col">Country</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr>
-                                <td><input type="text" /></td>
-                                <td><input type="text" /></td>
-                                <td><input type="text" /></td>
-                                <td><input type="text" /></td>
-                                <td><input type="text" /></td>
-                            </tr>
-                        </tbody>
+                    <table class="table table-bordered" id="customerAddresses">
+
                     </table>
                 </div>
             </div>
@@ -78,6 +62,58 @@
 
 @section Scripts {
 <partial name="_ValidationScriptsPartial" />
+<script src="~/js/services/grid-navigation-service.js"></script>
+
+<script>
+    // >> cols
+    var colFor = function (name, dataType, width, propName) {
+        return { name, dataType, width, propName };
+    };
+
+    var cols = [];
+    cols.push(colFor("Reference", "text", "40", "refNbr"));
+    cols.push(colFor("Default", "boolean", "40", "isDefault"));
+    cols.push(colFor("Street", "text", "120", "street"));
+    cols.push(colFor("Postal code", "number", "60", "postalCode"));
+    cols.push(colFor("City", "text", "80", "city"));
+    cols.push(colFor("Country", "text", "60", "country"));
+    // << cols
+
+    // >> datasource
+
+    var dataSource = {
+        isRemote: true,
+        url: 'https://localhost:7096/api/v1/Customers/address',
+        data: [{
+            refNbr: 001,
+            isDefault: false,
+            street: "Highway street 102N",
+            postalCode: "1289",
+            city: "LA",
+            country: "PAK"
+        },
+        {
+            refNbr: 002,
+            isDefault: true,
+            street: "Wonder lane 39J",
+            postalCode: "3840",
+            city: "Beach city",
+            country: "PAK"
+        }]
+    };
+
+    // << datasource
+
+    var addressesGrid = new gridNavigationService({
+        gridId: "customerAddresses",
+        cols,
+        dataSource
+    });
+
+    addressesGrid.bind();
+
+
+</script>
 
 <script>
 
