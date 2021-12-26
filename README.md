@@ -9,3 +9,5 @@ Play tasks:
 5. Add identity server 4 and customize the user store
 6. Add custom claims using the custom user store
 7. configure the client app to utilize the claims for example user.id and tenant.id
+
+Note: The sample app can be configured to work with both Sql Server and SQL-Lite. SQL-Lite is good for speeding up development locally.
