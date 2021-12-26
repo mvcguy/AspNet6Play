@@ -35,7 +35,8 @@ namespace PlayWebApp.Areas.Logistics.Pages.Booking
             Customers = (await customerService.GetAll(page: 1)).Select(x => new SelectListItem
             {
                 Value = x.RefNbr,
-                Text = $"{x.RefNbr} - {x.Name}"
+                Text = $"{x.RefNbr} - {x.Name}",
+                Selected = true,
             }).ToList();
         }
     }

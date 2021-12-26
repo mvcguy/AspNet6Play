@@ -56,6 +56,11 @@ public class ApplicationDbContext : DbContext
         builder.Entity<Tenant>().Property(x => x.CreatedOn).IsRequired(false);
         builder.Entity<Tenant>().Property(x => x.ModifiedOn).IsRequired(false);
 
+        builder.Entity<ApplicationUser>().Property(x => x.CreatedBy).IsRequired(false);
+        builder.Entity<ApplicationUser>().Property(x => x.ModifiedBy).IsRequired(false);
+        builder.Entity<ApplicationUser>().Property(x => x.CreatedOn).IsRequired(false);
+        builder.Entity<ApplicationUser>().Property(x => x.ModifiedOn).IsRequired(false);
+
         applicationUser.Property(x => x.TenantId).IsRequired(false);
 
         // booking has many booking items

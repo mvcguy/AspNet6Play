@@ -25,7 +25,7 @@ namespace PlayWebApp.Services.Identity
             {
                 RefNbr = model.RefNbr,
                 Email = model.Email,
-                FirstName = model.RefNbr,
+                FirstName = model.FirstName,
                 LastName = model.LastName,
                 UserName = model.UserName
             };

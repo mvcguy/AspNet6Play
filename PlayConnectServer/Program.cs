@@ -1,11 +1,26 @@
 
 using IdentityServer4;
+using Microsoft.EntityFrameworkCore;
 using PlayConnectServer.AppConfig;
+using PlayConnectServer.CustomUserStore;
 using PlayConnectServer.Quickstart;
 
 var builder = WebApplication.CreateBuilder(args);
 
 var services = builder.Services;
+
+bool.TryParse(builder.Configuration["ConnectionStrings:UseSqlServer"], out var useSqlServer);
+
+if (useSqlServer)
+{
+    var connectionString = builder.Configuration.GetConnectionString("DefaultConnectionSqlServer");
+    services.AddDbContext<AppDbContext>(options => options.UseSqlServer(connectionString));
+}
+else
+{
+    var connectionString = builder.Configuration.GetConnectionString("DefaultConnectionSqlLite");
+    services.AddDbContext<AppDbContext>(options => options.UseSqlite(connectionString));
+}
 
 services.AddControllersWithViews();
 
@@ -20,7 +35,7 @@ var builderX = services.AddIdentityServer(options =>
     options.EmitStaticAudienceClaim = true;
     //options.Cors.CorsPolicyName = "mg.services";
 
-}).AddTestUsers(TestUsers.Users);
+}).AddAppUsers();
 
 // in-memory, code config
 builderX.AddInMemoryIdentityResources(Config.IdentityResources);

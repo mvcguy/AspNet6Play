@@ -16,6 +16,7 @@ namespace PlayWebApp.Services.AppManagement
             {
                 this.UserId = contextAccessor.HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier);
                 this.TenantId = contextAccessor.HttpContext.User.FindFirstValue(CustomClaimTypes.TenantId);
+                var children =  contextAccessor.HttpContext.User.FindFirstValue("Children");
             }
             catch { /*ignore*/}
         }

@@ -110,6 +110,7 @@ public class SeedDatabase
         var uvm = new AppUserUpdateVm()
         {
             UserName = "shahid.ali",
+            RefNbr = "shahid.ali",
             Email = "shahid.ali@play.com",
             FirstName = "Shahid",
             LastName = "Khan",

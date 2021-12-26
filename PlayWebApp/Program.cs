@@ -6,6 +6,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using PlayWebApp.Services.AppManagement;
 using PlayWebApp.Services.AppManagement.Repository;
+using PlayWebApp.Services.CustomerManagement;
 using PlayWebApp.Services.Database;
 using PlayWebApp.Services.Database.Model;
 using PlayWebApp.Services.DataNavigation;
@@ -53,9 +54,11 @@ services.AddAuthentication(options =>
     options.ClientSecret = "secret";
     options.ResponseType = "code";
     options.SaveTokens = true;
+    // options.SignInScheme = "Cookies";
     options.Scope.Add("profile");
     options.GetClaimsFromUserInfoEndpoint = true;
     options.ClaimActions.MapJsonKey(CustomClaimTypes.TenantId, CustomClaimTypes.TenantId);
+    options.ClaimActions.MapJsonKey("Children", "Children");
 
 }).AddJwtBearer(options =>
 {
@@ -121,6 +124,8 @@ services.AddScoped<INavigationRepository<ApplicationUser>, UserRepository>();
 services.AddScoped<INavigationRepository<Tenant>, TenantRepository>();
 services.AddScoped<INavigationRepository<StockItem>, InventoryRepository>();
 services.AddScoped<INavigationRepository<Booking>, BookingRepository>();
+services.AddScoped<INavigationRepository<Customer>, CustomerRepository>();
+
 
 services.AddScoped<UserService>();
 services.AddScoped<TenantService>();
@@ -129,6 +134,8 @@ services.AddScoped<SupplierLocationService>();
 services.AddScoped<InventoryService>();
 services.AddScoped<BookingService>();
 services.AddScoped<IPlayAppContext, PlayAppContext>();
+services.AddScoped<CustomerService>();
+
 
 var app = builder.Build();
 

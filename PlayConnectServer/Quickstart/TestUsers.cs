@@ -11,7 +11,7 @@ using System.Text.Json;
 
 namespace PlayConnectServer.Quickstart
 {
-    public class TestUsers
+    public class TestUsers_Obsolete
     {
         public static List<TestUser> Users
         {

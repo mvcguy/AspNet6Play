@@ -29,8 +29,8 @@
             <span asp-validation-for="BookingVm.RefNbr" class="text-danger"></span>
         </div>
         <div class="col-12">
-            <select asp-for="BookingVm.CustomerRefNbr" asp-items="Model.Customers" class="form-control"></select>
-            <label asp-for="BookingVm.CustomerRefNbr" class="form-label"></label>
+            <label asp-for="BookingVm.CustomerRefNbr"></label>
+            <select asp-for="BookingVm.CustomerRefNbr" asp-items="Model.Customers" class="form-control"></select>            
             <span asp-validation-for="BookingVm.CustomerRefNbr" class="text-danger"></span>
         </div>
         <div class="col-12">

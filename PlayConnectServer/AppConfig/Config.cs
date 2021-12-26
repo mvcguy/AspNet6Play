@@ -83,6 +83,7 @@ namespace PlayConnectServer.AppConfig
                     RedirectUris = { "https://localhost:7096/signin-oidc" },
                     // where to redirect to after logout
                     PostLogoutRedirectUris = { "https://localhost:7096/signout-callback-oidc" },
+                    FrontChannelLogoutUri = "https://localhost:7096/signout-oidc",
                     AllowedScopes = new List<string>
                     {
                         IdentityServerConstants.StandardScopes.OpenId,
