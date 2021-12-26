@@ -1,5 +1,6 @@
 # AspNet6Play
-Play project using ASP.NET core 6 using razer pages.
+Play project using ASP.NET core 6 using razer pages. The app is configured to work with JWT tokens and cookies. For cookie based auth, the identity server is configured with interactive flow. This uses the PKCE protocol to make sure the data is not tempered in the flight. It has more pros, and i recommend to read the official docs.
+The controllers are annotatted in such a way that it should support multiple auth schemes.
 
 Play tasks:
 1. Setup a play project using razer pages
