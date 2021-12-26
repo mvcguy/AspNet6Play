@@ -7,7 +7,7 @@ namespace PlayWebApp.Services.Logistics.ViewModels
     {
 
         [Required]
-        [Display(Name = "Booking number:")]
+        [Display(Name = "Reference")]
         [JsonPropertyName("BookingVm.RefNbr")]
         [StringLength(10, ErrorMessage = "The {0} must be at least {2} and at max {1} characters long.", MinimumLength = 3)]
         public new string RefNbr { get; set; }

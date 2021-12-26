@@ -1,0 +1,129 @@
+@page
+
+@model ManageCustomersModel
+
+@{
+    ViewData["Title"] = "Manage Customers";
+    ViewData["SelectedPage"] = "ManageCustomer";
+}
+
+@section ToolBar{
+<div class="row">
+    <partial name="_ActionBar" />
+
+    <div class="row g-1">
+        <div id="serverMessages">
+
+        </div>
+    </div>
+</div>
+}
+
+
+@if (Model != null)
+{
+    <form class="row g-1" id="frmCustomer" method="post">
+        <div class="col-12">
+            <label asp-for="CustomerVm.RefNbr"></label>
+            <input asp-for="CustomerVm.RefNbr" class="form-control" aria-required="true" />
+            <span asp-validation-for="CustomerVm.RefNbr" class="text-danger"></span>
+        </div>
+        <div class="col-12">
+            <label asp-for="CustomerVm.Name"></label>
+            <input asp-for="CustomerVm.Name" class="form-control" aria-required="true" />
+            <span asp-validation-for="CustomerVm.Name" class="text-danger"></span>
+        </div>
+
+        <ul class="nav nav-tabs" id="tabsCustomer" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active" id="tabCustomerDetails" data-bs-toggle="tab"
+                data-bs-target="#tabCustomerItemsContent" type="button" role="tab"
+                aria-controls="tabCustomerItemsContent" aria-selected="true">Shipping details</button>
+            </li>
+        </ul>
+        <div class="tab-content" id="myTabContent">
+            <div class="tab-pane fade show active" id="tabCustomerItemsContent" role="tabpanel" aria-labelledby="tabPrices">
+                <div class="table-responsive">
+                    <div>
+                        <button class="btn btn-sm btn-primary">+</button>
+                    </div>
+                    <table class="table table-bordered">
+                        <thead>
+                            <tr>
+                                <th scope="col">Reference</th>
+                                <th scope="col">Street</th>
+                                <th scope="col">Postal Code</th>
+                                <th scope="col">City</th>
+                                <th scope="col">Country</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><input type="text" /></td>
+                                <td><input type="text" /></td>
+                                <td><input type="text" /></td>
+                                <td><input type="text" /></td>
+                                <td><input type="text" /></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+    </form>
+
+}
+
+
+@section Scripts {
+<partial name="_ValidationScriptsPartial" />
+
+<script>
+
+    $(document).ready(function () {
+        var srv = new persistenceService({
+            url: "https://localhost:7096/api/v1/Customers/",
+            formId: "frmCustomer",
+            idField: 'CustomerVm_RefNbr',
+            msgContainer: "serverMessages",
+            getIdCallback: function () {
+                return $('#CustomerVm_RefNbr').val();
+            },
+            nextEndpoint: function () {
+                return $('#CustomerVm_RefNbr').val() + "/next";
+            },
+            prevEndpoint: function () {
+                return $('#CustomerVm_RefNbr').val() + "/previous";
+            },
+            onAdd: function (id) {
+                $('#CustomerVm_RefNbr').val('');
+                $('#CustomerVm_Name').val('');
+
+                if (id && id !== '')
+                    $('#CustomerVm_RefNbr').val(id);
+
+            },
+            lastEndpoint: "last",
+            firstEndpoint: "first",
+            onGetResponse: function (response) {
+                $('#CustomerVm_RefNbr').val(response.refNbr);
+                $('#CustomerVm_Name').val(response.name);
+            },
+            deleteEndpoint: function () {
+                return $('#CustomerVm_RefNbr').val();
+            },
+            onDeleteResponse: function (response) {
+
+            },
+            onSaveResponse: function (response) {
+
+            },
+        });
+        srv.registerHandlers();
+        srv.dumpParams();
+    });
+
+</script>
+
+}

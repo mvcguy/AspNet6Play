@@ -11,6 +11,8 @@
 <ul class="nav nav-pills flex-column">
     <li class="nav-item"><a class='nav-link @(selectedPage=="Index" ? "active" : "")' id="indexPage"
             asp-page="/Home/Index">Home</a></li>
+    <li class="nav-item"><a class='nav-link @(selectedPage=="ManageCustomer" ? "active" : "")' id="manageCustomer"
+            asp-page="/Customer/ManageCustomers">Customers</a></li>
     <li class="nav-item"><a class='nav-link @(selectedPage=="ManageBooking" ? "active" : "")' id="manageBooking"
             asp-page="/Booking/ManageBooking">Bookings</a></li>
     <li class="nav-item"><a class='nav-link @(selectedPage=="ManageStock" ? "active" : "")' id="manageStock"

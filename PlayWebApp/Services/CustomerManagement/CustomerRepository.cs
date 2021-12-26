@@ -1,3 +1,4 @@
+using Microsoft.EntityFrameworkCore;
 using PlayWebApp.Services.AppManagement;
 using PlayWebApp.Services.Database;
 using PlayWebApp.Services.Database.Model;
@@ -13,7 +14,7 @@ namespace PlayWebApp.Services.CustomerManagement
 
         public override IQueryable<Customer> GetTenantBasedQuery(bool includeSubItems = true)
         {
-            return dbContext.Customers.Where(x => x.TenantId == context.TenantId);
+            return dbContext.Customers.Include(x=>x.Addresses).Where(x => x.TenantId == context.TenantId);
         }
     }
 }

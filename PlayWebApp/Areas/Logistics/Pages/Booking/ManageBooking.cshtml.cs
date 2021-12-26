@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using PlayWebApp.Services.CustomerManagement;
 using PlayWebApp.Services.Database;
+using PlayWebApp.Services.Logistics.BookingMgt;
 using PlayWebApp.Services.Logistics.ViewModels;
 using System.Linq;
 #nullable disable
@@ -11,12 +12,12 @@ namespace PlayWebApp.Areas.Logistics.Pages.Booking
 {
     public class ManageBookingModel : PageModel
     {
-        private readonly ApplicationDbContext dbContext;
+        private readonly BookingService bookingService;
         private readonly CustomerService customerService;
 
-        public ManageBookingModel(ApplicationDbContext dbContext, CustomerService customerService)
+        public ManageBookingModel(BookingService bookingService, CustomerService customerService)
         {
-            this.dbContext = dbContext;
+            this.bookingService = bookingService;
             this.customerService = customerService;
         }
 
@@ -26,7 +27,7 @@ namespace PlayWebApp.Areas.Logistics.Pages.Booking
 
         public async Task OnGet()
         {
-            var top1 = await dbContext.Bookings.OrderBy(x => x.RefNbr).FirstOrDefaultAsync();
+            var top1 = await bookingService.GetFirst();
             if (top1 != null)
             {
                 BookingVm = new BookingUpdateVm { RefNbr = top1.RefNbr, Description = top1.Description };
