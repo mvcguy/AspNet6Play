@@ -28,20 +28,34 @@ var gridNavigationService = function (gridOptions) {
 
         });
 
+
         $(templateRow).attr('data-index', rowNumber);
+
+
+        var rowInputs = $(templateRow).find('input');
+        rowInputs.on('change', function (e) {
+            var parent = $(e.target).parents('tr');
+            $(parent).attr('data-isdirty', true);
+            //
+            // rowcategory = ADDED || DELETED || UPDATED
+            //
+            var rowCat = $(parent).attr('data-rowcategory');
+            if (rowCat !== 'ADDED') {
+                $(parent).attr('data-rowcategory', 'UPDATED');
+            }
+
+        });
+
+        rowInputs.on('focus', function (e) {
+            var parent = $(e.target).parents('tr');
+            focusRow(parent);
+        });
 
         //
         // insert a new row if its the last input in the row
         //                    
 
-        var rowInputs = $(templateRow).find('input');
         var lastCell = rowInputs.last();
-        rowInputs.on('change', function (e) {
-            var parent = $(e.target).parents('tr');
-            $(parent).attr('data-isdirty', true);
-        });
-
-
         $(lastCell).on('keydown', function (e) {
 
             if (e.which !== 9) return;
@@ -58,12 +72,26 @@ var gridNavigationService = function (gridOptions) {
             if (isLastRow) {
                 var emptyRow = addNewRow(rowNumber + 1, createEmptyRowdData());
                 gridBody.append(emptyRow);
-                $(emptyRow).find('input').first().focus();
+
+                // rowcategory = ADDED || DELETED || UPDATED
+                //
+                $(emptyRow).attr('data-rowcategory', 'ADDED');
+                $(emptyRow).attr('data-isdirty', 'true');
+
             }
+        });
+
+        $(templateRow).on('click', function (e) {
+            focusRow(this);
         });
 
         return templateRow;
 
+    };
+
+    var focusRow = function (row) {
+        $(row).removeClass('table-active').addClass('table-active');
+        $(row).siblings().removeClass('table-active');
     };
 
     var createEmptyRowdData = function () {
@@ -133,6 +161,10 @@ var gridNavigationService = function (gridOptions) {
         $.each(dataSource.data, function (index, value) {
             var row = addNewRow(index, value);
             gridBody.append(row);
+            //
+            // rowcategory = ADDED || DELETED || UPDATED || PRESTINE
+            //
+            $(row).attr('data-rowcategory', 'PRESTINE')
         });
 
     };
@@ -153,6 +185,8 @@ var gridNavigationService = function (gridOptions) {
 
             var rowInputs = $(row).find('input');
             var record = {};
+            var rowCat = $(row).attr('data-rowcategory');
+            record['rowCategory'] = rowCat;
             $.each(rowInputs, function (cellIndex, cell) {
 
                 var cellPropName = $(cell).attr('data-propname');
@@ -176,14 +210,47 @@ var gridNavigationService = function (gridOptions) {
 
     var addNewRowToGrid = function () {
         var rowCount = $('#' + gridId).find('tbody>tr').length;
-        var emptyRow = addNewRow(rowCount -1, createEmptyRowdData());
+        var emptyRow = addNewRow(rowCount - 1, createEmptyRowdData());
         $('#' + gridId).find('tbody').append(emptyRow);
         $(emptyRow).find('input').first().focus();
+
+        //
+        // rowcategory = ADDED || DELETED || UPDATED
+        //
+        $(emptyRow).attr('data-rowcategory', 'ADDED');
+        $(emptyRow).attr('data-isdirty', 'true');
+    };
+
+    var getSelectedRow = function () {
+        return $('.table-active').first();
+    };
+
+    var deleteRow = function () {
+        var row = getSelectedRow();
+        if (row.length === 0) return;
+        var sibling = $(row).siblings(':visible').last();
+        $(row).removeClass('table-active');
+        $(row).attr('data-isdirty', 'true');
+
+        $(row).css('display', 'none');
+        //
+        // rowcategory = NEW || DELETED || UPDATED || ADDED_DELETED
+        //
+        var rowCat = $(row).attr('data-rowcategory');
+        if (rowCat === 'ADDED') {
+            $(row).attr('data-rowcategory', 'ADDED_DELETED');
+        }
+        else {
+            $(row).attr('data-rowcategory', 'DELETED');
+        }
+
+        focusRow(sibling);
     };
 
     return {
         bind,
         getDrityRows,
         addNewRowToGrid,
+        deleteRow,
     };
 };

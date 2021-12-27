@@ -46,7 +46,7 @@
                 <div class="table-responsive" style="min-height: 250px;">
                     <div>
                         <button type="button" class="btn btn-sm btn-outline-primary" id="btnAddRow">+</button>
-                        <button type="button" class="btn btn-sm btn-outline-danger">-</button>
+                        <button type="button" class="btn btn-sm btn-outline-danger" id="btnDeleteRow">-</button>
                         <button type="button" class="btn btn-sm btn-outline-primary" id="btnSaveGrid">Save</button>
                     </div>
                     <table class="table table-bordered" id="customerAddresses">
@@ -122,6 +122,10 @@
 
         $('#btnAddRow').on('click', function(){
             addressesGrid.addNewRowToGrid();
+        });
+
+        $('#btnDeleteRow').on('click', function(){
+            addressesGrid.deleteRow();
         });
 
 
