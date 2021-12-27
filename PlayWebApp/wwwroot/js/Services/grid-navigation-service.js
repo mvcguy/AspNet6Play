@@ -30,6 +30,7 @@ var gridNavigationService = function (gridOptions) {
 
 
         $(templateRow).attr('data-index', rowNumber);
+        $(templateRow).addClass('grid-row');
 
 
         var rowInputs = $(templateRow).find('input');
@@ -68,7 +69,7 @@ var gridNavigationService = function (gridOptions) {
             var currentRowIndex = parseInt($(parent).attr('data-index'));
 
             var isLastRow = (gridRows - 2) === currentRowIndex;
-            console.log(gridRows, currentRowIndex);
+            // console.log(gridRows, currentRowIndex);
             if (isLastRow) {
                 var emptyRow = addNewRow(rowNumber + 1, createEmptyRowdData());
                 gridBody.append(emptyRow);
@@ -157,16 +158,21 @@ var gridNavigationService = function (gridOptions) {
         //
         // add data to the grid
         //
+        bindDataSource(gridBody, dataSource.data);
+    };
 
-        $.each(dataSource.data, function (index, value) {
+
+    var bindDataSource = function (gridBody, data) {
+        if (!data || data.length <= 0) return;
+        $.each(data, function (index, value) {
             var row = addNewRow(index, value);
+            // console.log(row);
             gridBody.append(row);
             //
             // rowcategory = ADDED || DELETED || UPDATED || PRESTINE
             //
             $(row).attr('data-rowcategory', 'PRESTINE')
         });
-
     };
 
     var getDrityRows = function () {
@@ -180,7 +186,7 @@ var gridNavigationService = function (gridOptions) {
         if (dirtyRows.length === 0) {
             return [];
         }
-
+        
         $.each(dirtyRows, function (index, row) {
 
             var rowInputs = $(row).find('input');
@@ -198,10 +204,9 @@ var gridNavigationService = function (gridOptions) {
                 }
                 else {
                     record[cellPropName] = $(cell).val();
-                }
-
-                record["index"] = index;
+                }                
             });
+            record["index"] = index;
             records.push(record);
         });
 
@@ -247,10 +252,48 @@ var gridNavigationService = function (gridOptions) {
         focusRow(sibling);
     };
 
+
+    var registerCallback = function (key, eventTypeX, callback) {
+        if (!window.gridCallbacks || window.gridCallbacks.length === 0) {
+            window.gridCallbacks = [];
+        }
+
+        //
+        // search if callback exist from before
+        //
+        var index = window.gridCallbacks.findIndex(({ key, eventType }) => key === gridId && eventType === eventTypeX);
+        // console.log('index: ', index);
+        if (index === -1) {
+            window.gridCallbacks.push({ key: key, eventType: eventTypeX, callback: callback });
+        }
+    };
+
+    var onHeaderNext = function (data) {
+        console.log('Grid-Callback: ON_NEXT_RECORD. Data: ', data);        
+        clearGrid();
+        var gridBody = $('#' + gridId).find('tbody');
+        bindDataSource($(gridBody), data);
+
+    };
+
+    var registerCallbacks = function () {
+        registerCallback(gridId, appDataEvents.GRID_DATA, getDrityRows);
+        registerCallback(gridId, appDataEvents.ON_NEXT_RECORD, onHeaderNext);
+        registerCallback(gridId, appDataEvents.ON_PREV_RECORD, onHeaderNext);
+        registerCallback(gridId, appDataEvents.ON_LAST_RECORD, onHeaderNext);
+        registerCallback(gridId, appDataEvents.ON_FIRST_RECORD, onHeaderNext);
+        registerCallback(gridId, appDataEvents.ON_ADD_RECORD, onHeaderNext);
+    };
+
+    var clearGrid = function () { 
+        $('#' + gridId).find('.grid-row').remove();
+    };
+
     return {
         bind,
         getDrityRows,
         addNewRowToGrid,
-        deleteRow,
+        deleteRow, // hides element from display and add to the list of dirty-rows
+        registerCallbacks
     };
 };
