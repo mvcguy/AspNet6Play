@@ -24,8 +24,8 @@ namespace PlayWebApp.Controllers
         {
             if (!ModelState.IsValid) return BadRequest(ModelState);
 
-            var existingItem = await service.GetById(CreateRequest(model.AddressCode));
-            if (existingItem == null) return BadRequest($"Address with ID: {model.AddressCode} does not exist");
+            var existingItem = await service.GetById(CreateRequest(model.RefNbr));
+            if (existingItem == null) return BadRequest($"Address with ID: {model.RefNbr} does not exist");
 
             var item = await service.Update(model);
 
@@ -39,8 +39,8 @@ namespace PlayWebApp.Controllers
             if (!ModelState.IsValid) return BadRequest(ModelState);
 
 
-            var exists = await service.GetById(CreateRequest(model.AddressCode));
-            if (exists != null) return BadRequest($"Address with ID: {model.AddressCode} exists from before");
+            var exists = await service.GetById(CreateRequest(model.RefNbr));
+            if (exists != null) return BadRequest($"Address with ID: {model.RefNbr} exists from before");
 
             var item = await service.Add(model);
             await service.SaveChanges();

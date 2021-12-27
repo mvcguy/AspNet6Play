@@ -18,5 +18,9 @@ namespace PlayWebApp.Services.DataNavigation
         IQueryable<TModel> GetTenantBasedQuery(bool includeSubItems = true);
         Task<int> SaveChanges();
         EntityEntry<TModel> Update(TModel model);
+
+        void AddAuditData<TEntity>(TEntity model) where TEntity : EntityBase;
+
+        void UpdateAuditData<TEntity>(TEntity model) where TEntity : EntityBase;
     }
 }

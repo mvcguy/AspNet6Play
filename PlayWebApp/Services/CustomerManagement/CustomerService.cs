@@ -1,6 +1,7 @@
 using PlayWebApp.Services.CustomerManagement.ViewModels;
 using PlayWebApp.Services.Database.Model;
 using PlayWebApp.Services.DataNavigation;
+using PlayWebApp.Services.Logistics.ViewModels;
 using PlayWebApp.Services.ModelExtentions;
 
 namespace PlayWebApp.Services.CustomerManagement
@@ -39,10 +40,36 @@ namespace PlayWebApp.Services.CustomerManagement
             item.Name = model.Name;
             item.Active = model.Active;
 
+            model.Addresses = model.Addresses ?? new List<AddressUpdateVm>();
+            foreach (var addressVm in model.Addresses)
+            {
+                switch (addressVm.UpdateType)
+                {
+                    case UpdateType.New:
+                        AddNewAddress(item, addressVm);
+                        break;
+                }
+            }
+
             var entry = repository.Update(item);
 
             return entry.Entity.ToDto();
 
+        }
+
+        private void AddNewAddress(Customer item, AddressUpdateVm addressVm)
+        {
+            var address = new CustomerAddress
+            {
+                Id = Guid.NewGuid().ToString(),
+                City = addressVm.City,
+                Country = addressVm.Country,
+                StreetAddress = addressVm.StreetAddress,
+                RefNbr = addressVm.RefNbr,
+                PostalCode = addressVm.PostalCode
+            };
+            repository.AddAuditData(address);
+            item.Addresses.Add(address);
         }
     }
 }

@@ -16,7 +16,7 @@ namespace PlayWebApp.Services.Logistics.LocationMgt
 
         public async override Task<AddressDto> Add(AddressUpdateVm model)
         {
-            var record = await repository.GetById(model.AddressCode);
+            var record = await repository.GetById(model.RefNbr);
             if (record == null)
             {
                 record = new CustomerAddress
@@ -25,7 +25,7 @@ namespace PlayWebApp.Services.Logistics.LocationMgt
                     City = model.City,
                     StreetAddress = model.StreetAddress,
                     PostalCode = model.PostalCode,
-                    RefNbr = model.AddressCode,
+                    RefNbr = model.RefNbr,
                 };
                 var item = repository.Add(record);
                 return item.Entity.ToDto();
@@ -41,7 +41,7 @@ namespace PlayWebApp.Services.Logistics.LocationMgt
 
         public async override Task<AddressDto> Update(AddressUpdateVm model)
         {
-            var record = await repository.GetById(model.AddressCode);
+            var record = await repository.GetById(model.RefNbr);
             if (record != null)
             {
                 record.Country = model.Country;
@@ -65,7 +65,7 @@ namespace PlayWebApp.Services.Logistics.LocationMgt
 
         public async override Task<AddressDto> Add(AddressUpdateVm model)
         {
-            var record = await repository.GetById(model.AddressCode);
+            var record = await repository.GetById(model.RefNbr);
             if (record == null)
             {
                 record = new SupplierAddress
@@ -74,7 +74,7 @@ namespace PlayWebApp.Services.Logistics.LocationMgt
                     City = model.City,
                     StreetAddress = model.StreetAddress,
                     PostalCode = model.PostalCode,
-                    RefNbr = model.AddressCode,
+                    RefNbr = model.RefNbr,
                 };
                 var item = repository.Add(record);
                 return item.Entity.ToDto();
@@ -90,7 +90,7 @@ namespace PlayWebApp.Services.Logistics.LocationMgt
 
         public async override Task<AddressDto> Update(AddressUpdateVm model)
         {
-            var record = await repository.GetById(model.AddressCode);
+            var record = await repository.GetById(model.RefNbr);
             if (record != null)
             {
                 record.Country = model.Country;

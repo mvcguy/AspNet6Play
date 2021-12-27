@@ -118,6 +118,7 @@ namespace PlayWebApp.Services.ModelExtentions
                 InternalId = model.Id,
                 Active = model.Active,
                 Name = model.Name,
+                Addresses = model?.Addresses.Select(x=>x.ToDto()).ToList()
             };
         }
 

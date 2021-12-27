@@ -58,22 +58,6 @@ var persistenceService = function (serviceParams) {
         });
 
         $('#btnSave').on('click', function (e) {
-
-            //
-            // collect data from all the grids which has pending changes
-            //
-
-            if (window.gridCallbacks && window.gridCallbacks.length > 0) {
-
-                $.each(window.gridCallbacks, function (index, value) {
-                    if (value.eventType === appDataEvents.GRID_DATA) {
-                        var girdData = value.callback();
-                        console.log("KEY: ", value.key, "Values: ", girdData);
-                    }
-
-                });
-            }
-
             saveRecord();
         });
 
@@ -131,7 +115,7 @@ var persistenceService = function (serviceParams) {
             // console.log(postParams);
 
             if (recordExist === true)
-                putRequest(postParams)
+                putRequest(postParams);
             else
                 postRequest(postParams);
         };
@@ -287,6 +271,31 @@ var persistenceService = function (serviceParams) {
     };
 
     var putRequest = function (postParams) {
+
+        //
+        // collect data from all the grids which has pending changes
+        //
+        var addresses;
+        if (window.gridCallbacks && window.gridCallbacks.length > 0) {
+
+            $.each(window.gridCallbacks, function (index, value) {
+                if (value.eventType === appDataEvents.GRID_DATA) {
+                    addresses = value.callback();
+                    console.log("KEY: ", value.key, "Values: ", addresses);
+                }
+
+            });
+        }
+
+        var addressesX = addresses.map(function (value, index) {
+            if (value.rowCategory === "ADDED") {
+                value["updateType"] = 3;
+            }
+            return value;
+        });
+
+        postParams.data["addresses"] = addressesX;
+
         var ajaxOptions = {
             url: postParams.url,
             method: 'PUT',
@@ -302,7 +311,7 @@ var persistenceService = function (serviceParams) {
         });
     };
 
-    
+
     var notfiyListeners = function (eventType, payload) {
         try {
             if (!window.gridCallbacks || window.gridCallbacks.length === 0) {
@@ -342,14 +351,7 @@ var persistenceService = function (serviceParams) {
             // notify listeners
             //            
             if (getParams.action) {
-                _notfiyListeners(getParams.action, [{
-                    refNbr: 120, // sending some fake data
-                    isDefault: true,
-                    street: "Navigation service",
-                    postalCode: "1111",
-                    city: "Navland",
-                    country: "NAV"
-                }]);
+                _notfiyListeners(getParams.action, response.addresses);
             }
 
         }, function error(error) {
@@ -364,9 +366,10 @@ var persistenceService = function (serviceParams) {
             method: 'DELETE',
             headers: deleteParams.headers ? deleteParams.headers : {}
         };
-
+        var _notfiyListeners = notfiyListeners;
         $.ajax(ajaxOptions).then(function done(response) {
             deleteParams.callback(response);
+            _notfiyListeners(appDataEvents.ON_DELETE_RECORD, []);
         }, function error(error) {
             deleteParams.errorCallback(error);
         });

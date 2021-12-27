@@ -107,7 +107,7 @@ namespace PlayWebApp.Services.DataNavigation
             return await dbContext.SaveChangesAsync();
         }
 
-        protected virtual void AddAuditData(TModel model)
+        public void AddAuditData<TEntity>(TEntity model) where TEntity : EntityBase
         {
             model.ModifiedOn = DateTime.UtcNow;
             model.ModifiedBy = context.UserId;
@@ -116,12 +116,10 @@ namespace PlayWebApp.Services.DataNavigation
             model.TenantId = context.TenantId;
         }
 
-        protected virtual void UpdateAuditData(TModel model)
+        public void UpdateAuditData<TEntity>(TEntity model) where TEntity : EntityBase
         {
             model.ModifiedOn = DateTime.UtcNow;
             model.ModifiedBy = context.UserId;
         }
-
-
     }
 }
