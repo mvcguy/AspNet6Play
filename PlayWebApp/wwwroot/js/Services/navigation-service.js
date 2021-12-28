@@ -18,6 +18,30 @@ var persistenceService = function (serviceParams) {
 
     var recordExist = true;
 
+    var registerCallback = function (key, eventTypeX, callback, dataSourceNameX) {
+        if (!window.headerCallbacks || window.headerCallbacks.length === 0) {
+            window.headerCallbacks = [];
+        }
+
+        //
+        // search if callback exist from before
+        //
+        var index = window.headerCallbacks.findIndex(({ key, eventType, dataSourceName }) => key === formId && eventType === eventTypeX && dataSourceName === dataSourceNameX);
+        // console.log('index: ', index);
+        if (index === -1) {
+            window.headerCallbacks.push({ key: key, eventType: eventTypeX, callback: callback, dataSourceName: dataSourceNameX });
+        }
+    };
+
+    var onGridUpdated = function (event) {
+        console.log('Grid-Event: ', event);
+        enableSaveButton(true);
+    };
+
+    var registerCallbacks = function () {
+        registerCallback(formId, appDataEvents.ON_GRID_UPDATED, onGridUpdated, 'mainForm');
+    };
+
     var registerHandlers = function () {
 
         $("#" + formId + " input,textarea,select").each(function () {
@@ -240,14 +264,16 @@ var persistenceService = function (serviceParams) {
             }
         };
 
-        var enableSaveButton = function (enable) {
-            var saveBtn = $('#btnSave');
-            if (enable === true)
-                saveBtn.removeAttr('disabled');
-            else
-                saveBtn.attr('disabled', 'disabled');
-        };
+        
 
+    };
+
+    var enableSaveButton = function (enable) {
+        var saveBtn = $('#btnSave');
+        if (enable === true)
+            saveBtn.removeAttr('disabled');
+        else
+            saveBtn.attr('disabled', 'disabled');
     };
 
     var dumpParams = function () {
@@ -270,32 +296,43 @@ var persistenceService = function (serviceParams) {
         });
     };
 
-    var putRequest = function (postParams) {
-
+    var addGridsData = function (postParams) { 
         //
         // collect data from all the grids which has pending changes
         //
-        var addresses;
+        var grids = [];
         if (window.gridCallbacks && window.gridCallbacks.length > 0) {
 
             $.each(window.gridCallbacks, function (index, value) {
                 if (value.eventType === appDataEvents.GRID_DATA) {
-                    addresses = value.callback();
-                    console.log("KEY: ", value.key, "Values: ", addresses);
+                    var gridData = value.callback();                    
+                    var dataSourceName = value.dataSourceName;
+                    grids.push({ gridData, dataSourceName });
+                    console.log("grids: ", grids);
                 }
 
             });
         }
 
-        var addressesX = addresses.map(function (value, index) {
-            if (value.rowCategory === "ADDED") {
-                value["updateType"] = 3;
-            }
-            return value;
+        $.each(grids, function (gridIndex, grid) {
+            var records = grid.gridData.map(function (value, index) {
+                if (value.rowCategory === "ADDED") {
+                    value["updateType"] = 3;
+                }
+                else if (value.rowCategory === 'DELETED') {
+                    value["updateType"] = 2;
+                }
+                else if (value.rowCategory === 'UPDATED') {
+                    value["updateType"] = 1;
+                }
+                return value;
+            });
+    
+            postParams.data[grid.dataSourceName] = records;
         });
+    };
 
-        postParams.data["addresses"] = addressesX;
-
+    var putRequest = function (postParams) {
         var ajaxOptions = {
             url: postParams.url,
             method: 'PUT',
@@ -328,7 +365,7 @@ var persistenceService = function (serviceParams) {
 
             if (releventEvents && releventEvents.length > 0) {
                 $.each(releventEvents, function (index, ev) {
-                    ev.callback(payload);
+                    ev.callback(payload[ev.dataSourceName]);
                 });
             }
 
@@ -351,7 +388,7 @@ var persistenceService = function (serviceParams) {
             // notify listeners
             //            
             if (getParams.action) {
-                _notfiyListeners(getParams.action, response.addresses);
+                _notfiyListeners(getParams.action, response);
             }
 
         }, function error(error) {
@@ -377,6 +414,7 @@ var persistenceService = function (serviceParams) {
 
     return {
         registerHandlers,
+        registerCallbacks,
         dumpParams,
         postRequest,
         getRequest

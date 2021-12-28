@@ -48,6 +48,12 @@ namespace PlayWebApp.Services.CustomerManagement
                     case UpdateType.New:
                         AddNewAddress(item, addressVm);
                         break;
+                    case UpdateType.Update:
+                        UpdateExistingAddress(item, addressVm);
+                        break;
+                    case UpdateType.Delete:
+                        DeleteExistingAddress(item, addressVm);
+                        break;
                 }
             }
 
@@ -55,6 +61,28 @@ namespace PlayWebApp.Services.CustomerManagement
 
             return entry.Entity.ToDto();
 
+        }
+
+        private static void DeleteExistingAddress(Customer item, AddressUpdateVm addressVm)
+        {
+            var address = item.Addresses.FirstOrDefault(x => x.RefNbr == addressVm.RefNbr);
+            if (address != null)
+            {
+                item.Addresses.Remove(address);
+            }
+        }
+
+        private void UpdateExistingAddress(Customer item, AddressUpdateVm addressVm)
+        {
+            var address = item.Addresses.FirstOrDefault(x => x.RefNbr == addressVm.RefNbr);
+            if (address != null)
+            {
+                address.City = addressVm.City;
+                address.Country = addressVm.Country;
+                address.PostalCode = addressVm.PostalCode;
+                address.StreetAddress = addressVm.StreetAddress;
+                repository.UpdateAuditData(address);
+            }
         }
 
         private void AddNewAddress(Customer item, AddressUpdateVm addressVm)

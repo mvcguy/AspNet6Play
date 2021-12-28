@@ -113,6 +113,7 @@ services.AddMvcCore(options =>
 services.AddControllers().AddJsonOptions(options =>
 {
     options.JsonSerializerOptions.NumberHandling = JsonNumberHandling.AllowReadingFromString | JsonNumberHandling.WriteAsString;
+    
 });
 
 

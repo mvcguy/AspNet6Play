@@ -45,6 +45,8 @@ var gridNavigationService = function (gridOptions) {
                 $(parent).attr('data-rowcategory', 'UPDATED');
             }
 
+            notfiyListeners(appDataEvents.ON_GRID_UPDATED, { dataSourceName: 'mainForm', event: e });
+
         });
 
         rowInputs.on('focus', function (e) {
@@ -186,7 +188,7 @@ var gridNavigationService = function (gridOptions) {
         if (dirtyRows.length === 0) {
             return [];
         }
-        
+
         $.each(dirtyRows, function (index, row) {
 
             var rowInputs = $(row).find('input');
@@ -204,7 +206,7 @@ var gridNavigationService = function (gridOptions) {
                 }
                 else {
                     record[cellPropName] = $(cell).val();
-                }                
+                }
             });
             record["index"] = index;
             records.push(record);
@@ -253,7 +255,7 @@ var gridNavigationService = function (gridOptions) {
     };
 
 
-    var registerCallback = function (key, eventTypeX, callback) {
+    var registerCallback = function (key, eventTypeX, callback, dataSourceNameX) {
         if (!window.gridCallbacks || window.gridCallbacks.length === 0) {
             window.gridCallbacks = [];
         }
@@ -261,31 +263,56 @@ var gridNavigationService = function (gridOptions) {
         //
         // search if callback exist from before
         //
-        var index = window.gridCallbacks.findIndex(({ key, eventType }) => key === gridId && eventType === eventTypeX);
+        var index = window.gridCallbacks.findIndex(({ key, eventType, dataSourceName }) => key === gridId && eventType === eventTypeX && dataSourceName === dataSourceNameX);
         // console.log('index: ', index);
         if (index === -1) {
-            window.gridCallbacks.push({ key: key, eventType: eventTypeX, callback: callback });
+            window.gridCallbacks.push({ key: key, eventType: eventTypeX, callback: callback, dataSourceName: dataSourceNameX });
         }
     };
 
     var onHeaderNext = function (data) {
-        console.log('Grid-Callback: ON_NEXT_RECORD. Data: ', data);        
+        console.log('Grid-Callback: ON_NEXT_RECORD. Data: ', data);
         clearGrid();
         var gridBody = $('#' + gridId).find('tbody');
         bindDataSource($(gridBody), data);
 
     };
 
-    var registerCallbacks = function () {
-        registerCallback(gridId, appDataEvents.GRID_DATA, getDrityRows);
-        registerCallback(gridId, appDataEvents.ON_NEXT_RECORD, onHeaderNext);
-        registerCallback(gridId, appDataEvents.ON_PREV_RECORD, onHeaderNext);
-        registerCallback(gridId, appDataEvents.ON_LAST_RECORD, onHeaderNext);
-        registerCallback(gridId, appDataEvents.ON_FIRST_RECORD, onHeaderNext);
-        registerCallback(gridId, appDataEvents.ON_ADD_RECORD, onHeaderNext);
+    var notfiyListeners = function (eventType, payload) {
+        try {
+            if (!window.headerCallbacks || window.headerCallbacks.length === 0) {
+                return;
+            }
+
+            //
+            // search if callback exist from before
+            //                
+            var releventEvents = window.headerCallbacks.filter(function (value, index) {
+                if (value.eventType === eventType)
+                    return value;
+            });
+
+            if (releventEvents && releventEvents.length > 0) {
+                $.each(releventEvents, function (index, ev) {
+                    ev.callback(payload);
+                });
+            }
+
+        } catch (error) {
+            console.error(error);
+        }
     };
 
-    var clearGrid = function () { 
+    var registerCallbacks = function () {
+        registerCallback(gridId, appDataEvents.GRID_DATA, getDrityRows, dataSource.dataSourceName);
+        registerCallback(gridId, appDataEvents.ON_NEXT_RECORD, onHeaderNext, dataSource.dataSourceName);
+        registerCallback(gridId, appDataEvents.ON_PREV_RECORD, onHeaderNext, dataSource.dataSourceName);
+        registerCallback(gridId, appDataEvents.ON_LAST_RECORD, onHeaderNext, dataSource.dataSourceName);
+        registerCallback(gridId, appDataEvents.ON_FIRST_RECORD, onHeaderNext, dataSource.dataSourceName);
+        registerCallback(gridId, appDataEvents.ON_ADD_RECORD, onHeaderNext, dataSource.dataSourceName);
+    };
+
+    var clearGrid = function () {
         $('#' + gridId).find('.grid-row').remove();
     };
 

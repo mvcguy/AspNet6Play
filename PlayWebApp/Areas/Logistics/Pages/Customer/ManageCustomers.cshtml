@@ -87,7 +87,8 @@
         var dataSource = {
             isRemote: true,
             url: 'https://localhost:7096/api/v1/Customers/address',
-            data: []
+            data: [],
+            dataSourceName: 'addresses'
         };
 
         // << datasource
@@ -160,6 +161,7 @@
             },
         });
         srv.registerHandlers();
+        srv.registerCallbacks();
         srv.dumpParams();
     });
 
