@@ -16,3 +16,5 @@ Note: The sample app can be configured to work with both Sql Server and SQL-Lite
 Snapshot showing the customer view of the play app.
 
 ![customers-view](https://user-images.githubusercontent.com/12786083/147574081-f06aebc5-a84f-418b-bab4-45bfa2c5ac0c.PNG)
+
+Its also worth mentioning that the data-table is also implemented part of this play project. The navigation controls communicates using the event listeners to enable or disable controls based on the communication with the backend.
