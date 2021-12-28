@@ -12,3 +12,7 @@ Play tasks:
 7. configure the client app to utilize the claims for example user.id and tenant.id
 
 Note: The sample app can be configured to work with both Sql Server and SQL-Lite. SQL-Lite is good for speeding up development locally.
+
+Snapshot showing the customer view of the play app.
+
+![customers-view](https://user-images.githubusercontent.com/12786083/147574081-f06aebc5-a84f-418b-bab4-45bfa2c5ac0c.PNG)
