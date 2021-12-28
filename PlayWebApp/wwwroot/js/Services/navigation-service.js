@@ -283,7 +283,7 @@ var persistenceService = function (serviceParams) {
     var postRequest = function (postParams) {
 
         addGridsDataToRequest(postParams);
-
+        var _notfiyListeners = notfiyListeners;
         var ajaxOptions = {
             url: postParams.url,
             method: 'POST',
@@ -294,6 +294,7 @@ var persistenceService = function (serviceParams) {
 
         $.ajax(ajaxOptions).then(function done(response) {
             postParams.callback(response);
+            _notfiyListeners(appDataEvents.ON_SAVE_RECORD, []);
         }, function error(error) {
             postParams.errorCallback(error);
         });
@@ -345,7 +346,7 @@ var persistenceService = function (serviceParams) {
     var putRequest = function (postParams) {
 
         addGridsDataToRequest(postParams);
-
+        var _notfiyListeners = notfiyListeners;
         var ajaxOptions = {
             url: postParams.url,
             method: 'PUT',
@@ -356,6 +357,7 @@ var persistenceService = function (serviceParams) {
 
         $.ajax(ajaxOptions).then(function done(response) {
             postParams.callback(response);
+            _notfiyListeners(appDataEvents.ON_SAVE_RECORD, []);
         }, function error(error) {
             postParams.errorCallback(error);
         });
