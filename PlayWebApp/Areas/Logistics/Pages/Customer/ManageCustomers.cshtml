@@ -44,13 +44,15 @@
         <div class="tab-content" id="myTabContent">
             <div class="tab-pane fade show active" id="tabCustomerItemsContent" role="tabpanel" aria-labelledby="tabPrices">
                 <div class="table-responsive" style="min-height: 250px;">
-                    <div>
-                        <button type="button" class="btn btn-sm btn-outline-primary" id="btnAddRow">+</button>
-                        <button type="button" class="btn btn-sm btn-outline-danger" id="btnDeleteRow">-</button>
-                        <button type="button" class="btn btn-sm btn-outline-primary" id="btnSaveGrid">Save</button>
-                    </div>
-                    <table class="table table-bordered resizable" id="customerAddresses">
-
+                    <table class="table table-bordered" id="customerAddresses">
+                        <thead>
+                            <tr>
+                                <th colspan="6">
+                                    <button type="button" class="btn btn-sm btn-outline-primary" id="btnAddRow">+</button>
+                                    <button type="button" class="btn btn-sm btn-outline-danger" id="btnDeleteRow">-</button>
+                                </th>
+                            </tr>
+                        </thead>
                     </table>
                 </div>
             </div>
@@ -69,25 +71,27 @@
 
     $(document).ready(function () {
         // >> cols
-        var colFor = function (name, dataType, width, propName) {
-            return { name, dataType, width, propName };
+        var colFor = function (name, dataType, width, propName, key) {
+            return { name, dataType, width, propName, keyColumn: key };
         };
 
         var cols = [];
-        cols.push(colFor("Reference", "text", "40", "refNbr"));
-        cols.push(colFor("Default", "boolean", "40", "isDefault"));
-        cols.push(colFor("Street", "text", "120", "streetAddress"));
-        cols.push(colFor("Postal code", "number", "60", "postalCode"));
-        cols.push(colFor("City", "text", "80", "city"));
-        cols.push(colFor("Country", "text", "60", "country"));
+        cols.push(colFor("Reference", "text", "10%", "refNbr", true));
+        cols.push(colFor("Default", "boolean", "10%", "isDefault", false));
+        cols.push(colFor("Street", "text", "30%", "streetAddress", false));
+        cols.push(colFor("Postal code", "number", "10%", "postalCode", false));
+        cols.push(colFor("City", "text", "30%", "city", false));
+        cols.push(colFor("Country", "text", "10%", "country", false));
         // << cols
 
         // >> datasource
 
+        var initData = @Json.Serialize(Model.CustomerVm.Addresses);
+
         var dataSource = {
             isRemote: true,
             url: 'https://localhost:7096/api/v1/Customers/address',
-            data: [],
+            data: initData,
             dataSourceName: 'addresses'
         };
 

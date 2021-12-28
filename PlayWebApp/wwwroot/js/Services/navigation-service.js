@@ -264,7 +264,7 @@ var persistenceService = function (serviceParams) {
             }
         };
 
-        
+
 
     };
 
@@ -281,6 +281,9 @@ var persistenceService = function (serviceParams) {
     };
 
     var postRequest = function (postParams) {
+
+        addGridsDataToRequest(postParams);
+        var _notfiyListeners = notfiyListeners;
         var ajaxOptions = {
             url: postParams.url,
             method: 'POST',
@@ -291,21 +294,24 @@ var persistenceService = function (serviceParams) {
 
         $.ajax(ajaxOptions).then(function done(response) {
             postParams.callback(response);
+            _notfiyListeners(appDataEvents.ON_SAVE_RECORD, []);
         }, function error(error) {
             postParams.errorCallback(error);
         });
     };
 
-    var addGridsData = function (postParams) { 
+    var addGridsDataToRequest = function (postParams) {
         //
         // collect data from all the grids which has pending changes
         //
+        if (!postParams.data) return;
+
         var grids = [];
         if (window.gridCallbacks && window.gridCallbacks.length > 0) {
 
             $.each(window.gridCallbacks, function (index, value) {
                 if (value.eventType === appDataEvents.GRID_DATA) {
-                    var gridData = value.callback();                    
+                    var gridData = value.callback();
                     var dataSourceName = value.dataSourceName;
                     grids.push({ gridData, dataSourceName });
                     console.log("grids: ", grids);
@@ -315,7 +321,8 @@ var persistenceService = function (serviceParams) {
         }
 
         $.each(grids, function (gridIndex, grid) {
-            var records = grid.gridData.map(function (value, index) {
+
+            var records = grid.gridData.filter(function (value, index) {
                 if (value.rowCategory === "ADDED") {
                     value["updateType"] = 3;
                 }
@@ -325,14 +332,21 @@ var persistenceService = function (serviceParams) {
                 else if (value.rowCategory === 'UPDATED') {
                     value["updateType"] = 1;
                 }
+
+
+                if (!value.updateType) return undefined;
+
                 return value;
             });
-    
+
             postParams.data[grid.dataSourceName] = records;
         });
     };
 
     var putRequest = function (postParams) {
+
+        addGridsDataToRequest(postParams);
+        var _notfiyListeners = notfiyListeners;
         var ajaxOptions = {
             url: postParams.url,
             method: 'PUT',
@@ -343,6 +357,7 @@ var persistenceService = function (serviceParams) {
 
         $.ajax(ajaxOptions).then(function done(response) {
             postParams.callback(response);
+            _notfiyListeners(appDataEvents.ON_SAVE_RECORD, []);
         }, function error(error) {
             postParams.errorCallback(error);
         });

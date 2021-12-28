@@ -5,6 +5,7 @@ using PlayWebApp.Services.CustomerManagement;
 using PlayWebApp.Services.CustomerManagement.ViewModels;
 using PlayWebApp.Services.Database;
 using PlayWebApp.Services.Logistics.ViewModels;
+using PlayWebApp.Services.ModelExtentions;
 using System.Linq;
 #nullable disable
 
@@ -26,7 +27,7 @@ namespace PlayWebApp.Areas.Logistics.Pages.Booking
             var top1 = await customerService.GetFirst();
             if (top1 != null)
             {
-                CustomerVm = new CustomerUpdateVm { RefNbr = top1.RefNbr, Name = top1.Name, Active = top1.Active };
+                CustomerVm = top1.ToVm();
             }
 
         }

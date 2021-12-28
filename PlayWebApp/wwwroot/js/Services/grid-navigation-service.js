@@ -5,7 +5,7 @@ var gridNavigationService = function (gridOptions) {
     var gridId = gridOptions.gridId;
 
 
-    var addNewRow = function (rowNumber, rowData) {
+    var addNewRow = function (rowNumber, rowData, existingRecord) {
         var templateRow = $('#' + gridId + "_template_row_").clone();
         templateRow.attr('id', gridId + "_template_row_" + rowNumber);
         templateRow.css('display', 'table-row');
@@ -16,6 +16,7 @@ var gridNavigationService = function (gridOptions) {
             $(cellValue).attr('id', oldId + "_" + rowNumber);
             var cellPropName = $(cellValue).attr('data-propname');
             var cellType = $(cellValue).attr('type');
+            // debugger;
             var xx = rowData[cellPropName];
             if (cellType === 'checkbox') {
                 if (xx === 'true' || xx === 'True' || xx === true) {
@@ -24,6 +25,10 @@ var gridNavigationService = function (gridOptions) {
             }
             else {
                 $(cellValue).val(xx);
+            }
+
+            if (existingRecord === false) {
+                $(cellValue).attr('disabled', false);
             }
 
         });
@@ -61,26 +66,14 @@ var gridNavigationService = function (gridOptions) {
         var lastCell = rowInputs.last();
         $(lastCell).on('keydown', function (e) {
 
-            if (e.which !== 9) return;
+            if (e.which !== 9 || e.shiftKey === true) return;
 
-            var gridBody = $('#' + gridId).find('tbody');
-            var gridRows = gridBody.find('tr').length;
+            var lastRowIndex = $('#' + gridId).find('tbody>tr:visible').last().attr('data-index');
+            var parentIndex = $(e.target).parents('tr').first().attr('data-index');
 
-            var parent = $(e.target).parents('tr');
-
-            var currentRowIndex = parseInt($(parent).attr('data-index'));
-
-            var isLastRow = (gridRows - 2) === currentRowIndex;
             // console.log(gridRows, currentRowIndex);
-            if (isLastRow) {
-                var emptyRow = addNewRow(rowNumber + 1, createEmptyRowdData());
-                gridBody.append(emptyRow);
-
-                // rowcategory = ADDED || DELETED || UPDATED
-                //
-                $(emptyRow).attr('data-rowcategory', 'ADDED');
-                $(emptyRow).attr('data-isdirty', 'true');
-
+            if (lastRowIndex === parentIndex) {
+                addNewRowToGrid();
             }
         });
 
@@ -97,46 +90,42 @@ var gridNavigationService = function (gridOptions) {
         $(row).siblings().removeClass('table-active');
     };
 
-    var createEmptyRowdData = function () {
+    var createEmptyRowData = function () {
         return {
-            refNbr: "SELECT",
+            refNbr: "",
             isDefault: false,
             street: "",
-            postalCode: "0000",
+            postalCode: "",
             city: "",
-            country: "SELECT"
+            country: ""
         }
     };
 
 
     var bind = function () {
-
-        var gridHeader = $("<thead></thead>");
+        var grid = $('#' + gridId);
+        var gridHeader = grid.find('thead');
         var gridBody = $("<tbody></tbody>");
         var gridHeaderRow = $("<tr></tr>");
         var gridBodyRow = $("<tr></tr>");
         gridBodyRow.attr('id', gridId + "_template_row_");
         gridBodyRow.css('display', 'none');
 
-
         $.each(cols, function (index, value) {
+            
             var gridHeaderCell = $("<th></th>");
             var gridBodyCell = $("<td></td>");
             gridHeaderCell.text(value.name);
 
-            if (value.width) {
-                gridHeaderCell.css('width', value.width + "px");
-            }
-
             var cellInput = "";
             if (value.dataType === 'text') {
-                cellInput = '<input type="text" />';
+                cellInput = '<input class="form-control" type="text" />';
             }
             if (value.dataType === 'boolean') {
                 cellInput = '<input type="checkbox" />';
             }
             if (value.dataType === 'number') {
-                cellInput = '<input type="number" />';
+                cellInput = '<input class="form-control" type="number" />';
             }
 
             if (cellInput !== "") {
@@ -144,8 +133,25 @@ var gridNavigationService = function (gridOptions) {
                 cellInputVar.attr('data-propname', value.propName);
                 cellInputVar.attr('title', value.name);
                 cellInputVar.attr('id', gridId + "_template_row_" + value.propName);
+
+                if (value.width) {
+                    //
+                    // pixels does not work well for table cells, TODO: use percentages
+                    //
+                    gridHeaderCell.css('width', value.width); // value.width should be in %age
+                    cellInputVar.css('width', "100%");
+                }
+
+                if (value.keyColumn === true) {
+                    cellInputVar.attr('disabled', true);
+                    cellInputVar.attr('data-keycolumn', 'true');
+                }
+
+                cellInputVar.attr('placeholder', value.name);
                 gridBodyCell.append(cellInputVar);
             }
+
+
 
             gridHeaderRow.append(gridHeaderCell);
             gridBodyRow.append(gridBodyCell);
@@ -154,8 +160,8 @@ var gridNavigationService = function (gridOptions) {
         gridHeader.append(gridHeaderRow);
         gridBody.append(gridBodyRow);
 
-        $('#' + gridId).append(gridHeader);
-        $('#' + gridId).append(gridBody);
+        grid.append(gridHeader);
+        grid.append(gridBody);
 
         //
         // add data to the grid
@@ -167,7 +173,7 @@ var gridNavigationService = function (gridOptions) {
     var bindDataSource = function (gridBody, data) {
         if (!data || data.length <= 0) return;
         $.each(data, function (index, value) {
-            var row = addNewRow(index, value);
+            var row = addNewRow(index, value, true);
             // console.log(row);
             gridBody.append(row);
             //
@@ -217,7 +223,7 @@ var gridNavigationService = function (gridOptions) {
 
     var addNewRowToGrid = function () {
         var rowCount = $('#' + gridId).find('tbody>tr').length;
-        var emptyRow = addNewRow(rowCount - 1, createEmptyRowdData());
+        var emptyRow = addNewRow(rowCount - 1, createEmptyRowData(), false);
         $('#' + gridId).find('tbody').append(emptyRow);
         $(emptyRow).find('input').first().focus();
 
@@ -226,6 +232,9 @@ var gridNavigationService = function (gridOptions) {
         //
         $(emptyRow).attr('data-rowcategory', 'ADDED');
         $(emptyRow).attr('data-isdirty', 'true');
+
+        notfiyListeners(appDataEvents.ON_GRID_UPDATED, { dataSourceName: 'mainForm', event: emptyRow });
+
     };
 
     var getSelectedRow = function () {
@@ -251,6 +260,8 @@ var gridNavigationService = function (gridOptions) {
             $(row).attr('data-rowcategory', 'DELETED');
         }
 
+        notfiyListeners(appDataEvents.ON_GRID_UPDATED, { dataSourceName: 'mainForm', event: row });
+
         focusRow(sibling);
     };
 
@@ -275,6 +286,17 @@ var gridNavigationService = function (gridOptions) {
         clearGrid();
         var gridBody = $('#' + gridId).find('tbody');
         bindDataSource($(gridBody), data);
+
+    };
+
+    var onSaveRecord = function (data) {
+        //
+        // when main record is saved, disable the key columns of the grid
+        //
+        var keyColumns = $('#' + gridId).find('tbody>tr:visible').find("input[data-keycolumn='true']");
+        $.each(keyColumns, function(index, col){
+            $(col).attr('disabled', true);
+        });
 
     };
 
@@ -310,6 +332,10 @@ var gridNavigationService = function (gridOptions) {
         registerCallback(gridId, appDataEvents.ON_LAST_RECORD, onHeaderNext, dataSource.dataSourceName);
         registerCallback(gridId, appDataEvents.ON_FIRST_RECORD, onHeaderNext, dataSource.dataSourceName);
         registerCallback(gridId, appDataEvents.ON_ADD_RECORD, onHeaderNext, dataSource.dataSourceName);
+        registerCallback(gridId, appDataEvents.ON_FETCH_RECORD, onHeaderNext, dataSource.dataSourceName);
+
+        registerCallback(gridId, appDataEvents.ON_SAVE_RECORD, onSaveRecord, dataSource.dataSourceName);
+
     };
 
     var clearGrid = function () {

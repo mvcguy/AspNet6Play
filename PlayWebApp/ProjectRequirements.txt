@@ -7,40 +7,18 @@ migrations:
 dotnet ef migrations add CustomUserData
 dotnet ef database update
 
+#debugging freezing solution
+"C:\Users\Xyz\AppData\Local\Programs\Microsoft VS Code\Code.exe" --disable-features=CalculateNativeWinOcclusion
 
-Booking
-
-UserID: Shahid
-Date: 01.11.2021
-AddressID: 10200
-BookingID: ef3b82a6-d27a-470b-9d6d-5bbdd02e7102
-
-BookingItems:
-ProductID: p1
-BookingID: ef..
-
-StockItems
-
-ItemID: cb...
-DisplayID: air heater
-Description: 
-
-StockItemPrices
-ItemID: cb..
-BreakQty: 10
-PriceValidFrom: 
-PriceExpiresAt:
-Unit Cost: 
-UnitOfMeasure: 
-
-Address
-AddressID: 10200
-Address: Ml Shahid gate 34H
-PostalCode: 1234
-City: Oslo
-Country: Norway
-Phone: 123456789
-Email: shahid.ali@play.com
-
-
-
+# issues:
+1. using tab in grid: tabbing back on the last cell causes creating new row - need a fix - SOLVED
+2. The ref field in the addresses grids needs to be disabled after saving. - SOLVED
+3. No data in the grid when the page loads for the first time - SOLVED
+4. Save button is disabled when a new grid row is added - SOLVED
+5. Show errors in the grid - row level OR cell level
+6. Fix the width of items in the grid - SOLEVED
+7. Support pagination in the grid
+8. Support for dropdowns in the grid
+9. support for row markers in the grid., e.g, row is added, updated, errors, (icons)
+10. Enable save button when a line from the gird is deleted - SOLVED
+11. Add support for resizing the columns
