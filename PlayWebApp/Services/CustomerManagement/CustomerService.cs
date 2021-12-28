@@ -22,7 +22,9 @@ namespace PlayWebApp.Services.CustomerManagement
                 Name = model.Name,
                 Active = model.Active,
                 RefNbr = model.RefNbr,
+                Addresses = new List<CustomerAddress>()
             };
+            UpdateCustomerAddresses(model, item);
             var entry = repository.Add(item);
             return entry.Entity.ToDto();
         }
@@ -40,6 +42,18 @@ namespace PlayWebApp.Services.CustomerManagement
             item.Name = model.Name;
             item.Active = model.Active;
 
+            item.Addresses = item.Addresses ?? new List<CustomerAddress>();
+
+            UpdateCustomerAddresses(model, item);
+
+            var entry = repository.Update(item);
+
+            return entry.Entity.ToDto();
+
+        }
+
+        private void UpdateCustomerAddresses(CustomerUpdateVm model, Customer item)
+        {
             model.Addresses = model.Addresses ?? new List<AddressUpdateVm>();
             foreach (var addressVm in model.Addresses)
             {
@@ -56,11 +70,6 @@ namespace PlayWebApp.Services.CustomerManagement
                         break;
                 }
             }
-
-            var entry = repository.Update(item);
-
-            return entry.Entity.ToDto();
-
         }
 
         private static void DeleteExistingAddress(Customer item, AddressUpdateVm addressVm)

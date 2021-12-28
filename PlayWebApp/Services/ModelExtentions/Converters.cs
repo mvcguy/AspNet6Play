@@ -55,6 +55,19 @@ namespace PlayWebApp.Services.ModelExtentions
             };
         }
 
+        public static AddressUpdateVm ToVm(this AddressDto model)
+        {
+            if (model == null) return null;
+            return new AddressUpdateVm
+            {
+                RefNbr = model.RefNbr,
+                StreetAddress = model.StreetAddress,
+                City = model.City,
+                PostalCode = model.PostalCode,                
+                Country = model.Country,
+            };
+        }
+
         public static BookingDto ToDto(this Booking model)
         {
             if (model == null) return null;
@@ -118,7 +131,20 @@ namespace PlayWebApp.Services.ModelExtentions
                 InternalId = model.Id,
                 Active = model.Active,
                 Name = model.Name,
-                Addresses = model?.Addresses.Select(x=>x.ToDto()).ToList()
+                Addresses = model.Addresses?.Select(x=>x.ToDto()).ToList()
+            };
+        }
+
+        public static CustomerUpdateVm ToVm(this CustomerDto model)
+        {
+            if (model == null) return null;
+
+            return new CustomerUpdateVm
+            {
+                RefNbr = model.RefNbr,                
+                Active = model.Active,
+                Name = model.Name,
+                Addresses = model.Addresses?.Select(x=>x.ToVm()).ToList()
             };
         }
 

@@ -74,20 +74,22 @@
         };
 
         var cols = [];
-        cols.push(colFor("Reference", "text", "40", "refNbr"));
-        cols.push(colFor("Default", "boolean", "40", "isDefault"));
-        cols.push(colFor("Street", "text", "120", "streetAddress"));
-        cols.push(colFor("Postal code", "number", "60", "postalCode"));
-        cols.push(colFor("City", "text", "80", "city"));
-        cols.push(colFor("Country", "text", "60", "country"));
+        cols.push(colFor("Reference", "text", "10%", "refNbr"));
+        cols.push(colFor("Default", "boolean", "10%", "isDefault"));
+        cols.push(colFor("Street", "text", "30%", "streetAddress"));
+        cols.push(colFor("Postal code", "number", "10%", "postalCode"));
+        cols.push(colFor("City", "text", "30%", "city"));
+        cols.push(colFor("Country", "text", "10%", "country"));
         // << cols
 
         // >> datasource
 
+        var initData = @Json.Serialize(Model.CustomerVm.Addresses);
+
         var dataSource = {
             isRemote: true,
             url: 'https://localhost:7096/api/v1/Customers/address',
-            data: [],
+            data: initData,
             dataSourceName: 'addresses'
         };
 

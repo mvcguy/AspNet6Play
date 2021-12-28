@@ -16,6 +16,7 @@ var gridNavigationService = function (gridOptions) {
             $(cellValue).attr('id', oldId + "_" + rowNumber);
             var cellPropName = $(cellValue).attr('data-propname');
             var cellType = $(cellValue).attr('type');
+            // debugger;
             var xx = rowData[cellPropName];
             if (cellType === 'checkbox') {
                 if (xx === 'true' || xx === 'True' || xx === true) {
@@ -61,26 +62,14 @@ var gridNavigationService = function (gridOptions) {
         var lastCell = rowInputs.last();
         $(lastCell).on('keydown', function (e) {
 
-            if (e.which !== 9) return;
+            if (e.which !== 9 || e.shiftKey === true) return;
 
-            var gridBody = $('#' + gridId).find('tbody');
-            var gridRows = gridBody.find('tr').length;
+            var lastRowIndex = $('#' + gridId).find('tbody>tr:visible').last().attr('data-index');
+            var parentIndex = $(e.target).parents('tr').first().attr('data-index');
 
-            var parent = $(e.target).parents('tr');
-
-            var currentRowIndex = parseInt($(parent).attr('data-index'));
-
-            var isLastRow = (gridRows - 2) === currentRowIndex;
             // console.log(gridRows, currentRowIndex);
-            if (isLastRow) {
-                var emptyRow = addNewRow(rowNumber + 1, createEmptyRowdData());
-                gridBody.append(emptyRow);
-
-                // rowcategory = ADDED || DELETED || UPDATED
-                //
-                $(emptyRow).attr('data-rowcategory', 'ADDED');
-                $(emptyRow).attr('data-isdirty', 'true');
-
+            if (lastRowIndex === parentIndex) {
+                addNewRowToGrid();
             }
         });
 
@@ -97,7 +86,7 @@ var gridNavigationService = function (gridOptions) {
         $(row).siblings().removeClass('table-active');
     };
 
-    var createEmptyRowdData = function () {
+    var createEmptyRowData = function () {
         return {
             refNbr: "SELECT",
             isDefault: false,
@@ -124,9 +113,7 @@ var gridNavigationService = function (gridOptions) {
             var gridBodyCell = $("<td></td>");
             gridHeaderCell.text(value.name);
 
-            if (value.width) {
-                gridHeaderCell.css('width', value.width + "px");
-            }
+            
 
             var cellInput = "";
             if (value.dataType === 'text') {
@@ -144,8 +131,20 @@ var gridNavigationService = function (gridOptions) {
                 cellInputVar.attr('data-propname', value.propName);
                 cellInputVar.attr('title', value.name);
                 cellInputVar.attr('id', gridId + "_template_row_" + value.propName);
+
+                if (value.width) {
+                    //
+                    // pixels does not work well for table cells, TODO: use percentages
+                    //
+                    gridHeaderCell.css('width', value.width);
+                    cellInputVar.css('width', "100%");
+
+                }
+
                 gridBodyCell.append(cellInputVar);
             }
+
+            
 
             gridHeaderRow.append(gridHeaderCell);
             gridBodyRow.append(gridBodyCell);
@@ -217,7 +216,7 @@ var gridNavigationService = function (gridOptions) {
 
     var addNewRowToGrid = function () {
         var rowCount = $('#' + gridId).find('tbody>tr').length;
-        var emptyRow = addNewRow(rowCount - 1, createEmptyRowdData());
+        var emptyRow = addNewRow(rowCount - 1, createEmptyRowData());
         $('#' + gridId).find('tbody').append(emptyRow);
         $(emptyRow).find('input').first().focus();
 
@@ -226,6 +225,9 @@ var gridNavigationService = function (gridOptions) {
         //
         $(emptyRow).attr('data-rowcategory', 'ADDED');
         $(emptyRow).attr('data-isdirty', 'true');
+
+        notfiyListeners(appDataEvents.ON_GRID_UPDATED, { dataSourceName: 'mainForm', event: emptyRow });
+
     };
 
     var getSelectedRow = function () {
