@@ -43,8 +43,8 @@
         </ul>
         <div class="tab-content" id="myTabContent">
             <div class="tab-pane fade show active" id="tabCustomerItemsContent" role="tabpanel" aria-labelledby="tabPrices">
-                <div class="table-responsive" style="min-height: 250px;">
-                    <table class="table table-bordered" id="customerAddresses">
+                <div class="" style="min-height: 250px;">
+                    <table class="table table-bordered resizable" id="customerAddresses">
                         <thead>
                             <tr>
                                 <th colspan="6">
@@ -76,12 +76,12 @@
         };
 
         var cols = [];
-        cols.push(colFor("Reference", "text", "10%", "refNbr", true));
-        cols.push(colFor("Default", "boolean", "10%", "isDefault", false));
-        cols.push(colFor("Street", "text", "30%", "streetAddress", false));
-        cols.push(colFor("Postal code", "number", "10%", "postalCode", false));
-        cols.push(colFor("City", "text", "30%", "city", false));
-        cols.push(colFor("Country", "text", "10%", "country", false));
+        cols.push(colFor("Reference", "text", "80px", "refNbr", true));
+        cols.push(colFor("Default", "boolean", "60px", "isDefault", false));
+        cols.push(colFor("Street", "text", "220px", "streetAddress", false));
+        cols.push(colFor("Postal code", "number", "80px", "postalCode", false));
+        cols.push(colFor("City", "text", "120px", "city", false));
+        cols.push(colFor("Country", "text", "120px", "country", false));
         // << cols
 
         // >> datasource

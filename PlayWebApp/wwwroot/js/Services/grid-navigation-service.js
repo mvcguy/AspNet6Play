@@ -104,9 +104,11 @@ var gridNavigationService = function (gridOptions) {
 
     var bind = function () {
         var grid = $('#' + gridId);
+        grid.css('width', 'inherit');
+
         var gridHeader = grid.find('thead');
         var gridBody = $("<tbody></tbody>");
-        var gridHeaderRow = $("<tr></tr>");
+        var gridHeaderRow = $("<tr class='draggable'></tr>");
         var gridBodyRow = $("<tr></tr>");
         gridBodyRow.attr('id', gridId + "_template_row_");
         gridBodyRow.css('display', 'none');
@@ -139,7 +141,7 @@ var gridNavigationService = function (gridOptions) {
                     // pixels does not work well for table cells, TODO: use percentages
                     //
                     gridHeaderCell.css('width', value.width); // value.width should be in %age
-                    cellInputVar.css('width', "100%");
+                    //cellInputVar.css('width', "100%");
                 }
 
                 if (value.keyColumn === true) {

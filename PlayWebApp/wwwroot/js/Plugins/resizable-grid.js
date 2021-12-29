@@ -4,7 +4,7 @@
 //
 
 function resizableGrid(table) {
-    var row = table.getElementsByTagName('tr')[0],
+    var row = table.getElementsByClassName('draggable')[0],
         cols = row ? row.children : undefined;
     if (!cols) return;
 
@@ -19,7 +19,7 @@ function resizableGrid(table) {
         setListeners(div, table);
     }
 
-    function setListeners(div) {
+    function setListeners(div, table) {
         var pageX, curCol, nxtCol, curColWidth, nxtColWidth, tableWidth;
 
         div.addEventListener('mousedown', function (e) {
@@ -34,8 +34,7 @@ function resizableGrid(table) {
             var padding = paddingDiff(curCol);
 
             curColWidth = curCol.offsetWidth - padding;
-            //  if (nxtCol)
-            //nxtColWidth = nxtCol.offsetWidth - padding;
+            console.log('MDown: tableW: ', tableWidth, 'pageX: ', pageX, 'padding: ', padding, 'colW: ', curColWidth);
         });
 
         div.addEventListener('mouseover', function (e) {
@@ -50,14 +49,11 @@ function resizableGrid(table) {
             if (curCol) {
                 var diffX = e.pageX - pageX;
 
-                // if (nxtCol)
-                //nxtCol.style.width = (nxtColWidth - (diffX)) + 'px';
-
                 curCol.style.width = (curColWidth + diffX) + 'px';
-                // console.log(curCol.style.width);
-                // console.log(tableWidth);
                 // document.getElementById('tableId').style.width = tableWidth + diffX + "px"
                 table.style.width = tableWidth + diffX + "px";
+
+                console.log('MMove: diffX: ', diffX, 'curColW: ', curCol.style.width, 'TableW: ', table.style.width);
 
             }
         });
