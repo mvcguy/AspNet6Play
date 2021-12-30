@@ -50,6 +50,12 @@ var gridNavigationService = function (gridOptions) {
                 $(parent).attr('data-rowcategory', 'UPDATED');
             }
 
+            // remove any previous errors
+            $(this).removeClass('is-invalid').attr('title', '');
+            var tooltip = bootstrap.Tooltip.getInstance(this);
+            if (tooltip)
+                tooltip.dispose();
+
             notfiyListeners(appDataEvents.ON_GRID_UPDATED, { dataSourceName: 'mainForm', event: e });
 
         });
@@ -90,6 +96,9 @@ var gridNavigationService = function (gridOptions) {
         $(row).siblings().removeClass('table-active');
     };
 
+    //
+    // TODO: remove hard coded grid props
+    //
     var createEmptyRowData = function () {
         return {
             refNbr: "",
@@ -100,7 +109,6 @@ var gridNavigationService = function (gridOptions) {
             country: ""
         }
     };
-
 
     var bind = function () {
         var grid = $('#' + gridId);
@@ -114,7 +122,7 @@ var gridNavigationService = function (gridOptions) {
         gridBodyRow.css('display', 'none');
 
         $.each(cols, function (index, value) {
-            
+
             var gridHeaderCell = $("<th></th>");
             var gridBodyCell = $("<td></td>");
             gridHeaderCell.text(value.name);
@@ -185,21 +193,30 @@ var gridNavigationService = function (gridOptions) {
         });
     };
 
-    var getDrityRows = function () {
+
+    var getDirtyRows = function () {
         var dirtyRows = $('#' + gridId).find('tbody>tr').map(function () {
             if ($(this).attr('data-isdirty') === 'true') {
                 return this;
             }
         });
+        return dirtyRows;
+    };
 
-        var records = [];
+    var getDirtyRecords = function () {
+        var dirtyRows = getDirtyRows();
+
         if (dirtyRows.length === 0) {
             return [];
         }
-
+        var records = [];
         $.each(dirtyRows, function (index, row) {
 
             var rowInputs = $(row).find('input');
+            var rowIndex = $(row).attr('data-index');
+            if (rowIndex) {
+                rowIndex = parseInt(rowIndex);
+            }
             var record = {};
             var rowCat = $(row).attr('data-rowcategory');
             record['rowCategory'] = rowCat;
@@ -216,7 +233,7 @@ var gridNavigationService = function (gridOptions) {
                     record[cellPropName] = $(cell).val();
                 }
             });
-            record["index"] = index;
+            record["clientRowNumber"] = rowIndex;
             records.push(record);
         });
 
@@ -296,10 +313,90 @@ var gridNavigationService = function (gridOptions) {
         // when main record is saved, disable the key columns of the grid
         //
         var keyColumns = $('#' + gridId).find('tbody>tr:visible').find("input[data-keycolumn='true']");
-        $.each(keyColumns, function(index, col){
+        $.each(keyColumns, function (index, col) {
             $(col).attr('disabled', true);
         });
 
+    };
+
+    var onSaveError = function (error) {
+        //
+        // Its assumed that the .net mvc api will convert the model state errors into the following format
+        //
+        // {
+        //     "addresses.[0]": ["1"], // client row index
+        //     "addresses.[1]": ["2"],
+        //     "addresses.[2]": ["3"],
+        //     "addresses[1].City": ["The City: field is required.", "The City: must be at least 3 and at max 128 characters long."],
+        //     "addresses[1].Country": ["The Country: field is required.", "The Country: must be at least 2 and at max 128 characters long."],
+        //     "addresses[1].PostalCode": ["The Postal code: field is required.", "The Postal code: must be at least 3 and at max 128 characters long."],
+        //     "addresses[1].StreetAddress": ["The Street address: field is required.", "The Street address: must be at least 3 and at max 128 characters long."],
+        //     "addresses[2].City": ["The City: field is required.", "The City: must be at least 3 and at max 128 characters long."],
+        //     "addresses[2].Country": ["The Country: field is required.", "The Country: must be at least 2 and at max 128 characters long."],
+        //     "addresses[2].PostalCode": ["The Postal code: field is required.", "The Postal code: must be at least 3 and at max 128 characters long."],
+        //     "addresses[2].StreetAddress": ["The Street address: must be at least 3 and at max 128 characters long."]
+        // }
+
+        var dsName = dataSource.dataSourceName;
+
+        var rows = getRowsByIndexes(["0", "1", "2"]);
+        var indexMappings = [];
+        var dirtyRows = getDirtyRows();
+        var grid = $('#' + gridId);
+
+        for (let i = 0; i < dirtyRows.length; i++) {
+            //var index = $(row).attr('data-index');
+            var errorProp = dsName + '.[' + i + ']';
+            var im = error[errorProp];
+            if (im && im.length > 0) {
+                var clientIndex = im[0];
+                var serverIndex = i;
+
+                var errorRow = getRowByIndex(grid, parseInt(clientIndex));
+                if (!errorRow || errorRow.length === 0) continue;
+
+                $.each(cols, function (x, col) {
+                    var propName = col.propName.toPascalCaseJson();
+                    var inputError = error[dsName + '[' + serverIndex + '].' + propName];
+                    if (inputError && inputError.length > 0) {
+                        var input = errorRow.find("input[data-propname=" + col.propName + "]");
+                        if (input && input.length > 0) {
+                            input.addClass('is-invalid');
+                            //console.log(inputError);
+                            var allErrors = '';
+                            $.each(inputError, function (ie, er) {
+                                //var x = $('<div></div>').addClass('invalid-feedback').text(er);
+                                //$(x).after(input);
+                                // x.after(input);
+                                //input.after(x);
+                                //console.log(input[0]);
+                                allErrors += er + ' ';
+                            });
+                            input.attr('title', allErrors);//.attr('data-bs-toggle', 'tooltip');
+                            var tooltip = new bootstrap.Tooltip(input[0], { customClass: 'tooltip-error' });
+                        }
+                    }
+
+                });
+            }
+        }
+
+    }
+
+    var getRowsByIndexes = function (indexes) {
+        var grid = $('#' + gridId);
+        var rows = [];
+        $.each(indexes, function (i, index) {
+            var row = getRowByIndex(grid, index);
+            if (row && row.length > 0)
+                rows.push(row);
+        });
+
+        return rows;
+    }
+
+    var getRowByIndex = function (grid, index) {
+        return grid.find("tr[data-index = '" + index + "']");;
     };
 
     var notfiyListeners = function (eventType, payload) {
@@ -328,7 +425,7 @@ var gridNavigationService = function (gridOptions) {
     };
 
     var registerCallbacks = function () {
-        registerCallback(gridId, appDataEvents.GRID_DATA, getDrityRows, dataSource.dataSourceName);
+        registerCallback(gridId, appDataEvents.GRID_DATA, getDirtyRecords, dataSource.dataSourceName);
         registerCallback(gridId, appDataEvents.ON_NEXT_RECORD, onHeaderNext, dataSource.dataSourceName);
         registerCallback(gridId, appDataEvents.ON_PREV_RECORD, onHeaderNext, dataSource.dataSourceName);
         registerCallback(gridId, appDataEvents.ON_LAST_RECORD, onHeaderNext, dataSource.dataSourceName);
@@ -337,6 +434,8 @@ var gridNavigationService = function (gridOptions) {
         registerCallback(gridId, appDataEvents.ON_FETCH_RECORD, onHeaderNext, dataSource.dataSourceName);
 
         registerCallback(gridId, appDataEvents.ON_SAVE_RECORD, onSaveRecord, dataSource.dataSourceName);
+        registerCallback(gridId, appDataEvents.ON_SAVE_ERROR, onSaveError, dataSource.dataSourceName);
+
 
     };
 
@@ -346,7 +445,7 @@ var gridNavigationService = function (gridOptions) {
 
     return {
         bind,
-        getDrityRows,
+        getDirtyRecords,
         addNewRowToGrid,
         deleteRow, // hides element from display and add to the list of dirty-rows
         registerCallbacks

@@ -10,4 +10,6 @@ var appDataEvents = {
     ON_FETCH_RECORD: "ON_FETCH_RECORD",
 
     ON_GRID_UPDATED: "ON_GRID_UPDATED",
+
+    ON_SAVE_ERROR: "ON_SAVE_ERROR"
 };

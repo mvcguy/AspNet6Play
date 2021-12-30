@@ -16,3 +16,18 @@ html {
 body {
   margin-bottom: 60px;
 }
+
+
+.tooltip-error .tooltip-inner {
+  max-width: 200px;
+  padding: .25rem .5rem;
+  color: red;
+  text-align: center;
+  background-color: white;
+  border-radius: .25rem;
+  border: 1px solid red;
+}
+
+.tooltip-error .tooltip-arrow::before {
+  border-top-color: red;
+}

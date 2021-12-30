@@ -7,4 +7,78 @@
 <div class="text-center">
     <h1 class="display-4">Welcome</h1>
     <p>Play project to demonstrate skills in ASP.NET core and Entity framework 6.</p>
+    <p>Test the functions for pascal and camal casing</p>
+    <p>
+        <input type="text" id="sampleText" /> <br />
+
+        <input type="radio" name="function" id="pascal" value="pascal" />
+        <label for="pascal">Pascal case</label>
+
+        <input type="radio" name="function" id="pascalJson" value="pascalJson" />
+        <label for="pascalJson">Pascal case (Json)</label>
+
+        <input type="radio" name="function" id="camal" value="camal" />
+        <label for="camal">Camel case</label>
+        <br />
+        <button id="btnConvert" type="button">Convert</button>
+
+    <div>
+        <span>Converted Text:</span>
+        <span id="lblOutput"></span>
+    </div>
+
+    </p>
+
+    <h4>Popovers using bootstrap</h4>
+    <p>
+        <button type="button" class="btn btn-secondary" data-bs-toggle="tooltip" data-bs-placement="top"
+            title="Tooltip on top">
+            Tooltip on top
+        </button>
+        <button type="button" class="btn btn-secondary" data-bs-toggle="tooltip" data-bs-placement="right"
+            title="Tooltip on right">
+            Tooltip on right
+        </button>
+        <button type="button" class="btn btn-secondary" data-bs-toggle="tooltip" data-bs-placement="bottom"
+            title="Tooltip on bottom">
+            Tooltip on bottom
+        </button>
+        <button type="button" class="btn btn-secondary" data-bs-toggle="tooltip" data-bs-placement="left"
+            title="Tooltip on left">
+            Tooltip on left
+        </button>
+    </p>
+
 </div>
+
+@section Scripts
+{
+<script>
+    $(document).ready(function () {
+        $('#btnConvert').on('click', function () {
+
+            var sampleText = $('#sampleText').val();
+            if (!sampleText || sampleText === '') {
+                $('#lblOutput').text('Please specify a sample text');
+                return;
+            }
+
+            var opt = $('input[name="function"]:checked').val();
+            if (opt === 'camal') {
+                $('#lblOutput').text(sampleText.toCamalCase());
+            }
+            else if (opt === 'pascal') {
+                $('#lblOutput').text(sampleText.toPascalCase());
+            }
+            else if (opt === 'pascalJson') {
+                $('#lblOutput').text(sampleText.toPascalCaseJson());
+            }
+            else {
+                $('#lblOutput').text('Please select a function');
+            }
+
+        });
+
+    });
+</script>
+}

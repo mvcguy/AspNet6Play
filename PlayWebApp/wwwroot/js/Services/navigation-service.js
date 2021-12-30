@@ -69,7 +69,7 @@ var persistenceService = function (serviceParams) {
                     recordExist = true;
                 },
                 errorCallback: function (error) {
-                    console.error(error);
+                   // console.error(error);
                     resetOnNotFound(error, recordId);
                     if (error.status === 404) {
                         recordExist = false;
@@ -131,7 +131,8 @@ var persistenceService = function (serviceParams) {
                     enableSaveButton(false);
                 },
                 errorCallback: function (error) {
-                    $('#' + msgContainer).attr('class', 'alert alert-danger').text("An error has occurred while saving the changes. Error: " + error.responseText).show(0).delay(8000).hide(0);
+                    //console.error(error);
+                    //$('#' + msgContainer).attr('class', 'alert alert-danger').text("An error has occurred while saving the changes. Error: " + error.responseText).show(0).delay(8000).hide(0);
                 },
                 data: $('#' + formId).serializeObject(),
                 url: url,
@@ -295,8 +296,9 @@ var persistenceService = function (serviceParams) {
         $.ajax(ajaxOptions).then(function done(response) {
             postParams.callback(response);
             _notfiyListeners(appDataEvents.ON_SAVE_RECORD, []);
-        }, function error(error) {
+        }, function error(error, dt) {
             postParams.errorCallback(error);
+            _notfiyListeners(appDataEvents.ON_SAVE_ERROR, error.responseJSON, true);
         });
     };
 
@@ -358,13 +360,14 @@ var persistenceService = function (serviceParams) {
         $.ajax(ajaxOptions).then(function done(response) {
             postParams.callback(response);
             _notfiyListeners(appDataEvents.ON_SAVE_RECORD, []);
-        }, function error(error) {
+        }, function error(error, dt) {
             postParams.errorCallback(error);
+            _notfiyListeners(appDataEvents.ON_SAVE_ERROR, error.responseJSON, true);
         });
     };
 
 
-    var notfiyListeners = function (eventType, payload) {
+    var notfiyListeners = function (eventType, payload, isError) {
         try {
             if (!window.gridCallbacks || window.gridCallbacks.length === 0) {
                 return;
@@ -380,7 +383,13 @@ var persistenceService = function (serviceParams) {
 
             if (releventEvents && releventEvents.length > 0) {
                 $.each(releventEvents, function (index, ev) {
-                    ev.callback(payload[ev.dataSourceName]);
+                    if (isError) {
+                        ev.callback(payload);
+                    }
+                    else {
+                        ev.callback(payload[ev.dataSourceName]);
+                    }
+                    
                 });
             }
 
@@ -422,8 +431,9 @@ var persistenceService = function (serviceParams) {
         $.ajax(ajaxOptions).then(function done(response) {
             deleteParams.callback(response);
             _notfiyListeners(appDataEvents.ON_DELETE_RECORD, []);
-        }, function error(error) {
+        }, function error(error, dt) {
             deleteParams.errorCallback(error);
+            _notfiyListeners(appDataEvents.ON_SAVE_ERROR, error.responseJSON, true);
         });
     };
 

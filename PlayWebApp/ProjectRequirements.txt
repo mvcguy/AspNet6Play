@@ -22,3 +22,4 @@ dotnet ef database update
 9. support for row markers in the grid., e.g, row is added, updated, errors, (icons)
 10. Enable save button when a line from the gird is deleted - SOLVED
 11. Add support for resizing the columns - SOLVED
+12. Clear model errors when navigate away from current record

@@ -8,7 +8,7 @@ namespace PlayWebApp.Services.Logistics.ViewModels
     {
 
         [Required]
-        [Display(Name = "Address code")]
+        [Display(Name = "Reference")]
         [StringLength(10, ErrorMessage = "The {0} must be at least {2} and at max {1} characters long.", MinimumLength = 3)]
         public new string RefNbr { get; set; }
 
@@ -33,6 +33,11 @@ namespace PlayWebApp.Services.Logistics.ViewModels
         public string Country { get; set; }
 
         public UpdateType UpdateType { get; set; }
+        
+        [Required]
+        [Range(0, 20000)]        
+        public int ClientRowNumber { get; set; }
+
     }
 
     public enum UpdateType

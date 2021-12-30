@@ -1,9 +1,11 @@
+using System.Text.Json;
 using System.Text.Json.Serialization;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.OpenIdConnect;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
+using Newtonsoft.Json.Serialization;
 using PlayWebApp.Services.AppManagement;
 using PlayWebApp.Services.AppManagement.Repository;
 using PlayWebApp.Services.CustomerManagement;
@@ -110,12 +112,13 @@ services.AddMvcCore(options =>
     options.Filters.Add<CustomExceptionFilter>();
 });
 
-services.AddControllers().AddJsonOptions(options =>
+services.AddControllers().AddNewtonsoftJson(options =>
 {
-    options.JsonSerializerOptions.NumberHandling = JsonNumberHandling.AllowReadingFromString | JsonNumberHandling.WriteAsString;
-    
+    options.UseCamelCasing(true);
+}).ConfigureApiBehaviorOptions(options =>
+{
+    options.SuppressModelStateInvalidFilter = true;
 });
-
 
 
 

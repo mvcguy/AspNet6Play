@@ -1,4 +1,6 @@
+using System.Globalization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.ModelBinding;
 using PlayWebApp.Services.CustomerManagement;
 using PlayWebApp.Services.CustomerManagement.ViewModels;
 
@@ -16,6 +18,22 @@ namespace PlayWebApp.Controllers
         [HttpPut]
         public async Task<IActionResult> Put(CustomerUpdateVm model)
         {
+            if (!ModelState.IsValid)
+            {
+                var addressErrors = ModelState.FindKeysWithPrefix("Addresses");
+
+                if (addressErrors.Any())
+                {
+                    for (int i = 0; i < model.Addresses.Count; i++)
+                    {
+                        ModelState
+                        .AddModelError($"{nameof(model.Addresses)}.[{i}]",
+                                model.Addresses[i].ClientRowNumber.ToString(CultureInfo.InvariantCulture));
+                    }
+                }
+            }
+
+
             if (!ModelState.IsValid) return BadRequest(ModelState);
 
             var existingItem = await service.GetById(CreateRequest(model.RefNbr));
@@ -24,7 +42,7 @@ namespace PlayWebApp.Controllers
             var item = await service.Update(model);
 
             await service.SaveChanges();
-            return Ok(item.RefNbr); 
+            return Ok(item.RefNbr);
         }
 
         [HttpPost]
@@ -58,7 +76,7 @@ namespace PlayWebApp.Controllers
         public async Task<IActionResult> GetNextRecord(string currentRecord)
         {
             var model = await service.GetNext(CreateRequest(currentRecord));
-            if(model == null) return NotFound();
+            if (model == null) return NotFound();
             return Ok(model);
 
         }
@@ -68,7 +86,7 @@ namespace PlayWebApp.Controllers
         public async Task<IActionResult> GetPreviousRecord(string currentRecord)
         {
             var model = await service.GetPrevious(CreateRequest(currentRecord));
-            if(model == null) return NotFound();
+            if (model == null) return NotFound();
             return Ok(model);
         }
 
