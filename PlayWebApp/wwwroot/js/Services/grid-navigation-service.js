@@ -281,18 +281,7 @@ var gridNavigationService = function (gridOptions) {
 
 
     var registerCallback = function (key, eventTypeX, callback, dataSourceNameX) {
-        if (!window.gridCallbacks || window.gridCallbacks.length === 0) {
-            window.gridCallbacks = [];
-        }
-
-        //
-        // search if callback exist from before
-        //
-        var index = window.gridCallbacks.findIndex(({ key, eventType, dataSourceName }) => key === gridId && eventType === eventTypeX && dataSourceName === dataSourceNameX);
-        // console.log('index: ', index);
-        if (index === -1) {
-            window.gridCallbacks.push({ key: key, eventType: eventTypeX, callback: callback, dataSourceName: dataSourceNameX });
-        }
+        dataEventsService.registerCallback(key, eventTypeX, callback, dataSourceNameX);
     };
 
     var onHeaderNext = function (eventArgs) {
@@ -307,14 +296,8 @@ var gridNavigationService = function (gridOptions) {
     };
 
     var onSaveRecord = function (eventArgs) {
-        //
-        // when main record is saved, disable the key columns of the grid,
-        //
+
         var grid = $('#' + gridId);
-        var keyColumns = grid.find('tbody>tr:visible').find("input[data-keycolumn='true']");
-        $.each(keyColumns, function (index, col) {
-            $(col).attr('disabled', true);
-        });
 
         //
         // remove rows from the grid that has been deleted
@@ -322,6 +305,17 @@ var gridNavigationService = function (gridOptions) {
 
         grid.find("tr[data-rowcategory='DELETED']").remove();
         grid.find("tr[data-rowcategory='ADDED_DELETED']").remove();
+
+        //
+        // when main record is saved, disable the key columns of the grid,
+        //
+        var visibleRows = grid.find('tbody>tr:visible');
+        visibleRows.find("input[data-keycolumn='true']").attr('disabled', true);
+
+        //
+        // mark row as prestine on successful saving
+        //
+        visibleRows.attr('data-rowcategory', 'PRESTINE');
 
     };
 
@@ -383,37 +377,13 @@ var gridNavigationService = function (gridOptions) {
 
     }
 
-    var getRowsByIndexes = function (indexes) {
-        var grid = $('#' + gridId);
-        var rows = [];
-        $.each(indexes, function (i, index) {
-            var row = getRowByIndex(grid, index);
-            if (row && row.length > 0)
-                rows.push(row);
-        });
-
-        return rows;
-    }
-
     var getRowByIndex = function (grid, index) {
         return grid.find("tr[data-index = '" + index + "']");;
     };
 
     var notifyListeners = function (eventType, payload) {
 
-        try {
-            if (!window.headerCallbacks || window.headerCallbacks.length === 0) {
-                return;
-            }
-
-            $.each(window.headerCallbacks, function () {
-                if (this.eventType !== eventType) return;
-                this.callback(payload);
-            });
-
-        } catch (error) {
-            console.error(error);
-        }
+        dataEventsService.notifyListeners(eventType, payload);
 
     };
 

@@ -19,18 +19,7 @@ var persistenceService = function (serviceParams) {
     var recordExist = true;
 
     var registerCallback = function (key, eventTypeX, callback, dataSourceNameX) {
-        if (!window.headerCallbacks || window.headerCallbacks.length === 0) {
-            window.headerCallbacks = [];
-        }
-
-        //
-        // search if callback exist from before
-        //
-        var index = window.headerCallbacks.findIndex(({ key, eventType, dataSourceName }) => key === formId && eventType === eventTypeX && dataSourceName === dataSourceNameX);
-        // console.log('index: ', index);
-        if (index === -1) {
-            window.headerCallbacks.push({ key: key, eventType: eventTypeX, callback: callback, dataSourceName: dataSourceNameX });
-        }
+        dataEventsService.registerCallback(key, eventTypeX, callback, dataSourceNameX);
     };
 
     var onGridUpdated = function (event) {
@@ -40,7 +29,15 @@ var persistenceService = function (serviceParams) {
 
     var registerCallbacks = function () {
         registerCallback(formId, appDataEvents.ON_GRID_UPDATED, onGridUpdated, 'mainForm');
+        registerCallback(formId, appDataEvents.ON_NAVIGATING, onNavigating, 'mainForm');
+
+        //ON_NAVIGATING
     };
+
+    var onNavigating = function (eventArgs) {
+        console.log('ON_NAVIGATING: EventData: ', eventArgs);
+
+    }
 
     var registerHandlers = function () {
 
@@ -84,14 +81,15 @@ var persistenceService = function (serviceParams) {
         $('#btnSave').on('click', function (e) {
             var result = $("#" + formId).valid();
             if (result === false) return;
-            
+
             saveRecord();
         });
 
         $("#btnNext").on('click', function (e) {
 
-            notifyListeners(appDataEvents.ON_NAVIGATING, { eventData: e });
-            if (eventData.cancelAction === true) {
+            var ev = { eventData: e };
+            notifyListeners(appDataEvents.ON_NAVIGATING, ev);
+            if (ev.eventData.cancelAction === true) {
                 return;
             }
 
@@ -370,19 +368,7 @@ var persistenceService = function (serviceParams) {
     };
 
     var notifyListeners = function (eventType, eventArgs) {
-        try {
-            if (!window.gridCallbacks || window.gridCallbacks.length === 0) {
-                return;
-            }
-
-            $.each(window.gridCallbacks, function () {
-                if (this.eventType !== eventType) return;
-                this.callback(eventArgs);
-            });
-
-        } catch (error) {
-            console.error(error);
-        }
+        dataEventsService.notifyListeners(eventType, eventArgs);
     };
 
     var resetFormValidation = function () {
@@ -396,23 +382,11 @@ var persistenceService = function (serviceParams) {
         //
         if (!postParams.data) return;
 
-        var grids = [];
-        if (window.gridCallbacks && window.gridCallbacks.length > 0) {
-
-            $.each(window.gridCallbacks, function (index, value) {
-                if (value.eventType === appDataEvents.GRID_DATA) {
-                    var gridData = value.callback();
-                    var dataSourceName = value.dataSourceName;
-                    grids.push({ gridData, dataSourceName });
-                    console.log("grids: ", grids);
-                }
-
-            });
-        }
+        var grids = dataEventsService.invokeCallback(appDataEvents.GRID_DATA);
 
         $.each(grids, function (gridIndex, grid) {
 
-            var records = grid.gridData.filter(function (value, index) {
+            var records = grid.data.filter(function (value, index) {
                 if (value.rowCategory === "ADDED") {
                     value["updateType"] = 3;
                 }
