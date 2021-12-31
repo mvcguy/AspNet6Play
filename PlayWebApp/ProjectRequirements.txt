@@ -24,6 +24,6 @@ dotnet ef database update
 11. Add support for resizing the columns - SOLVED
 12. Clear model errors when navigate away from current record - SOLVED
 13. Deleting a sub item does not work if any of the validation fails (e.g, city is empty) - SOLVED
-14. Disable save button when the previous record is navigated
-15. Show a warning if the record is dirty and the user tries to navigate - IN-PROGRESS
+14. Disable save button when the previous record is navigated - SOLVED
+15. Show a warning if the record is dirty and the user tries to navigate - SOLVED
 16. Show current record id in the address bar

@@ -15,8 +15,8 @@ var persistenceService = function (serviceParams) {
     var onDeleteResponse = serviceParams.onDeleteResponse;
     var onSaveResponse = serviceParams.onSaveResponse;
     var idField = serviceParams.idField;
-
     var recordExist = true;
+    var isRecordDirty = false;
 
     var registerCallback = function (key, eventTypeX, callback, dataSourceNameX) {
         dataEventsService.registerCallback(key, eventTypeX, callback, dataSourceNameX);
@@ -24,6 +24,7 @@ var persistenceService = function (serviceParams) {
 
     var onGridUpdated = function (event) {
         console.log('Grid-eventData: ', event);
+        isRecordDirty = true;
         enableSaveButton(true);
     };
 
@@ -37,16 +38,26 @@ var persistenceService = function (serviceParams) {
     var onNavigating = function (eventArgs) {
         console.log('ON_NAVIGATING: EventData: ', eventArgs);
 
+        var navigate = shouldNavigate();
+        if (navigate) {
+            isRecordDirty = false;
+            enableSaveButton(false);
+        }
+
+        eventArgs.eventData.cancelAction = navigate === false
     }
+
+    var shouldNavigate = function () {
+        if (!isRecordDirty) return true;
+        var $confirm = confirm("There is unsaved data. Are you sure you want to leave the current record?");
+        return $confirm;
+    };
 
     var registerHandlers = function () {
 
         $("#" + formId + " input,textarea,select").each(function () {
             $(this).on('change keydown', function () {
-                //
-                // element changed
-                //
-                //console.log('form element is updated', this);
+                isRecordDirty = true;
                 enableSaveButton(true);
             });
         });
@@ -101,6 +112,13 @@ var persistenceService = function (serviceParams) {
         });
 
         $("#btnPrev").on('click', function (e) {
+
+            var ev = { eventData: e };
+            notifyListeners(appDataEvents.ON_NAVIGATING, ev);
+            if (ev.eventData.cancelAction === true) {
+                return;
+            }
+
             if (!getIdCallback()) {
                 moveLast();
                 return;
@@ -109,14 +127,32 @@ var persistenceService = function (serviceParams) {
         });
 
         $('#btnFirst').on('click', function (e) {
+            var ev = { eventData: e };
+            notifyListeners(appDataEvents.ON_NAVIGATING, ev);
+            if (ev.eventData.cancelAction === true) {
+                return;
+            }
+
             moveFirst();
         });
 
         $('#btnLast').on('click', function (e) {
+            var ev = { eventData: e };
+            notifyListeners(appDataEvents.ON_NAVIGATING, ev);
+            if (ev.eventData.cancelAction === true) {
+                return;
+            }
+
             moveLast();
         });
 
         $("#btnAdd").on('click', function (e) {
+            var ev = { eventData: e };
+            notifyListeners(appDataEvents.ON_NAVIGATING, ev);
+            if (ev.eventData.cancelAction === true) {
+                return;
+            }
+
             onAdd();
             notifyListeners(appDataEvents.ON_ADD_RECORD, { eventData: e });
         });
@@ -135,7 +171,9 @@ var persistenceService = function (serviceParams) {
                 callback: function (response) {
                     $('#' + msgContainer).attr('class', 'alert alert-success').text("Record is successfully saved").show(0).delay(8000).hide(0);
                     onSaveResponse(response);
+                    isRecordDirty = false;
                     enableSaveButton(false);
+
                 },
                 errorCallback: function (error) {
                     //console.error(error);
