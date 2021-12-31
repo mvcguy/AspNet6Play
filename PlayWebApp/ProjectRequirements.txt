@@ -15,11 +15,15 @@ dotnet ef database update
 2. The ref field in the addresses grids needs to be disabled after saving. - SOLVED
 3. No data in the grid when the page loads for the first time - SOLVED
 4. Save button is disabled when a new grid row is added - SOLVED
-5. Show errors in the grid - row level OR cell level
-6. Fix the width of items in the grid - SOLEVED
+5. Show errors in the grid - row level OR cell level - SOLVED
+6. Fix the width of items in the grid - SOLVED
 7. Support pagination in the grid
 8. Support for dropdowns in the grid
 9. support for row markers in the grid., e.g, row is added, updated, errors, (icons)
 10. Enable save button when a line from the gird is deleted - SOLVED
 11. Add support for resizing the columns - SOLVED
-12. Clear model errors when navigate away from current record
+12. Clear model errors when navigate away from current record - SOLVED
+13. Deleting a sub item does not work if any of the validation fails (e.g, city is empty) - SOLVED
+14. Disable save button when the previous record is navigated
+15. Show a warning if the record is dirty and the user tries to navigate - IN-PROGRESS
+16. Show current record id in the address bar

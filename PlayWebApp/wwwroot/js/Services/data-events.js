@@ -9,6 +9,8 @@ var appDataEvents = {
     ON_ADD_RECORD: "ON_ADD_RECORD",
     ON_FETCH_RECORD: "ON_FETCH_RECORD",
 
+    ON_NAVIGATING_RECORD: "ON_NAVIGATING", // raised when the main record is about to navigate
+
     ON_GRID_UPDATED: "ON_GRID_UPDATED",
 
     ON_SAVE_ERROR: "ON_SAVE_ERROR"

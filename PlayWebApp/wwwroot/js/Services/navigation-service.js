@@ -34,7 +34,7 @@ var persistenceService = function (serviceParams) {
     };
 
     var onGridUpdated = function (event) {
-        console.log('Grid-Event: ', event);
+        console.log('Grid-eventData: ', event);
         enableSaveButton(true);
     };
 
@@ -69,7 +69,7 @@ var persistenceService = function (serviceParams) {
                     recordExist = true;
                 },
                 errorCallback: function (error) {
-                   // console.error(error);
+                    // console.error(error);
                     resetOnNotFound(error, recordId);
                     if (error.status === 404) {
                         recordExist = false;
@@ -82,10 +82,19 @@ var persistenceService = function (serviceParams) {
         });
 
         $('#btnSave').on('click', function (e) {
+            var result = $("#" + formId).valid();
+            if (result === false) return;
+            
             saveRecord();
         });
 
         $("#btnNext").on('click', function (e) {
+
+            notifyListeners(appDataEvents.ON_NAVIGATING, { eventData: e });
+            if (eventData.cancelAction === true) {
+                return;
+            }
+
             if (!getIdCallback()) {
                 moveFirst();
                 return;
@@ -111,7 +120,7 @@ var persistenceService = function (serviceParams) {
 
         $("#btnAdd").on('click', function (e) {
             onAdd();
-            notfiyListeners(appDataEvents.ON_ADD_RECORD, []);
+            notifyListeners(appDataEvents.ON_ADD_RECORD, { eventData: e });
         });
 
         $("#btnDelete").on('click', function (e) {
@@ -252,7 +261,6 @@ var persistenceService = function (serviceParams) {
             deleteRequest(deleteParams);
         };
 
-
         var resetOnNotFound = function (error, recordId) {
             console.log('error-status', error.status);
             if (error.status === 404) {
@@ -260,13 +268,10 @@ var persistenceService = function (serviceParams) {
                 //
                 // notify listeners
                 //
-                notfiyListeners(appDataEvents.ON_ADD_RECORD, []);
+                notifyListeners(appDataEvents.ON_ADD_RECORD, { eventData: { recordId } });
 
             }
         };
-
-
-
     };
 
     var enableSaveButton = function (enable) {
@@ -284,7 +289,7 @@ var persistenceService = function (serviceParams) {
     var postRequest = function (postParams) {
 
         addGridsDataToRequest(postParams);
-        var _notfiyListeners = notfiyListeners;
+        var _notifyListeners = notifyListeners;
         var ajaxOptions = {
             url: postParams.url,
             method: 'POST',
@@ -295,11 +300,94 @@ var persistenceService = function (serviceParams) {
 
         $.ajax(ajaxOptions).then(function done(response) {
             postParams.callback(response);
-            _notfiyListeners(appDataEvents.ON_SAVE_RECORD, []);
+            _notifyListeners(appDataEvents.ON_SAVE_RECORD, { eventData: response });
         }, function error(error, dt) {
             postParams.errorCallback(error);
-            _notfiyListeners(appDataEvents.ON_SAVE_ERROR, error.responseJSON, true);
+            _notifyListeners(appDataEvents.ON_SAVE_ERROR, { eventData: error }, true);
         });
+    };
+
+    var putRequest = function (postParams) {
+
+        addGridsDataToRequest(postParams);
+        var _notifyListeners = notifyListeners;
+        var ajaxOptions = {
+            url: postParams.url,
+            method: 'PUT',
+            data: postParams.data ? JSON.stringify(postParams.data) : {},
+            contentType: 'application/json',
+            headers: postParams.headers ? postParams.headers : {}
+        };
+
+        $.ajax(ajaxOptions).then(function done(response) {
+            postParams.callback(response);
+            _notifyListeners(appDataEvents.ON_SAVE_RECORD, { eventData: response });
+        }, function error(error, dt) {
+            postParams.errorCallback(error);
+            _notifyListeners(appDataEvents.ON_SAVE_ERROR, { eventData: error }, true);
+        });
+    };
+
+    var getRequest = function (getParams) {
+        var ajaxOptions = {
+            url: getParams.url,
+            method: 'GET',
+            headers: getParams.headers ? getParams.headers : {}
+        };
+        var _notifyListeners = notifyListeners;
+        $.ajax(ajaxOptions).then(function done(response) {
+
+            getParams.callback(response);
+            resetFormValidation();
+
+            //
+            // notify listeners
+            //            
+            if (getParams.action) {
+                _notifyListeners(getParams.action, { eventData: response });
+            }
+
+        }, function error(error) {
+            getParams.errorCallback(error);
+        });
+
+    };
+
+    var deleteRequest = function (deleteParams) {
+        var ajaxOptions = {
+            url: deleteParams.url,
+            method: 'DELETE',
+            headers: deleteParams.headers ? deleteParams.headers : {}
+        };
+        var _notifyListeners = notifyListeners;
+        $.ajax(ajaxOptions).then(function done(response) {
+            deleteParams.callback(response);
+            _notifyListeners(appDataEvents.ON_DELETE_RECORD, { eventData: response });
+        }, function error(error, dt) {
+            deleteParams.errorCallback(error);
+            _notifyListeners(appDataEvents.ON_SAVE_ERROR, { eventData: error }, true);
+        });
+    };
+
+    var notifyListeners = function (eventType, eventArgs) {
+        try {
+            if (!window.gridCallbacks || window.gridCallbacks.length === 0) {
+                return;
+            }
+
+            $.each(window.gridCallbacks, function () {
+                if (this.eventType !== eventType) return;
+                this.callback(eventArgs);
+            });
+
+        } catch (error) {
+            console.error(error);
+        }
+    };
+
+    var resetFormValidation = function () {
+        var $form = $('#' + formId);
+        $form.valid();
     };
 
     var addGridsDataToRequest = function (postParams) {
@@ -342,98 +430,6 @@ var persistenceService = function (serviceParams) {
             });
 
             postParams.data[grid.dataSourceName] = records;
-        });
-    };
-
-    var putRequest = function (postParams) {
-
-        addGridsDataToRequest(postParams);
-        var _notfiyListeners = notfiyListeners;
-        var ajaxOptions = {
-            url: postParams.url,
-            method: 'PUT',
-            data: postParams.data ? JSON.stringify(postParams.data) : {},
-            contentType: 'application/json',
-            headers: postParams.headers ? postParams.headers : {}
-        };
-
-        $.ajax(ajaxOptions).then(function done(response) {
-            postParams.callback(response);
-            _notfiyListeners(appDataEvents.ON_SAVE_RECORD, []);
-        }, function error(error, dt) {
-            postParams.errorCallback(error);
-            _notfiyListeners(appDataEvents.ON_SAVE_ERROR, error.responseJSON, true);
-        });
-    };
-
-
-    var notfiyListeners = function (eventType, payload, isError) {
-        try {
-            if (!window.gridCallbacks || window.gridCallbacks.length === 0) {
-                return;
-            }
-
-            //
-            // search if callback exist from before
-            //                
-            var releventEvents = window.gridCallbacks.filter(function (value, index) {
-                if (value.eventType === eventType)
-                    return value;
-            });
-
-            if (releventEvents && releventEvents.length > 0) {
-                $.each(releventEvents, function (index, ev) {
-                    if (isError) {
-                        ev.callback(payload);
-                    }
-                    else {
-                        ev.callback(payload[ev.dataSourceName]);
-                    }
-                    
-                });
-            }
-
-        } catch (error) {
-            console.error(error);
-        }
-    };
-
-
-    var getRequest = function (getParams) {
-        var ajaxOptions = {
-            url: getParams.url,
-            method: 'GET',
-            headers: getParams.headers ? getParams.headers : {}
-        };
-        var _notfiyListeners = notfiyListeners;
-        $.ajax(ajaxOptions).then(function done(response) {
-            getParams.callback(response);
-            //
-            // notify listeners
-            //            
-            if (getParams.action) {
-                _notfiyListeners(getParams.action, response);
-            }
-
-        }, function error(error) {
-            getParams.errorCallback(error);
-        });
-
-    };
-
-    var deleteRequest = function (deleteParams) {
-        var ajaxOptions = {
-            url: deleteParams.url,
-            method: 'DELETE',
-            headers: deleteParams.headers ? deleteParams.headers : {}
-        };
-        var _notfiyListeners = notfiyListeners;
-        $.ajax(ajaxOptions).then(function done(response) {
-            deleteParams.callback(response);
-            _notfiyListeners(appDataEvents.ON_DELETE_RECORD, []);
-        }, function error(error, dt) {
-            deleteParams.errorCallback(error);
-            _notfiyListeners(appDataEvents.ON_SAVE_ERROR, error.responseJSON, true);
         });
     };
 

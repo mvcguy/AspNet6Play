@@ -7,54 +7,107 @@
 <div class="text-center">
     <h1 class="display-4">Welcome</h1>
     <p>Play project to demonstrate skills in ASP.NET core and Entity framework 6.</p>
-    <p>Test the functions for pascal and camal casing</p>
-    <p>
-        <input type="text" id="sampleText" /> <br />
+    <p>Click <a asp-area="logistics" asp-page="home/index">here</a> to check out the <a asp-area="logistics" asp-page="home/index">LOGISTICS</a> module.</p>
+    <div style="display: none;">
+        <p>Test the functions for pascal and camal casing</p>
+        <p>
+            <input type="text" id="sampleText" /> <br />
 
-        <input type="radio" name="function" id="pascal" value="pascal" />
-        <label for="pascal">Pascal case</label>
+            <input type="radio" name="function" id="pascal" value="pascal" />
+            <label for="pascal">Pascal case</label>
 
-        <input type="radio" name="function" id="pascalJson" value="pascalJson" />
-        <label for="pascalJson">Pascal case (Json)</label>
+            <input type="radio" name="function" id="pascalJson" value="pascalJson" />
+            <label for="pascalJson">Pascal case (Json)</label>
 
-        <input type="radio" name="function" id="camal" value="camal" />
-        <label for="camal">Camel case</label>
-        <br />
-        <button id="btnConvert" type="button">Convert</button>
+            <input type="radio" name="function" id="camal" value="camal" />
+            <label for="camal">Camel case</label>
+            <br />
+            <button id="btnConvert" type="button">Convert</button>
 
-    <div>
-        <span>Converted Text:</span>
-        <span id="lblOutput"></span>
+        <div>
+            <span>Converted Text:</span>
+            <span id="lblOutput"></span>
+        </div>
+
+        </p>
     </div>
 
-    </p>
+    <div style="display: none;">
+        <h4>Jquery validation</h4>
+        <p>
+        <form id="frmGreetings">
 
-    <h4>Popovers using bootstrap</h4>
-    <p>
-        <button type="button" class="btn btn-secondary" data-bs-toggle="tooltip" data-bs-placement="top"
-            title="Tooltip on top">
-            Tooltip on top
-        </button>
-        <button type="button" class="btn btn-secondary" data-bs-toggle="tooltip" data-bs-placement="right"
-            title="Tooltip on right">
-            Tooltip on right
-        </button>
-        <button type="button" class="btn btn-secondary" data-bs-toggle="tooltip" data-bs-placement="bottom"
-            title="Tooltip on bottom">
-            Tooltip on bottom
-        </button>
-        <button type="button" class="btn btn-secondary" data-bs-toggle="tooltip" data-bs-placement="left"
-            title="Tooltip on left">
-            Tooltip on left
-        </button>
-    </p>
+            <label for="txtName">Enter your name</label>
+            <input type="text" id="txtName" name="txtName" value="Moniba" required minlength="4" maxlength="10" />
+
+            <span id="txtNameValidation"></span>
+            <br />
+
+            <input type="submit" value="Save" />
+        </form>
+        </p>
+    </div>
 
 </div>
 
 @section Scripts
 {
+<partial name="_ValidationScriptsPartial" />
+
 <script>
-    $(document).ready(function () {
+    $(function () {
+
+        //
+        // jquery validation
+        //
+        var $form = $('#frmGreetings');
+        var options = {  // options structure passed to jQuery Validate's validate() method
+            errorClass: "input-validation-error",
+            errorElement: "span",
+            errorPlacement: function () {
+                onError.apply($form, arguments);
+            },
+            invalidHandler: function () {
+                onErrors.apply($form, arguments);
+            },
+            messages: {
+                txtName: "Please specify your name",
+                email: {
+                    required: "We need your email address to contact you",
+                    email: "Your email address must be in the format of name@domain.com"
+                }
+            },
+            rules: {
+                txtName: "required",
+                email: {
+                    required: true,
+                    email: true
+                }
+            },
+            success: function () {
+                onSuccess.apply($form, arguments);
+            }
+        };
+
+        var attachValidation = function (form) {
+            form.validate(options);
+        };
+
+        var onError = function (error, element) {
+            console.log(error);
+            $('#txtNameValidation').html(error);
+        };
+
+        var onErrors = function (errors) {
+            console.log(errors);
+        };
+
+        var onSuccess = function (error) {
+            console.log(error);
+        };
+
+        attachValidation($form);
+
         $('#btnConvert').on('click', function () {
 
             var sampleText = $('#sampleText').val();
@@ -78,6 +131,8 @@
             }
 
         });
+
+
 
     });
 </script>

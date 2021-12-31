@@ -1,2 +1,15 @@
-﻿<script src="~/lib/jquery-validation/dist/jquery.validate.min.js"></script>
-<script src="~/lib/jquery-validation-unobtrusive/jquery.validate.unobtrusive.min.js"></script>
+﻿<script src="~/lib/jquery-validation/dist/jquery.validate.js"></script>
+<script src="~/lib/jquery-validation-unobtrusive/jquery.validate.unobtrusive.js"></script>
+
+<script src="~/js/services/data-events.js" asp-append-version="true"></script>
+<script src="~/js/plugins/resizable-grid.js" asp-append-version="true"></script>
+<script src="~/js/services/form-extentions.js" asp-append-version="true"></script>
+<script src="~/js/services/navigation-service.js" asp-append-version="true"></script>
+<script src="~/js/services/grid-navigation-service.js"></script>
+
+<script>
+    var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
+    var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+        return new bootstrap.Tooltip(tooltipTriggerEl)
+    })
+</script>

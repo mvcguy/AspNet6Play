@@ -82,7 +82,7 @@
 
     function onSuccess(error) {  // 'this' is the form element
         var container = error.data("unobtrusiveContainer");
-
+        //debugger;
         if (container) {
             var replaceAttrValue = container.attr("data-valmsg-replace"),
                 replace = replaceAttrValue ? $.parseJSON(replaceAttrValue) : null;
@@ -97,6 +97,7 @@
     }
 
     function onReset(event) {  // 'this' is the form element
+        //debugger;
         var $form = $(this),
             key = '__jquery_unobtrusive_validation_form_reset';
         if ($form.data(key)) {
