@@ -26,4 +26,6 @@ dotnet ef database update
 13. Deleting a sub item does not work if any of the validation fails (e.g, city is empty) - SOLVED
 14. Disable save button when the previous record is navigated - SOLVED
 15. Show a warning if the record is dirty and the user tries to navigate - SOLVED
-16. Show current record id in the address bar
+16. Show current record id in the address bar - SOLVED
+17. Main form validation errors are not showing up.
+18. Bug: Save main record, then add grid row and save -> a post request is sent instead of PUT. - CANNOT REPRODUCE!
