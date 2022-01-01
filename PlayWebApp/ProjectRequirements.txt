@@ -18,7 +18,7 @@ dotnet ef database update
 5. Show errors in the grid - row level OR cell level - SOLVED
 6. Fix the width of items in the grid - SOLVED
 7. Support pagination in the grid
-8. Support for dropdowns in the grid
+8. Support for dropdowns in the grid - IN-PROGRESS
 9. support for row markers in the grid., e.g, row is added, updated, errors, (icons)
 10. Enable save button when a line from the gird is deleted - SOLVED
 11. Add support for resizing the columns - SOLVED
@@ -29,3 +29,8 @@ dotnet ef database update
 16. Show current record id in the address bar - SOLVED
 17. Main form validation errors are not showing up.
 18. Bug: Save main record, then add grid row and save -> a post request is sent instead of PUT. - CANNOT REPRODUCE!
+19. Add possibility to upload data from files (excel or csv)
+20. Add sorting to the grid
+21. Add search possibility in the grid
+22. Add column configuration to the grid
+23. Save grid configuration in a cookie per user

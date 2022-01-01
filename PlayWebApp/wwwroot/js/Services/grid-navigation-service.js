@@ -9,7 +9,7 @@ var gridNavigationService = function (gridOptions) {
         var templateRow = $('#' + gridId + "_template_row_").clone();
         templateRow.attr('id', gridId + "_template_row_" + rowNumber);
         templateRow.css('display', 'table-row');
-        var childs = templateRow.find('input');
+        var childs = templateRow.find('input, select');
 
         $.each(childs, function (cellIndex, cellValue) {
             var oldId = $(cellValue).attr('id');
@@ -22,6 +22,10 @@ var gridNavigationService = function (gridOptions) {
                 if (xx === 'true' || xx === 'True' || xx === true) {
                     $(cellValue).attr('checked', 'checked');
                 }
+            }
+            else if (cellType === 'select') {
+                //console.log('select', xx);
+                $(cellValue).val(xx).change();
             }
             else {
                 $(cellValue).val(xx);
@@ -38,7 +42,7 @@ var gridNavigationService = function (gridOptions) {
         $(templateRow).addClass('grid-row');
 
 
-        var rowInputs = $(templateRow).find('input');
+        var rowInputs = $(templateRow).find('input, select');
         rowInputs.on('change', function (e) {
             var parent = $(e.target).parents('tr');
             $(parent).attr('data-isdirty', true);
@@ -132,6 +136,8 @@ var gridNavigationService = function (gridOptions) {
             if (value.dataType === 'number') {
                 cellInput = '<input class="form-control" type="number" />';
             }
+            if (value.dataType === 'select')
+                cellInput = '<select class="form-select"></select>';
 
             if (cellInput !== "") {
                 var cellInputVar = $(cellInput);
@@ -154,6 +160,19 @@ var gridNavigationService = function (gridOptions) {
 
                 cellInputVar.attr('placeholder', value.name);
                 gridBodyCell.append(cellInputVar);
+
+                //
+                // if its a dropdown, then inflate with data from ds
+                //
+                if (value.dataType === 'select') {
+                    $.each(value.dataSource, function () {
+                        var option = $("<option></option>");
+                        option.val(this.value);
+                        option.text(this.text);
+                        cellInputVar.append(option);
+                    });
+
+                }
             }
 
 
@@ -207,7 +226,7 @@ var gridNavigationService = function (gridOptions) {
         var records = [];
         $.each(dirtyRows, function (index, row) {
 
-            var rowInputs = $(row).find('input');
+            var rowInputs = $(row).find('input, select');
             var rowIndex = $(row).attr('data-index');
             if (rowIndex) {
                 rowIndex = parseInt(rowIndex);
@@ -239,7 +258,7 @@ var gridNavigationService = function (gridOptions) {
         var rowCount = $('#' + gridId).find('tbody>tr').length;
         var emptyRow = addNewRow(rowCount - 1, createEmptyRowData(), false);
         $('#' + gridId).find('tbody').append(emptyRow);
-        $(emptyRow).find('input').first().focus();
+        $(emptyRow).find('input, select').first().focus();
 
         //
         // rowcategory = ADDED || DELETED || UPDATED

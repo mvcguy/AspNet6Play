@@ -68,10 +68,15 @@
 
 <script>
 
+    //
+    // Configure customer addresses grid
+    //
+
+
     $(document).ready(function () {
         // >> cols
-        var colFor = function (name, dataType, width, propName, key) {
-            return { name, dataType, width, propName, keyColumn: key };
+        var colFor = function (name, dataType, width, propName, key, dataSource) {
+            return { name, dataType, width, propName, keyColumn: key, dataSource };
         };
 
         var cols = [];
@@ -80,7 +85,8 @@
         cols.push(colFor("Street", "text", "220px", "streetAddress", false));
         cols.push(colFor("Postal code", "number", "80px", "postalCode", false));
         cols.push(colFor("City", "text", "120px", "city", false));
-        cols.push(colFor("Country", "text", "120px", "country", false));
+        cols.push(colFor("Country", "select", "120px", "country", false,
+         [{text: 'Pakistan', value: 'PK'}, {text: 'Norway', value: 'NO'}, {text: 'Sweden', value: 'SE'}]));
         // << cols
 
         // >> datasource
@@ -133,36 +139,38 @@
 <script>
 
     $(document).ready(function () {
+        var keyCol = 'CustomerVm_RefNbr';
+
         var srv = new persistenceService({
             url: "https://localhost:7096/api/v1/Customers/",
             formId: "frmCustomer",
-            idField: 'CustomerVm_RefNbr',
+            idField: keyCol,
             msgContainer: "serverMessages",
             getIdCallback: function () {
-                return $('#CustomerVm_RefNbr').val();
+                return $('#' + keyCol).val();
             },
             nextEndpoint: function () {
-                return $('#CustomerVm_RefNbr').val() + "/next";
+                return $('#' + keyCol).val() + "/next";
             },
             prevEndpoint: function () {
-                return $('#CustomerVm_RefNbr').val() + "/previous";
+                return $('#' + keyCol).val() + "/previous";
             },
             onAdd: function (id) {
-                $('#CustomerVm_RefNbr').val('');
+                $('#' + keyCol).val('');
                 $('#CustomerVm_Name').val('');
 
                 if (id && id !== '')
-                    $('#CustomerVm_RefNbr').val(id);
+                    $('#' + keyCol).val(id);
 
             },
             lastEndpoint: "last",
             firstEndpoint: "first",
             onGetResponse: function (response) {
-                $('#CustomerVm_RefNbr').val(response.refNbr);
+                $('#' + keyCol).val(response.refNbr);
                 $('#CustomerVm_Name').val(response.name);
             },
             deleteEndpoint: function () {
-                return $('#CustomerVm_RefNbr').val();
+                return $('#' + keyCol).val();
             },
             onDeleteResponse: function (response) {
 
