@@ -81,7 +81,10 @@
 
         var cols = [];
         cols.push(colFor("Reference", "text", "80px", "refNbr", true));
-        cols.push(colFor("Default", "boolean", "60px", "isDefault", false));
+        cols.push(colFor("Default", "checkbox", "60px", "isDefault", false));
+        @* cols.push(colFor("Email", "email", "200px", "email", false)); *@
+        @* cols.push(colFor("Barcode", "file", "200px", "bcFile", false)); *@
+
         cols.push(colFor("Street", "text", "220px", "streetAddress", false));
         cols.push(colFor("Postal code", "number", "80px", "postalCode", false));
         cols.push(colFor("City", "text", "120px", "city", false));

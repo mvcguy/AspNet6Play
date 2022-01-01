@@ -34,7 +34,7 @@ function resizableGrid(table) {
             var padding = paddingDiff(curCol);
 
             curColWidth = curCol.offsetWidth - padding;
-            console.log('MDown: tableW: ', tableWidth, 'pageX: ', pageX, 'padding: ', padding, 'colW: ', curColWidth);
+            //console.log('MDown: tableW: ', tableWidth, 'pageX: ', pageX, 'padding: ', padding, 'colW: ', curColWidth);
         });
 
         div.addEventListener('mouseover', function (e) {
@@ -53,7 +53,7 @@ function resizableGrid(table) {
                 // document.getElementById('tableId').style.width = tableWidth + diffX + "px"
                 table.style.width = tableWidth + diffX + "px";
 
-                console.log('MMove: diffX: ', diffX, 'curColW: ', curCol.style.width, 'TableW: ', table.style.width);
+               // console.log('MMove: diffX: ', diffX, 'curColW: ', curCol.style.width, 'TableW: ', table.style.width);
 
             }
         });

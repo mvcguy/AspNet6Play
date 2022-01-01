@@ -41,7 +41,6 @@ var gridNavigationService = function (gridOptions) {
         $(templateRow).attr('data-index', rowNumber);
         $(templateRow).addClass('grid-row');
 
-
         var rowInputs = $(templateRow).find('input, select');
         rowInputs.on('change', function (e) {
             var parent = $(e.target).parents('tr');
@@ -126,56 +125,47 @@ var gridNavigationService = function (gridOptions) {
             var gridBodyCell = $("<td></td>");
             gridHeaderCell.text(value.name);
 
-            var cellInput = "";
-            if (value.dataType === 'text') {
-                cellInput = '<input class="form-control" type="text" />';
-            }
-            if (value.dataType === 'boolean') {
+            var cellInput = '<input class="form-control" type="' + value.dataType + '" />';
+            
+            if (value.dataType === 'checkbox') {
                 cellInput = '<input type="checkbox" />';
-            }
-            if (value.dataType === 'number') {
-                cellInput = '<input class="form-control" type="number" />';
             }
             if (value.dataType === 'select')
                 cellInput = '<select class="form-select"></select>';
 
-            if (cellInput !== "") {
-                var cellInputVar = $(cellInput);
-                cellInputVar.attr('data-propname', value.propName);
-                cellInputVar.attr('title', value.name);
-                cellInputVar.attr('id', gridId + "_template_row_" + value.propName);
+            var cellInputVar = $(cellInput);
+            cellInputVar.attr('data-propname', value.propName);
+            cellInputVar.attr('title', value.name);
+            cellInputVar.attr('id', gridId + "_template_row_" + value.propName);
 
-                if (value.width) {
-                    //
-                    // pixels does not work well for table cells, TODO: use percentages
-                    //
-                    gridHeaderCell.css('width', value.width); // value.width should be in %age
-                    //cellInputVar.css('width', "100%");
-                }
-
-                if (value.keyColumn === true) {
-                    cellInputVar.attr('disabled', true);
-                    cellInputVar.attr('data-keycolumn', 'true');
-                }
-
-                cellInputVar.attr('placeholder', value.name);
-                gridBodyCell.append(cellInputVar);
-
+            if (value.width) {
                 //
-                // if its a dropdown, then inflate with data from ds
+                // pixels does not work well for table cells, TODO: use percentages
                 //
-                if (value.dataType === 'select') {
-                    $.each(value.dataSource, function () {
-                        var option = $("<option></option>");
-                        option.val(this.value);
-                        option.text(this.text);
-                        cellInputVar.append(option);
-                    });
-
-                }
+                gridHeaderCell.css('width', value.width); // value.width should be in %age
+                //cellInputVar.css('width', "100%");
             }
 
+            if (value.keyColumn === true) {
+                cellInputVar.attr('disabled', true);
+                cellInputVar.attr('data-keycolumn', 'true');
+            }
 
+            cellInputVar.attr('placeholder', value.name);
+            gridBodyCell.append(cellInputVar);
+
+            //
+            // if its a dropdown, then inflate with data from ds
+            //
+            if (value.dataType === 'select') {
+                $.each(value.dataSource, function () {
+                    var option = $("<option></option>");
+                    option.val(this.value);
+                    option.text(this.text);
+                    cellInputVar.append(option);
+                });
+
+            }
 
             gridHeaderRow.append(gridHeaderCell);
             gridBodyRow.append(gridBodyCell);
