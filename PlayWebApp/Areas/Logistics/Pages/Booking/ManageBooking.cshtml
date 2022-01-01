@@ -95,7 +95,7 @@
             lastEndpoint: "last",
             firstEndpoint: "first",
             onGetResponse: function (response) {
-                $('#BookingVm_RefNbr').val(response.bookingNumber);
+                $('#BookingVm_RefNbr').val(response.refNbr);
                 $('#BookingVm_Description').val(response.description);
             },
             deleteEndpoint: function () {
@@ -108,8 +108,8 @@
 
             },
         });
-        srv.registerHandlers();
-        srv.dumpParams();
+        srv.registerHandlers();        
+        srv.registerCallbacks();
     });
 
 </script>

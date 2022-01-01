@@ -18,8 +18,6 @@ namespace PlayWebApp.Areas.Logistics.Pages.StockItems
             this.dbContext = dbContext;
             StockItemsList = new List<StockItem>();
         }
-        public string Welcome { get; set; } = "Hello from stockitems";
-
         [BindProperty]
         public StockItemUpdateVm StockItemVm { get; set; }
 

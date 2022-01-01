@@ -288,7 +288,7 @@ var gridNavigationService = function (gridOptions) {
 
         if (!eventArgs || !eventArgs.eventData) return;
 
-        console.log('Grid-Callback: ON_NEXT_RECORD. Data: ', eventArgs);
+        // console.log('Grid-Callback: ON_NEXT_RECORD. Data: ', eventArgs);
         clearGrid();
         var gridBody = $('#' + gridId).find('tbody');
         bindDataSource($(gridBody), eventArgs.eventData[dataSource.dataSourceName]);
@@ -389,10 +389,6 @@ var gridNavigationService = function (gridOptions) {
 
     var registerCallbacks = function () {
         registerCallback(gridId, appDataEvents.GRID_DATA, getDirtyRecords, dataSource.dataSourceName);
-        registerCallback(gridId, appDataEvents.ON_NEXT_RECORD, onHeaderNext, dataSource.dataSourceName);
-        registerCallback(gridId, appDataEvents.ON_PREV_RECORD, onHeaderNext, dataSource.dataSourceName);
-        registerCallback(gridId, appDataEvents.ON_LAST_RECORD, onHeaderNext, dataSource.dataSourceName);
-        registerCallback(gridId, appDataEvents.ON_FIRST_RECORD, onHeaderNext, dataSource.dataSourceName);
         registerCallback(gridId, appDataEvents.ON_ADD_RECORD, onHeaderNext, dataSource.dataSourceName);
         registerCallback(gridId, appDataEvents.ON_FETCH_RECORD, onHeaderNext, dataSource.dataSourceName);
 

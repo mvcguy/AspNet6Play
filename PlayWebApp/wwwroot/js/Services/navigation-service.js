@@ -22,17 +22,33 @@ var persistenceService = function (serviceParams) {
         dataEventsService.registerCallback(key, eventTypeX, callback, dataSourceNameX);
     };
 
-    var onGridUpdated = function (event) {
-        console.log('Grid-eventData: ', event);
+    var onGridUpdated = function (eventArgs) {
+        console.log('Grid-eventData: ', eventArgs);
         isRecordDirty = true;
         enableSaveButton(true);
+    };
+    var onFetchRecord = function (eventArgs) {
+        var response = eventArgs.eventData;
+        onGetResponse(response);
+        recordExist = true;
+
+        // validate form
+        resetFormValidation();
+    };
+
+    var onFetchRecordError = function (eventArgs) {
+        var error = eventArgs.eventData;
+        resetOnNotFound(error, eventArgs.recordId);
+        if (error.status === 404) {
+            recordExist = false;
+        }
     };
 
     var registerCallbacks = function () {
         registerCallback(formId, appDataEvents.ON_GRID_UPDATED, onGridUpdated, 'mainForm');
         registerCallback(formId, appDataEvents.ON_NAVIGATING, onNavigating, 'mainForm');
-
-        //ON_NAVIGATING
+        registerCallback(formId, appDataEvents.ON_FETCH_RECORD, onFetchRecord, 'mainForm');
+        registerCallback(formId, appDataEvents.ON_FETCH_RECORD_ERROR, onFetchRecordError, 'mainForm');
     };
 
     var onNavigating = function (eventArgs) {
@@ -71,20 +87,8 @@ var persistenceService = function (serviceParams) {
 
             console.log('getting record by ID');
             var getParams = {
-                callback: function (response) {
-                    //console.log(response);
-                    onGetResponse(response);
-                    recordExist = true;
-                },
-                errorCallback: function (error) {
-                    // console.error(error);
-                    resetOnNotFound(error, recordId);
-                    if (error.status === 404) {
-                        recordExist = false;
-                    }
-                },
                 url: url + recordId,
-                action: appDataEvents.ON_FETCH_RECORD,
+                recordId: recordId
             };
             getRequest(getParams);
         });
@@ -173,9 +177,10 @@ var persistenceService = function (serviceParams) {
                     onSaveResponse(response);
                     isRecordDirty = false;
                     enableSaveButton(false);
+                    recordExist = true;
 
                 },
-                errorCallback: function (error) {
+                errorCallback: function (error) {                    
                     //console.error(error);
                     //$('#' + msgContainer).attr('class', 'alert alert-danger').text("An error has occurred while saving the changes. Error: " + error.responseText).show(0).delay(8000).hide(0);
                 },
@@ -196,19 +201,8 @@ var persistenceService = function (serviceParams) {
         var moveNext = function () {
             console.log('moving to next record');
             var getParams = {
-                callback: function (response) {
-                    //console.log(response);
-                    onGetResponse(response);
-                },
-                errorCallback: function (error) {
-                    //console.error(error);
-                    resetOnNotFound(error);
-                },
                 url: url + nextEndpoint(),
-                action: appDataEvents.ON_NEXT_RECORD,
             };
-
-
 
             getRequest(getParams);
         };
@@ -219,16 +213,7 @@ var persistenceService = function (serviceParams) {
         var movePrev = function () {
             console.log('moving to prev record');
             var getParams = {
-                callback: function (response) {
-                    //console.log(response);
-                    onGetResponse(response);
-                },
-                errorCallback: function (error) {
-                    //console.error(error);
-                    resetOnNotFound(error);
-                },
                 url: url + prevEndpoint(),
-                action: appDataEvents.ON_PREV_RECORD,
             };
             getRequest(getParams);
         };
@@ -239,16 +224,7 @@ var persistenceService = function (serviceParams) {
         var moveFirst = function () {
             console.log('moving to First record');
             var getParams = {
-                callback: function (response) {
-                    //console.log(response);
-                    onGetResponse(response);
-
-                },
-                errorCallback: function (error) {
-                    //console.error(error);
-                },
                 url: url + firstEndpoint,
-                action: appDataEvents.ON_FIRST_RECORD,
             };
             getRequest(getParams);
         };
@@ -259,15 +235,7 @@ var persistenceService = function (serviceParams) {
         var moveLast = function () {
             console.log('moving to last record');
             var getParams = {
-                callback: function (response) {
-                    //console.log(response);
-                    onGetResponse(response);
-                },
-                errorCallback: function (error) {
-                    //console.error(error);
-                },
                 url: url + lastEndpoint,
-                action: appDataEvents.ON_LAST_RECORD,
             };
             getRequest(getParams);
         };
@@ -295,19 +263,19 @@ var persistenceService = function (serviceParams) {
                 url: url + deleteEndpoint()
             };
             deleteRequest(deleteParams);
-        };
+        };        
+    };
 
-        var resetOnNotFound = function (error, recordId) {
-            console.log('error-status', error.status);
-            if (error.status === 404) {
-                onAdd(recordId);
-                //
-                // notify listeners
-                //
-                notifyListeners(appDataEvents.ON_ADD_RECORD, { eventData: { recordId } });
+    var resetOnNotFound = function (error, recordId) {
+        console.log('error-status', error.status);
+        if (error.status === 404) {
+            onAdd(recordId);
+            //
+            // notify listeners
+            //
+            notifyListeners(appDataEvents.ON_ADD_RECORD, { eventData: { recordId } });
 
-            }
-        };
+        }
     };
 
     var enableSaveButton = function (enable) {
@@ -339,7 +307,7 @@ var persistenceService = function (serviceParams) {
             _notifyListeners(appDataEvents.ON_SAVE_RECORD, { eventData: response });
         }, function error(error, dt) {
             postParams.errorCallback(error);
-            _notifyListeners(appDataEvents.ON_SAVE_ERROR, { eventData: error }, true);
+            _notifyListeners(appDataEvents.ON_SAVE_ERROR, { eventData: error });
         });
     };
 
@@ -360,7 +328,7 @@ var persistenceService = function (serviceParams) {
             _notifyListeners(appDataEvents.ON_SAVE_RECORD, { eventData: response });
         }, function error(error, dt) {
             postParams.errorCallback(error);
-            _notifyListeners(appDataEvents.ON_SAVE_ERROR, { eventData: error }, true);
+            _notifyListeners(appDataEvents.ON_SAVE_ERROR, { eventData: error });
         });
     };
 
@@ -373,18 +341,18 @@ var persistenceService = function (serviceParams) {
         var _notifyListeners = notifyListeners;
         $.ajax(ajaxOptions).then(function done(response) {
 
-            getParams.callback(response);
-            resetFormValidation();
+            //getParams.callback(response);
+            
+            window.history.pushState({ eventData: response }, 'title', '?refNbr=' + response.refNbr);
 
             //
             // notify listeners
             //            
-            if (getParams.action) {
-                _notifyListeners(getParams.action, { eventData: response });
-            }
+            _notifyListeners(appDataEvents.ON_FETCH_RECORD, { eventData: response });
 
         }, function error(error) {
-            getParams.errorCallback(error);
+            //getParams.errorCallback(error);
+            _notifyListeners(appDataEvents.ON_FETCH_RECORD_ERROR, { eventData: error, recordId: getParams.recordId });
         });
 
     };

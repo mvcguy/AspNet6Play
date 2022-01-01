@@ -22,14 +22,23 @@ namespace PlayWebApp.Areas.Logistics.Pages.Booking
 
         public CustomerUpdateVm CustomerVm { get; set; }
 
-        public async Task OnGet()
+        public async Task OnGet(string refNbr = null)
         {
-            var top1 = await customerService.GetFirst();
-            if (top1 != null)
+            CustomerVm = new CustomerUpdateVm { Addresses = new List<AddressUpdateVm>() };
+            if (!string.IsNullOrWhiteSpace(refNbr))
             {
-                CustomerVm = top1.ToVm();
+                var rec = await customerService.GetById(new CustomerRequestDto { RefNbr = refNbr });
+                if (rec != null)
+                    CustomerVm = rec.ToVm();
             }
-
+            else
+            {
+                var top1 = await customerService.GetFirst();
+                if (top1 != null)
+                {
+                    CustomerVm = top1.ToVm();
+                }
+            }
         }
     }
 }

@@ -2,11 +2,22 @@ var dataEventsService = (function () {
     if (!window.playAppCallbacks || window.playAppCallbacks.length === 0) {
         window.playAppCallbacks = [];
     }
-
     return {
         callbacks: window.playAppCallbacks
     };
 })();
+
+dataEventsService.winPopstate = function () {
+    var _this = this;
+    window.onpopstate = function (e) {
+        if (e.state) {
+            _this.notifyListeners(appDataEvents.ON_FETCH_RECORD, { eventData: e.state.eventData });
+
+        }
+    };
+};
+
+dataEventsService.winPopstate();
 
 dataEventsService.notifyListeners = function (eventType, eventArgs) {
     try {

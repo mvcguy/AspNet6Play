@@ -32,13 +32,14 @@ namespace PlayWebApp.Areas.Logistics.Pages.Booking
             {
                 BookingVm = new BookingUpdateVm { RefNbr = top1.RefNbr, Description = top1.Description };
             }
-
-            Customers = (await customerService.GetAll(page: 1)).Select(x => new SelectListItem
+            Customers = new List<SelectListItem>();
+            Customers.Add(new SelectListItem { Text = "Select customer", Value = "", Selected = true });
+            Customers.AddRange((await customerService.GetAll(page: 1)).Select(x => new SelectListItem
             {
                 Value = x.RefNbr,
                 Text = $"{x.RefNbr} - {x.Name}",
-                Selected = true,
-            }).ToList();
+            }));
+
         }
     }
 }

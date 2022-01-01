@@ -77,33 +77,33 @@
         var srv = new persistenceService({
             url: "https://localhost:7096/api/v1/StockItems/",
             formId: "frmStockItems",
-            idField: 'StockItemVm_ItemDisplayId',
+            idField: 'StockItemVm_RefNbr',
             msgContainer: "serverMessages",
             getIdCallback: function () {
-                return $('#StockItemVm_ItemDisplayId').val();
+                return $('#StockItemVm_RefNbr').val();
             },
             nextEndpoint: function () {
-                return $('#StockItemVm_ItemDisplayId').val() + "/next";
+                return $('#StockItemVm_RefNbr').val() + "/next";
             },
             prevEndpoint: function () {
-                return $('#StockItemVm_ItemDisplayId').val() + "/previous";
+                return $('#StockItemVm_RefNbr').val() + "/previous";
             },
             onAdd: function (id) {
-                $('#StockItemVm_ItemDisplayId').val('');
+                $('#StockItemVm_RefNbr').val('');
                 $('#StockItemVm_ItemDescription').val('');
 
                 if (id && id !== '')
-                    $('#StockItemVm_ItemDisplayId').val(id);
+                    $('#StockItemVm_RefNbr').val(id);
 
             },
             lastEndpoint: "last",
             firstEndpoint: "first",
             onGetResponse: function (response) {
-                $('#StockItemVm_ItemDisplayId').val(response.itemDisplayId);
+                $('#StockItemVm_RefNbr').val(response.refNbr);
                 $('#StockItemVm_ItemDescription').val(response.itemDescription);
             },
             deleteEndpoint: function () {
-                return $('#StockItemVm_ItemDisplayId').val();
+                return $('#StockItemVm_RefNbr').val();
             },
             onDeleteResponse: function (response) {
 
@@ -113,7 +113,7 @@
             },
         });
         srv.registerHandlers();
-        srv.dumpParams();
+        srv.registerCallbacks();
     });
 
 </script>
