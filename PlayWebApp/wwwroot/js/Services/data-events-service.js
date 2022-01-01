@@ -10,9 +10,9 @@ var dataEventsService = (function () {
 dataEventsService.winPopstate = function () {
     var _this = this;
     window.onpopstate = function (e) {
-        if (e.state) {
-            _this.notifyListeners(appDataEvents.ON_FETCH_RECORD, { eventData: e.state.eventData });
-
+        if (e.state && e.state.eventData) {
+            console.log(e.state);
+            _this.notifyListeners(appDataEvents.ON_FETCH_RECORD, { eventData: e.state.eventData, skipPush: true });
         }
     };
 };

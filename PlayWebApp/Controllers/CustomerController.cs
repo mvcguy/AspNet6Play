@@ -51,7 +51,7 @@ namespace PlayWebApp.Controllers
             var item = await service.Update(model);
 
             await service.SaveChanges();
-            return Ok(item.RefNbr);
+            return Ok(item);
         }
 
         private void AdaptModelStateForAddressesArray(CustomerUpdateVm model)
@@ -99,7 +99,8 @@ namespace PlayWebApp.Controllers
 
             var item = await service.Add(model);
             await service.SaveChanges();
-            return Ok(item.RefNbr); // TODO: need to return URI to the newly created item
+            return CreatedAtAction(nameof(GetById), new { id = item.RefNbr }, item);
+            //return Ok(item.RefNbr); // TODO: need to return URI to the newly created item
         }
 
         [HttpGet()]

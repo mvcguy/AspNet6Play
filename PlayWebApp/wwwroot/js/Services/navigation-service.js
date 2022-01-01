@@ -17,9 +17,21 @@ var persistenceService = function (serviceParams) {
     var idField = serviceParams.idField;
     var recordExist = true;
     var isRecordDirty = false;
+    var urlQuery = serviceParams.urlQuery;
 
     var registerCallback = function (key, eventTypeX, callback, dataSourceNameX) {
         dataEventsService.registerCallback(key, eventTypeX, callback, dataSourceNameX);
+    };
+
+    var notifyListeners = function (eventType, eventArgs) {
+        dataEventsService.notifyListeners(eventType, eventArgs);
+    };
+
+    var updateBrowserHistory = function (response) {
+
+        if (!urlQuery) return;
+        window.location
+        window.history.pushState({ eventData: response }, 'title', urlQuery(response));
     };
 
     var onGridUpdated = function (eventArgs) {
@@ -27,6 +39,7 @@ var persistenceService = function (serviceParams) {
         isRecordDirty = true;
         enableSaveButton(true);
     };
+
     var onFetchRecord = function (eventArgs) {
         var response = eventArgs.eventData;
         onGetResponse(response);
@@ -34,6 +47,13 @@ var persistenceService = function (serviceParams) {
 
         // validate form
         resetFormValidation();
+
+        //
+        // update browser history
+        //
+        if (eventArgs.skipPush !== true)
+            updateBrowserHistory(response);
+
     };
 
     var onFetchRecordError = function (eventArgs) {
@@ -44,11 +64,55 @@ var persistenceService = function (serviceParams) {
         }
     };
 
+    var onSaveRecord = function (eventArgs) {
+
+        var response = eventArgs.eventData;
+        console.log(response);
+
+        $('#' + msgContainer).attr('class', 'alert alert-success')
+            .text("Record is successfully saved").show(0).delay(8000).hide(0);
+        onSaveResponse(response);
+        isRecordDirty = false;
+        enableSaveButton(false);
+        recordExist = true;
+        updateBrowserHistory(response);
+    };
+
+    var onSaveRecordError = function (eventArgs) {
+
+        var error = eventArgs.eventData;
+        console.error(error);
+        //$('#' + msgContainer).attr('class', 'alert alert-danger')
+        //      .text("An error has occurred while saving the changes. Error: " + error.responseText)
+        //      .show(0).delay(8000).hide(0);
+        //
+        // $('#' + msgContainer).attr('class', 'alert alert-danger')
+        //     .text("An error has occurred while deleting the record. Error: " + error.responseText)
+        //     .show(0).delay(8000).hide(0);
+
+    };
+
+    var onDeleteRecord = function (eventArgs) {
+        var response = eventArgs.eventData;
+        //console.log('Record is deleted. Service response: ', response);
+        $('#' + msgContainer).attr('class', 'alert alert-success')
+            .text("Record is successfully deleted").show(0).delay(8000).hide(0);
+
+        onDeleteResponse(response);
+        moveNext();
+    }
+
     var registerCallbacks = function () {
         registerCallback(formId, appDataEvents.ON_GRID_UPDATED, onGridUpdated, 'mainForm');
         registerCallback(formId, appDataEvents.ON_NAVIGATING, onNavigating, 'mainForm');
         registerCallback(formId, appDataEvents.ON_FETCH_RECORD, onFetchRecord, 'mainForm');
         registerCallback(formId, appDataEvents.ON_FETCH_RECORD_ERROR, onFetchRecordError, 'mainForm');
+
+        registerCallback(formId, appDataEvents.ON_SAVE_RECORD, onSaveRecord, 'mainForm');
+        registerCallback(formId, appDataEvents.ON_SAVE_ERROR, onSaveRecordError, 'mainForm');
+
+        registerCallback(formId, appDataEvents.ON_DELETE_RECORD, onDeleteRecord, 'mainForm');
+
     };
 
     var onNavigating = function (eventArgs) {
@@ -166,104 +230,78 @@ var persistenceService = function (serviceParams) {
             deleteItem();
         });
 
-        //
-        // save record
-        //
-        var saveRecord = function () {
-            console.log('saving changes ...');
-            var postParams = {
-                callback: function (response) {
-                    $('#' + msgContainer).attr('class', 'alert alert-success').text("Record is successfully saved").show(0).delay(8000).hide(0);
-                    onSaveResponse(response);
-                    isRecordDirty = false;
-                    enableSaveButton(false);
-                    recordExist = true;
 
-                },
-                errorCallback: function (error) {                    
-                    //console.error(error);
-                    //$('#' + msgContainer).attr('class', 'alert alert-danger').text("An error has occurred while saving the changes. Error: " + error.responseText).show(0).delay(8000).hide(0);
-                },
-                data: $('#' + formId).serializeObject(),
-                url: url,
-            };
-            // console.log(postParams);
+    };
 
-            if (recordExist === true)
-                putRequest(postParams);
-            else
-                postRequest(postParams);
+    //
+    // save record
+    //
+    var saveRecord = function () {
+        console.log('saving changes ...');
+        var postParams = {
+            data: $('#' + formId).serializeObject(),
+            url: url,
+        };
+        if (recordExist === true)
+            putRequest(postParams);
+        else
+            postRequest(postParams);
+    };
+
+    //
+    // move to next record
+    //
+    var moveNext = function () {
+        console.log('moving to next record');
+        var getParams = {
+            url: url + nextEndpoint(),
         };
 
-        //
-        // move to next record
-        //
-        var moveNext = function () {
-            console.log('moving to next record');
-            var getParams = {
-                url: url + nextEndpoint(),
-            };
+        getRequest(getParams);
+    };
 
-            getRequest(getParams);
+    //
+    // move to prev record
+    //
+    var movePrev = function () {
+        console.log('moving to prev record');
+        var getParams = {
+            url: url + prevEndpoint(),
         };
+        getRequest(getParams);
+    };
 
-        //
-        // move to prev record
-        //
-        var movePrev = function () {
-            console.log('moving to prev record');
-            var getParams = {
-                url: url + prevEndpoint(),
-            };
-            getRequest(getParams);
+    //
+    // move to first
+    //
+    var moveFirst = function () {
+        console.log('moving to First record');
+        var getParams = {
+            url: url + firstEndpoint,
         };
+        getRequest(getParams);
+    };
 
-        //
-        // move to first
-        //
-        var moveFirst = function () {
-            console.log('moving to First record');
-            var getParams = {
-                url: url + firstEndpoint,
-            };
-            getRequest(getParams);
+    //
+    // move to last
+    //
+    var moveLast = function () {
+        console.log('moving to last record');
+        var getParams = {
+            url: url + lastEndpoint,
         };
+        getRequest(getParams);
+    };
 
-        //
-        // move to last
-        //
-        var moveLast = function () {
-            console.log('moving to last record');
-            var getParams = {
-                url: url + lastEndpoint,
-            };
-            getRequest(getParams);
+    //
+    // delete record
+    //
+    var deleteItem = function () {
+        console.log('deleting record');
+        var deleteParams = {
+            url: url + deleteEndpoint()
         };
-
-        //
-        // delete record
-        //
-        var deleteItem = function () {
-            console.log('deleting record');
-            var deleteParams = {
-                callback: function (response) {
-
-                    //console.log('Record is deleted. Service response: ', response);
-                    $('#' + msgContainer).attr('class', 'alert alert-success')
-                        .text("Record is successfully deleted").show(0).delay(8000).hide(0);
-
-                    //console.log(response);
-                    onDeleteResponse(response);
-                    moveNext();
-                },
-                errorCallback: function (error) {
-                    $('#' + msgContainer).attr('class', 'alert alert-danger').text("An error has occurred while deleting the record. Error: " + error.responseText).show(0).delay(8000).hide(0);
-
-                },
-                url: url + deleteEndpoint()
-            };
-            deleteRequest(deleteParams);
-        };        
+        deleteRequest(deleteParams);
     };
 
     var resetOnNotFound = function (error, recordId) {
@@ -303,10 +341,8 @@ var persistenceService = function (serviceParams) {
         };
 
         $.ajax(ajaxOptions).then(function done(response) {
-            postParams.callback(response);
             _notifyListeners(appDataEvents.ON_SAVE_RECORD, { eventData: response });
         }, function error(error, dt) {
-            postParams.errorCallback(error);
             _notifyListeners(appDataEvents.ON_SAVE_ERROR, { eventData: error });
         });
     };
@@ -324,10 +360,8 @@ var persistenceService = function (serviceParams) {
         };
 
         $.ajax(ajaxOptions).then(function done(response) {
-            postParams.callback(response);
             _notifyListeners(appDataEvents.ON_SAVE_RECORD, { eventData: response });
         }, function error(error, dt) {
-            postParams.errorCallback(error);
             _notifyListeners(appDataEvents.ON_SAVE_ERROR, { eventData: error });
         });
     };
@@ -340,18 +374,9 @@ var persistenceService = function (serviceParams) {
         };
         var _notifyListeners = notifyListeners;
         $.ajax(ajaxOptions).then(function done(response) {
-
-            //getParams.callback(response);
-            
-            window.history.pushState({ eventData: response }, 'title', '?refNbr=' + response.refNbr);
-
-            //
-            // notify listeners
-            //            
             _notifyListeners(appDataEvents.ON_FETCH_RECORD, { eventData: response });
 
         }, function error(error) {
-            //getParams.errorCallback(error);
             _notifyListeners(appDataEvents.ON_FETCH_RECORD_ERROR, { eventData: error, recordId: getParams.recordId });
         });
 
@@ -365,16 +390,10 @@ var persistenceService = function (serviceParams) {
         };
         var _notifyListeners = notifyListeners;
         $.ajax(ajaxOptions).then(function done(response) {
-            deleteParams.callback(response);
             _notifyListeners(appDataEvents.ON_DELETE_RECORD, { eventData: response });
         }, function error(error, dt) {
-            deleteParams.errorCallback(error);
-            _notifyListeners(appDataEvents.ON_SAVE_ERROR, { eventData: error }, true);
+            _notifyListeners(appDataEvents.ON_SAVE_ERROR, { eventData: error });
         });
-    };
-
-    var notifyListeners = function (eventType, eventArgs) {
-        dataEventsService.notifyListeners(eventType, eventArgs);
     };
 
     var resetFormValidation = function () {

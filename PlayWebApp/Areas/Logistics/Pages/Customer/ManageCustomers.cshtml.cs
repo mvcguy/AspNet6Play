@@ -1,12 +1,8 @@
 using Microsoft.AspNetCore.Mvc.RazorPages;
-using Microsoft.AspNetCore.Mvc.Rendering;
-using Microsoft.EntityFrameworkCore;
 using PlayWebApp.Services.CustomerManagement;
 using PlayWebApp.Services.CustomerManagement.ViewModels;
-using PlayWebApp.Services.Database;
 using PlayWebApp.Services.Logistics.ViewModels;
 using PlayWebApp.Services.ModelExtentions;
-using System.Linq;
 #nullable disable
 
 namespace PlayWebApp.Areas.Logistics.Pages.Booking
