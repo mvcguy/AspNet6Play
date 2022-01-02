@@ -49,36 +49,6 @@
         </p>
     </div>
 
-    <div>
-        <h4>Sorting tables</h4>
-        <table>
-            <thead>
-                <tr>
-                    <th id="name">Name</th>
-                    <th id="age">Age</th>
-
-                </tr>
-            </thead>
-            <tbody>
-                <tr>
-                    <td>Shahid</td>
-                    <td>39</td>
-                </tr>
-                <tr>
-                    <td>Moniba</td>
-                    <td>2</td>
-                </tr>
-                <tr>
-                    <td>Safia</td>
-                    <td>31</td>
-                </tr>
-                <tr>
-                    <td>Muhammad Sulaiman</td>
-                    <td>1</td>
-                </tr>
-            </tbody>
-        </table>
-    </div>
 
 </div>
 
@@ -163,25 +133,6 @@
             }
 
         });
-
-        //
-        // sorting tables
-        //
-        var asc = true;
-        $('#name').on('click', function(e){
-            var th = e.target;
-            var table = $(th).parents('table');
-            $(table).sortTable(th, asc);
-            asc = !asc;
-        });
-
-        $('#age').on('click', function(e){
-            var th = e.target;
-            var table = $(th).parents('table');
-            $(table).sortTable(th, asc);
-            asc = !asc;
-        });
-
 
     });
 </script>
