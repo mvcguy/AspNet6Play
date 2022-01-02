@@ -119,46 +119,46 @@ var gridNavigationService = function (gridOptions) {
         gridBodyRow.attr('id', gridId + "_template_row_");
         gridBodyRow.css('display', 'none');
 
-        $.each(cols, function (index, value) {
+        $.each(cols, function (index, colDef) {
 
-            var gridHeaderCell = $("<th></th>");
+            var gridHeaderCell = $("<th class='sorting'></th>");
             var gridBodyCell = $("<td></td>");
-            gridHeaderCell.text(value.name);
+            gridHeaderCell.text(colDef.name);
 
-            var cellInput = '<input class="form-control" type="' + value.dataType + '" />';
-            
-            if (value.dataType === 'checkbox') {
+            var cellInput = '<input class="form-control" type="' + colDef.dataType + '" />';
+
+            if (colDef.dataType === 'checkbox') {
                 cellInput = '<input type="checkbox" />';
             }
-            if (value.dataType === 'select')
+            if (colDef.dataType === 'select')
                 cellInput = '<select class="form-select"></select>';
 
             var cellInputVar = $(cellInput);
-            cellInputVar.attr('data-propname', value.propName);
-            cellInputVar.attr('title', value.name);
-            cellInputVar.attr('id', gridId + "_template_row_" + value.propName);
+            cellInputVar.attr('data-propname', colDef.propName);
+            cellInputVar.attr('title', colDef.name);
+            cellInputVar.attr('id', gridId + "_template_row_" + colDef.propName);
 
-            if (value.width) {
+            if (colDef.width) {
                 //
                 // pixels does not work well for table cells, TODO: use percentages
                 //
-                gridHeaderCell.css('width', value.width); // value.width should be in %age
+                gridHeaderCell.css('width', colDef.width); // value.width should be in %age
                 //cellInputVar.css('width', "100%");
             }
 
-            if (value.keyColumn === true) {
+            if (colDef.keyColumn === true) {
                 cellInputVar.attr('disabled', true);
                 cellInputVar.attr('data-keycolumn', 'true');
             }
 
-            cellInputVar.attr('placeholder', value.name);
+            cellInputVar.attr('placeholder', colDef.name);
             gridBodyCell.append(cellInputVar);
 
             //
             // if its a dropdown, then inflate with data from ds
             //
-            if (value.dataType === 'select') {
-                $.each(value.dataSource, function () {
+            if (colDef.dataType === 'select') {
+                $.each(colDef.dataSource, function () {
                     var option = $("<option></option>");
                     option.val(this.value);
                     option.text(this.text);
@@ -166,6 +166,35 @@ var gridNavigationService = function (gridOptions) {
                 });
 
             }
+
+            //
+            // sorting of the data when the header cell is clicked
+            //
+            gridHeaderCell.attr('data-th-propname', colDef.propName);
+            gridHeaderCell.on('click', function (e) {
+                var elem = $(this);
+                var asc = true;
+                if (elem.hasClass('sorting_asc')) {
+                    elem.removeClass('sorting_asc').addClass('sorting_desc');
+                    asc = false;
+                }
+                else {
+                    elem.removeClass('sorting_desc').addClass('sorting_asc');
+                }
+
+                //
+                // supports sorting on only one column.
+                //
+                elem.siblings('th').removeClass('sorting_asc').removeClass('sorting_desc');
+
+                //
+                // notify that we need sorting of the column
+                //
+                var prop = $(e.target).attr('data-th-propname');
+                notifyListeners(appDataEvents.ON_SORTING_REQUESTED,
+                    { dataSourceName: dataSource.dataSourceName, eventData: e, propName: prop, asc });
+
+            });
 
             gridHeaderRow.append(gridHeaderCell);
             gridBodyRow.append(gridBodyCell);
@@ -387,7 +416,17 @@ var gridNavigationService = function (gridOptions) {
     }
 
     var getRowByIndex = function (grid, index) {
-        return grid.find("tr[data-index = '" + index + "']");;
+        return grid.find("tr[data-index = '" + index + "']");
+    };
+
+    var onSortingRequest = function (eventArgs) {
+        console.log(eventArgs);
+        
+        var ds = eventArgs.dataSourceName;
+        var prop = eventArgs.propName;
+        var table = $(eventArgs.eventData.target).parents('table');
+        
+        $(table).sortTable(eventArgs.eventData.target, eventArgs.asc);
     };
 
     var notifyListeners = function (eventType, payload) {
@@ -403,8 +442,7 @@ var gridNavigationService = function (gridOptions) {
 
         registerCallback(gridId, appDataEvents.ON_SAVE_RECORD, onSaveRecord, dataSource.dataSourceName);
         registerCallback(gridId, appDataEvents.ON_SAVE_ERROR, onSaveError, dataSource.dataSourceName);
-
-
+        registerCallback(gridId, appDataEvents.ON_SORTING_REQUESTED, onSortingRequest, dataSource.dataSourceName);
     };
 
     var clearGrid = function () {
