@@ -30,7 +30,10 @@ dotnet ef database update
 17. Main form validation errors are not showing up.
 18. Bug: Save main record, then add grid row and save -> a post request is sent instead of PUT. - CANNOT REPRODUCE!
 19. Add possibility to upload data from files (excel or csv)
-20. Add sorting to the grid - IN-PROGRESS
+20. Add sorting to the grid - client side - SOLVED
 21. Add search possibility in the grid
-22. Add column configuration to the grid
+22. Add column configuration to the grid - IN-PROGRESS
 23. Save grid configuration in a cookie per user
+24. Allow the user to change the grid columns order - drag around
+25. Show errors on the dropdowns in the grid
+26. Inform user about the errors in the hidden column of the grid.

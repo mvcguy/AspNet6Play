@@ -23,7 +23,7 @@ $.fn.serializeObject = function () {
 
 $.fn.sortTable = function (th, ascX) {
 
-     console.log('sorting', ascX);
+    //  console.log('sorting', ascX);
     const getCellValue = (tr, idx) => {
         var child = $($(tr).children()[idx]);
         // console.log('idx: ', idx,  child);
@@ -45,7 +45,7 @@ $.fn.sortTable = function (th, ascX) {
             // It allows passing in different order of args, based on 
             // the ascending/descending order.
             return function (v1, v2) {
-                 console.log('v1: ', v1, 'v2: ', v2);
+                //  console.log('v1: ', v1, 'v2: ', v2);
                 // sort based on a numeric or localeCompare, based on type...
                 return (v1 !== '' && v2 !== '' && !isNaN(v1) && !isNaN(v2))
                     ? v1 - v2

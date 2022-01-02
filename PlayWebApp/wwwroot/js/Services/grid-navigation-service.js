@@ -114,14 +114,14 @@ var gridNavigationService = function (gridOptions) {
 
         var gridHeader = grid.find('thead');
         var gridBody = $("<tbody></tbody>");
-        var gridHeaderRow = $("<tr class='draggable'></tr>");
-        var gridBodyRow = $("<tr></tr>");
+        var gridHeaderRow = $("<tr class='draggable grid-cols'></tr>");
+        var gridBodyRow = $("<tr class='grid-rows'></tr>");
         gridBodyRow.attr('id', gridId + "_template_row_");
         gridBodyRow.css('display', 'none');
 
         $.each(cols, function (index, colDef) {
 
-            var gridHeaderCell = $("<th class='sorting'></th>");
+            var gridHeaderCell = $("<th class='sorting ds-col'></th>");
             var gridBodyCell = $("<td></td>");
             gridHeaderCell.text(colDef.name);
 
@@ -210,6 +210,8 @@ var gridNavigationService = function (gridOptions) {
         // add data to the grid
         //
         bindDataSource(gridBody, dataSource.data);
+
+        grid.gridConfigure();
     };
 
 
@@ -253,17 +255,17 @@ var gridNavigationService = function (gridOptions) {
             var record = {};
             var rowCat = $(row).attr('data-rowcategory');
             record['rowCategory'] = rowCat;
-            $.each(rowInputs, function (cellIndex, cell) {
+            $.each(rowInputs, function (cellIndex, rowInput) {
 
-                var cellPropName = $(cell).attr('data-propname');
+                var cellPropName = $(rowInput).attr('data-propname');
 
-                var cellType = $(cell).attr('type');
+                var cellType = $(rowInput).attr('type');
 
                 if (cellType === 'checkbox') {
-                    record[cellPropName] = $(cell).is(":checked");
+                    record[cellPropName] = $(rowInput).is(":checked");
                 }
                 else {
-                    record[cellPropName] = $(cell).val();
+                    record[cellPropName] = $(rowInput).val();
                 }
             });
             record["clientRowNumber"] = rowIndex;
@@ -326,7 +328,7 @@ var gridNavigationService = function (gridOptions) {
 
         if (!eventArgs || !eventArgs.eventData) return;
 
-        // console.log('Grid-Callback: ON_NEXT_RECORD. Data: ', eventArgs);
+        resetSorting();
         clearGrid();
         var gridBody = $('#' + gridId).find('tbody');
         bindDataSource($(gridBody), eventArgs.eventData[dataSource.dataSourceName]);
@@ -421,12 +423,19 @@ var gridNavigationService = function (gridOptions) {
 
     var onSortingRequest = function (eventArgs) {
         console.log(eventArgs);
-        
+
         var ds = eventArgs.dataSourceName;
         var prop = eventArgs.propName;
         var table = $(eventArgs.eventData.target).parents('table');
-        
+
         $(table).sortTable(eventArgs.eventData.target, eventArgs.asc);
+    };
+
+    var resetSorting = function () {
+        $('#' + gridId)
+            .find('.sorting_desc, .sorting_asc')
+            .removeClass('sorting_desc')
+            .removeClass('sorting_asc');
     };
 
     var notifyListeners = function (eventType, payload) {

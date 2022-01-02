@@ -22,43 +22,73 @@
 
 @if (Model != null)
 {
-                <form class="row g-1" id="frmCustomer" method="post">
-                    <div class="col-12">
-                        <label asp-for="CustomerVm.RefNbr"></label>
-                        <input asp-for="CustomerVm.RefNbr" class="form-control" aria-required="true" />
-                        <span asp-validation-for="CustomerVm.RefNbr" class="text-danger"></span>
-                    </div>
-                    <div class="col-12">
-                        <label asp-for="CustomerVm.Name"></label>
-                        <input asp-for="CustomerVm.Name" class="form-control" aria-required="true" />
-                        <span asp-validation-for="CustomerVm.Name" class="text-danger"></span>
-                    </div>
+    <form class="row g-1" id="frmCustomer" method="post">
+        <div class="col-12">
+            <label asp-for="CustomerVm.RefNbr"></label>
+            <input asp-for="CustomerVm.RefNbr" class="form-control" aria-required="true" />
+            <span asp-validation-for="CustomerVm.RefNbr" class="text-danger"></span>
+        </div>
+        <div class="col-12">
+            <label asp-for="CustomerVm.Name"></label>
+            <input asp-for="CustomerVm.Name" class="form-control" aria-required="true" />
+            <span asp-validation-for="CustomerVm.Name" class="text-danger"></span>
+        </div>
 
-                    <ul class="nav nav-tabs" id="tabsCustomer" role="tablist">
-                        <li class="nav-item" role="presentation">
-                            <button class="nav-link active" id="tabCustomerDetails" data-bs-toggle="tab"
+        <ul class="nav nav-tabs" id="tabsCustomer" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active" id="tabCustomerDetails" data-bs-toggle="tab"
                 data-bs-target="#tabCustomerItemsContent" type="button" role="tab"
                 aria-controls="tabCustomerItemsContent" aria-selected="true">Shipping details</button>
-                        </li>
-                    </ul>
-                    <div class="tab-content" id="myTabContent">
-                        <div class="tab-pane fade show active" id="tabCustomerItemsContent" role="tabpanel" aria-labelledby="tabPrices">
-                            <div class="" style="min-height: 250px;">
-                                <table class="table table-bordered resizable navTable nowrap" id="customerAddresses">
-                                    <thead>
-                                        <tr>
-                                            <th colspan="6">
-                                                <button type="button" class="btn btn-sm btn-outline-primary" id="btnAddRow">+</button>
-                                                <button type="button" class="btn btn-sm btn-outline-danger" id="btnDeleteRow">-</button>
-                                            </th>
-                                        </tr>
-                                    </thead>
-                                </table>
-                            </div>
-                        </div>
-                    </div>
+            </li>
+        </ul>
+        <div class="tab-content" id="myTabContent">
+            <div class="tab-pane fade show active" id="tabCustomerItemsContent" role="tabpanel" aria-labelledby="tabPrices">
+                <div class="" style="min-height: 250px;">
+                    <table class="table table-bordered resizable navTable nowrap" id="customerAddresses">
+                        <thead>
+                            <tr>
+                                <th colspan="6">
+                                    <button type="button" class="btn btn-sm btn-outline-primary" id="btnAddRow">+</button>
+                                    <button type="button" class="btn btn-sm btn-outline-danger" id="btnDeleteRow">-</button>
+                                    <div style="float: right;">
+                                        <button type="button" class="btn btn-sm btn-outline-primary" data-bs-toggle="modal"
+                                        data-bs-target="#staticBackdrop" id="btnSettings">
+                                            <i class="bi bi-gear"></i>
+                                        </button>
+                                    </div>
+                                </th>
+                            </tr>
+                        </thead>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </form>
 
-                </form>
+    <div class="settings-menu grid-config-template">
+
+        <div class="modal fade" id="staticBackdrop" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1"
+        aria-labelledby="staticBackdropLabel" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-scrollable">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="staticBackdropLabel">Configure columns</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <ul class="list-group grid-config-cols">
+                            
+                        </ul>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="button" class="btn btn-primary" id="btnSaveGridConfig">Save</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
 
 }
 
@@ -83,13 +113,13 @@
         cols.push(colFor("Reference", "text", "80px", "refNbr", true));
         cols.push(colFor("Default", "checkbox", "60px", "isDefault", false));
         @* cols.push(colFor("Email", "email", "200px", "email", false)); *@
-        @* cols.push(colFor("Barcode", "file", "200px", "bcFile", false)); *@
+            @* cols.push(colFor("Barcode", "file", "200px", "bcFile", false)); *@
 
-        cols.push(colFor("Street", "text", "220px", "streetAddress", false));
+            cols.push(colFor("Street", "text", "220px", "streetAddress", false));
         cols.push(colFor("Postal code", "number", "80px", "postalCode", false));
         cols.push(colFor("City", "text", "120px", "city", false));
         cols.push(colFor("Country", "select", "120px", "country", false,
-         [{text: 'Pakistan', value: 'PK'}, {text: 'Norway', value: 'NO'}, {text: 'Sweden', value: 'SE'}]));
+            [{ text: 'Pakistan', value: 'PK' }, { text: 'Norway', value: 'NO' }, { text: 'Sweden', value: 'SE' }]));
         // << cols
 
         // >> datasource
@@ -183,7 +213,7 @@
             },
             // important for updating the url and appending the current record query-string
             // useful for bookmarking the record
-            urlQuery: function(response){
+            urlQuery: function (response) {
                 return '?refNbr=' + response.refNbr;
             },
         });
