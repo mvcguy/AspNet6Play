@@ -66,105 +66,113 @@ $.fn.enableColumnReordering = function () {
     cols.css('cursor', 'pointer');
     cols.css('user-select', 'none');
 
-    var colPos = 0;
-    var curCol = undefined;
+    // var colPos = 0;
+    // var div = undefined;
 
-    cols.on('mousedown', function (e) {
-        var col = this;
-        curCol = 'x';
-        console.log(e);
+    // cols.on('mousedown', function (e) {
+    //     var col = $(this);
+    //     var hdr = col.find('.grid-header-text');
 
-        var rows = $table.find('tr');
-        var index = Array.from($(col).parent('tr').children()).indexOf(col);
-        // console.log(index);
-        var ofs = $(col).offset();
-        var pos = $(col).position();
-        var x = e.pageX;
-        var y = e.pageY;
+    //     if (!hdr || hdr.length <= 0) return;
+    //     var pos = hdr.position();
+    //     var off = hdr.offset();
 
-        colPos = x;
+    //     div = hdr.clone();
 
-        console.log(ofs, pos, x, y);
+    //     // div.css({top: pos.top, left: pos.left, position:'absolute', border:'solid 1px red'});
 
-        $(col).css('cursor', 'move');
+    //     div.css({ top: off.top, left: off.left, position: 'absolute', border: 'solid 1px red' });
 
-        $.each(rows, function () {
-            var $row = $(this);
-            var cls = $row.find('td, th')[index];
+    //     div.attr('draggable', true);
+    //     div.addClass('clone')
+    //     div.position(pos);
+    //     col.append(div);
 
-            if (!cls || cls.length <= 0) return;
-            $(cls).css('border', 'solid 1px gray');
-            $(cls).css('position', 'relative');
+    //     // console.log(pos, div.position());
+    // });
 
+    // cols.on('mouseup', function () {
+    //     var col = $(this);
+    //     col.find('.clone').remove();
+    //     div = undefined;
+    // });
 
-        });
+    // cols.on('mousemove', function (e) {
+
+    //     if (!div) return;
+
+    //     var x = e.pageX;
+    //     var y = e.pageY;
+    //     var off = { top: y, left: x };
+
+    //     div.css({ top: off.top, left: off.left, position: 'absolute', border: 'solid 1px red' });
+
+    // });
+
+    var srcParent;
+    var srcElement;
+    var destElement;
+    //jQuery.event.props.push('dataTransfer');
+    $('.grid-header').on({
+        dragstart: function (e) {
+            if ($(e.target).hasClass('grid-header')) {
+                srcElement = e.target;
+                $(this).css('opacity', '0.5');
+            }
+
+        },
+        dragleave: function (e) {
+            e.preventDefault();
+            $(this).removeClass('over');
+        },
+        dragenter: function (e) {
+            e.preventDefault();
+            $(this).addClass('over');
+            // e.preventDefault();
+        },
+        dragover: function (e) {
+            $(this).addClass('over');
+            e.preventDefault();
+        },
+        dragend: function (e) {
+            e.preventDefault();
+            $(this).css('opacity', '1');
+        },
+        drop: function (e) {
+
+            e.preventDefault();
+            // e.stopPropagation();
+
+            console.log(e.target.className);
+            if ($(e.target).hasClass('grid-header')) {
+
+                /*
+                 Swap columns
+                1. Remove the element from the source
+                2. Add to the destination
+                3. Remove the element from destination
+                4. Add the element to the source
+                */
+
+                // e.target.style.background = "";
+
+                destElement = e.target; // 3 remove from destination
+
+                if(srcElement === destElement) return;
+
+                var srcParent = srcElement.parentNode;
+                var destParent = destElement.parentNode;
+
+                srcParent.removeChild(srcElement); // 1 remove from source
+                destParent.removeChild(destElement);
+
+                destParent.appendChild(srcElement); // 2 insert in the destination
+                srcParent.appendChild(destElement);
+
+                $(this).removeClass('over');
+            }
+        }
     });
 
-    cols.on('mouseup', function () {
-        var col = this;
-        curCol = undefined;
-
-        var rows = $table.find('tr');
-        var index = Array.from($(col).parent('tr').children()).indexOf(col);
-        // console.log(index);
-        $(col).css('cursor', 'pointer');
-        $.each(rows, function () {
-            var $row = $(this);
-            var cls = $row.find('td, th')[index];
-
-            if (!cls || cls.length <= 0) return;
-            $(cls).css('border', '');
-            $(cls).css('position', '');
-
-        });
-    });
-
-    cols.on('mousemove', function (e) {
-        if (!curCol) return;
-        var col = this;
-        var curPos = e.pageX;
-        var diff = curPos - colPos;
-        var pos = $(col).position();
-        if (diff < 0) return;
-
-        $(col).css('border', '1px solid red').css('position', 'relative');
-        // $(col).css('display', 'block');
-        $(col).css('left', pos.left + diff + 'px');
-
-        if (diff < 20) return;
-
-
-        // console.log(e);
-        var rows = $table.find('tr');
-        var index = Array.from($(col).parent('tr').children()).indexOf(col);
-        // console.log(index);
-        $.each(rows, function () {
-            var $row = $(this);
-            var cls = $row.find('td, th')[index];
-
-
-            if (!cls || cls.length <= 0) return;
-            var $cls = $(cls);
-
-            //$cls.css('display', 'block');
-
-            var col0 = $row.find('td, th')[0];
-            var col1 = $row.find('td, th')[1];
-            //console.log(col0, col1);
-
-            //swap
-            var temp = col0;
-            col0 = col1;
-            col1 = temp;
-            $row.append(col0);
-            $row.append(col1);
-
-            $(col0).css('border', '');
-            $(col1).css('position', '');
-
-
-        });
-        curCol = undefined;
-    });
 
 }

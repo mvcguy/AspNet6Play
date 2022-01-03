@@ -66,3 +66,17 @@ caption, th {
 table.navTable .form-control{
   border: 0px;
 }
+
+.over {
+  border: 2px dashed #000;
+}
+
+.grid-header
+{
+  /* padding: 5px;
+  display: block;
+  border: 3px solid red;
+  height: 20px;
+  width: 120px; */
+  position: relative;
+}
