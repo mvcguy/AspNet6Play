@@ -32,7 +32,7 @@ dotnet ef database update
 19. Add possibility to upload data from files (excel or csv)
 20. Add sorting to the grid - client side - SOLVED
 21. Add search possibility in the grid
-22. Add column configuration to the grid - IN-PROGRESS
+22. Add column configuration to the grid - SOLVED
 23. Save grid configuration in a cookie per user
 24. Allow the user to change the grid columns order - drag around
 25. Show errors on the dropdowns in the grid

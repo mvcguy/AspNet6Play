@@ -52,6 +52,25 @@
 
 </div>
 
+<div class="container continer-fluid">
+    <div class="row">
+        <table class="table table-bordered" id="colReorder">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Email</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Moniba Shahid</td>
+                    <td>moniba.shahid@humanity.com</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
 @section Scripts
 {
 <partial name="_ValidationScriptsPartial" />
@@ -110,6 +129,10 @@
 
         attachValidation($form);
 
+
+        //
+        // string casing: pascal, camel, pascalJson
+        //
         $('#btnConvert').on('click', function () {
 
             var sampleText = $('#sampleText').val();
@@ -133,6 +156,11 @@
             }
 
         });
+
+        //
+        // draggable table columns
+        //
+        $('#colReorder').enableColumnReordering();
 
     });
 </script>
