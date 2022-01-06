@@ -211,7 +211,16 @@ var gridNavigationService = function (gridOptions) {
         //
         bindDataSource(gridBody, dataSource.data);
 
+        //
+        // enables the configuration of columns
+        //
         grid.gridConfigure();
+
+        //
+        // enables to re-order the columns
+        //
+        grid.enableColumnReordering();
+
     };
 
 

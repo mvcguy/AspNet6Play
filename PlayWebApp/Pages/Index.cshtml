@@ -54,33 +54,37 @@
 
 <div class="container continer-fluid">
     <div class="row">
-        <table class="table table-bordered" id="colReorder">
+
+
+        <table class="table table-bordered" id="colReorder">            
             <thead>
-                <tr>
-                    <th>
-                        <div draggable="true" class="grid-header">
-                            Name
-                        </div>
-                    </th>
-                    <th>
-                        <div draggable="true" class="grid-header">
-                            Email
-                        </div>
-                    </th>
-                    <th>
-                        <div draggable="true" class="grid-header">
-                            Phone
-                        </div>
-                    </th>
+                <tr class='grid-cols'>
+                    @{
+                        for (int i = 0; i < 6; i++)
+                        {
+                            <th>
+                                <div>COL-@i</div>
+                            </th>
+                        }
+                    }
+                    <th>COL-extra</th>
                 </tr>
             </thead>
             <tbody>
-                <tr>
-                    <td>Moniba Shahid</td>
-                    <td>moniba.shahid@humanity.com</td>
-                    <td>1234567890</td>
-
-                </tr>
+                @{
+                    for (int i = 0; i < 10; i++)
+                    {
+                        <tr>
+                            @{
+                                for (int j = 0; j < 6; j++)
+                                {
+                                    <td>DATA-@i-@j</td>
+                                }
+                            }
+                            <td>DT-extra</td>
+                        </tr>
+                    }
+                }
             </tbody>
         </table>
     </div>

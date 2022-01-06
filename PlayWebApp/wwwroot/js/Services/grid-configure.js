@@ -59,120 +59,159 @@ $.fn.gridConfigure = function () {
 }
 
 $.fn.enableColumnReordering = function () {
-    console.log('enabling column re-ordering feature...');
+
     var $table = $(this);
-    var $header = $table.find('thead');
-    var cols = $header.find('th');
-    cols.css('cursor', 'pointer');
-    cols.css('user-select', 'none');
+    var addWaitMarker = function () {
+        var dw = $('<div></div>');
+        dw.addClass('wait-reorder').hide();
+        var ct = $('<div class="d-flex justify-content-center"></div>');
+        var ds = $('<div></div>').addClass('spinner-border');
+        ds.append('<span class="visually-hidden">Wait...</span>');
+        ct.append(ds);
+        dw.append(ct);
+        $table.addClass('caption-top');
+        $table.append($('<caption></caption>').append(dw));
+    };
 
-    // var colPos = 0;
-    // var div = undefined;
+    var thWrap = $('<div draggable="true" class="grid-header"></div>');
+    
+    $.each($table.find('.grid-cols>th:visible'), function () {
+        var childs = $(this).children();
+        if (childs.length === 0) {
+            var txt = $(this).text();
+            $(this).text('');
+            childs = $('<div></div>').text(txt);
+            $(this).append(childs);
+        }
 
-    // cols.on('mousedown', function (e) {
-    //     var col = $(this);
-    //     var hdr = col.find('.grid-header-text');
+        $(childs).wrap(thWrap);
+    });
 
-    //     if (!hdr || hdr.length <= 0) return;
-    //     var pos = hdr.position();
-    //     var off = hdr.offset();
+    addWaitMarker();
 
-    //     div = hdr.clone();
-
-    //     // div.css({top: pos.top, left: pos.left, position:'absolute', border:'solid 1px red'});
-
-    //     div.css({ top: off.top, left: off.left, position: 'absolute', border: 'solid 1px red' });
-
-    //     div.attr('draggable', true);
-    //     div.addClass('clone')
-    //     div.position(pos);
-    //     col.append(div);
-
-    //     // console.log(pos, div.position());
-    // });
-
-    // cols.on('mouseup', function () {
-    //     var col = $(this);
-    //     col.find('.clone').remove();
-    //     div = undefined;
-    // });
-
-    // cols.on('mousemove', function (e) {
-
-    //     if (!div) return;
-
-    //     var x = e.pageX;
-    //     var y = e.pageY;
-    //     var off = { top: y, left: x };
-
-    //     div.css({ top: off.top, left: off.left, position: 'absolute', border: 'solid 1px red' });
-
-    // });
-
-    var srcParent;
     var srcElement;
-    var destElement;
-    //jQuery.event.props.push('dataTransfer');
-    $('.grid-header').on({
-        dragstart: function (e) {
-            if ($(e.target).hasClass('grid-header')) {
-                srcElement = e.target;
-                $(this).css('opacity', '0.5');
-            }
 
+    //jQuery.event.props.push('dataTransfer');
+    $table.find('.grid-header').on({
+        dragstart: function (e) {
+            if (!$(e.target).hasClass('grid-header')) {
+                srcElement = undefined;
+                return;
+            };
+
+            srcElement = e.target;
+            $(this).css('opacity', '0.5');
         },
         dragleave: function (e) {
             e.preventDefault();
+            if (!srcElement) return;
+
+            if (!$(this).hasClass('grid-header')) return;
             $(this).removeClass('over');
         },
         dragenter: function (e) {
             e.preventDefault();
+            if (!srcElement) return;
+
+            if (!$(this).hasClass('grid-header')) return;
             $(this).addClass('over');
             // e.preventDefault();
         },
         dragover: function (e) {
-            $(this).addClass('over');
             e.preventDefault();
+            if (!srcElement) return;
+
+            if (!$(this).hasClass('grid-header')) return;
+            $(this).addClass('over');
+
+
         },
         dragend: function (e) {
             e.preventDefault();
+            if (!srcElement) return;
             $(this).css('opacity', '1');
         },
         drop: function (e) {
-
             e.preventDefault();
-            // e.stopPropagation();
+            if (!srcElement) return;
+            var $this = $(this);
+            $this.removeClass('over');
+            var destElement = e.target;
+            if (!$this.hasClass('grid-header')) return;
+            if (srcElement === destElement) return;
 
-            console.log(e.target.className);
-            if ($(e.target).hasClass('grid-header')) {
+            var cols = $table.find('.grid-cols>th:visible');
 
-                /*
-                 Swap columns
-                1. Remove the element from the source
-                2. Add to the destination
-                3. Remove the element from destination
-                4. Add the element to the source
-                */
+            // dest
+            var thParent = $this.parents('th');
+            var toIndex = cols.index(thParent);
 
-                // e.target.style.background = "";
+            // src
+            var thParent2 = $(srcElement).parents('th');
+            var fromIndex = cols.index(thParent2);
 
-                destElement = e.target; // 3 remove from destination
+            console.log(toIndex, fromIndex);
 
-                if(srcElement === destElement) return;
+            if (toIndex == fromIndex) return;
 
-                var srcParent = srcElement.parentNode;
-                var destParent = destElement.parentNode;
+            var hRow = $this.parents('tr');
 
-                srcParent.removeChild(srcElement); // 1 remove from source
-                destParent.removeChild(destElement);
+            reOrder(hRow, cols, fromIndex, toIndex);
 
-                destParent.appendChild(srcElement); // 2 insert in the destination
-                srcParent.appendChild(destElement);
+            var rows = $table.find('tbody>tr');
+            $('.wait-reorder').css({ 'cursor': 'progress' }).show();
+            setTimeout(() => {
+                console.log('Reordering started, ', new Date());
+                for (let index = 0; index < rows.length; index++) {
+                    var row = rows[index];
+                    var cells = $(row).find('td:visible');
+                    if (toIndex == fromIndex) return;
+                    reOrder(row, cells, fromIndex, toIndex);
+                }
+                $('.wait-reorder').css({ 'cursor': '' }).hide();
+                console.log('Reordering completed, ', new Date());
+            }, 500);
 
-                $(this).removeClass('over');
-            }
         }
     });
 
+    var reOrder = function (row, cells, fromIndex, toIndex) {
 
+        if (fromIndex == toIndex) return;
+
+        var dir = directions.ltr;
+
+        if (fromIndex > toIndex) {
+            dir = directions.rtl;
+        }
+
+        if (dir === directions.rtl) {
+            swapRtl(cells, fromIndex, toIndex)
+        }
+        else {
+            swapLtr(cells, fromIndex, toIndex);
+        }
+
+        $(row).append(cells);
+    };
+
+    var swapRtl = function (cells, fromIndex, toIndex) {
+        for (let i = fromIndex; i > toIndex; i--) {
+            swap(cells, i, i - 1);
+        }
+    };
+
+    var swapLtr = function (cells, fromIndex, toIndex) {
+        for (let i = fromIndex; i < toIndex; i++) {
+            swap(cells, i, i + 1);
+        }
+    };
+
+    var swap = function (arr, ia, ib) {
+        var temp = arr[ia];
+        arr[ia] = arr[ib];
+        arr[ib] = temp;
+    };
+
+    var directions = { rtl: 'RIGHT-TO-LEFT', ltr: 'LEFT-TO-RIGHT' };
 }
