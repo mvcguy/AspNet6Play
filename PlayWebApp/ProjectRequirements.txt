@@ -33,7 +33,7 @@ dotnet ef database update
 20. Add sorting to the grid - client side - SOLVED
 21. Add search possibility in the grid
 22. Add column configuration to the grid - SOLVED
-23. Save grid configuration in a cookie per user
+23. Save grid configuration in a cookie per user -  IN-PROGRESS
 24. Allow the user to change the grid columns order - drag around - SOLVED
 25. Show errors on the dropdowns in the grid
 26. Inform user about the errors in the hidden column of the grid.

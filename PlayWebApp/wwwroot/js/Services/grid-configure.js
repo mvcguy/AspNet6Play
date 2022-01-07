@@ -1,10 +1,15 @@
+
+/**
+ * Allow for hiding/showing grid columns
+ */
 $.fn.gridConfigure = function () {
 
     var headers = this.find('.ds-col');
-    var _this = this;
+    var $table = $(this);
+    var dataSourceName = $table.attr('data-datasource');
 
     var colsList = $('.grid-config-cols');
-    $.each(headers, function (index) {
+    $.each(headers, function () {
 
         var $header = $(this);
         var propName = $header.attr('data-th-propname');
@@ -27,15 +32,15 @@ $.fn.gridConfigure = function () {
         colsListItem.append(chkLbl);
         colsList.append(colsListItem);
 
-        chk.on('click', function () {
+        chk.on('click', function (e) {
             var $chk = $(this);
             var prop = $chk.attr('data-config-propname');
             if (!prop) return;
 
-            var col = $(_this).find('th[data-th-propname=' + prop + ']');
+            var col = $table.find('th[data-th-propname=' + prop + ']');
             if (!col || col.length <= 0) return;
 
-            var rows = $(_this).find('.grid-cols, .grid-rows');
+            var rows = $table.find('.grid-cols, .grid-rows');
 
             var index = Array.from(col.parent('tr').children()).indexOf(col[0]);
             if (index < 0) return;
@@ -53,11 +58,19 @@ $.fn.gridConfigure = function () {
                     $(cols).hide();
                 }
             });
+
+            dataEventsService.notifyListeners(appDataEvents.ON_GRID_CONFIG_UPDATED,
+                { dataSourceName: dataSourceName, eventData: e, source: $table, action: appActions.COL_SHOW_HIDE });
+
+
         });
     });
 
 }
 
+/**
+ * Allow for re-ordering the grid columns
+ */
 $.fn.enableColumnReordering = function () {
 
     var $table = $(this);
@@ -153,7 +166,7 @@ $.fn.enableColumnReordering = function () {
             var srcParent = $(srcElement).parents('th');
             var fromIndex = cols.index(srcParent);
 
-            console.log(toIndex, fromIndex);
+            //console.log(toIndex, fromIndex);
 
             if (toIndex == fromIndex) return;
 
@@ -171,7 +184,7 @@ $.fn.enableColumnReordering = function () {
             // apply new order to all the rows in the grid
             //
             setTimeout(() => {
-                console.log('Reordering started, ', new Date());
+                //console.log('Reordering started, ', new Date());
                 for (let index = 0; index < rows.length; index++) {
                     var row = rows[index];
                     var cells = $(row).find('td');
@@ -179,12 +192,15 @@ $.fn.enableColumnReordering = function () {
                     reOrder(row, cells, fromIndex, toIndex);
                 }
 
-                console.log('Reordering completed, ', new Date());
+                //console.log('Reordering completed, ', new Date());
                 //
                 // notify about column re-ordering
                 //
                 notifyListeners(appDataEvents.ON_COLS_REORDERED,
                     { dataSourceName: dataSourceName, eventData: e, source: $table });
+
+                notifyListeners(appDataEvents.ON_GRID_CONFIG_UPDATED,
+                    { dataSourceName: dataSourceName, eventData: e, source: $table, action: appActions.COL_REORDER });
 
                 $('.wait-reorder').css({ 'cursor': '' }).hide();
             }, 500);
@@ -240,19 +256,20 @@ $.fn.enableColumnReordering = function () {
 
 
 /**
+ * Allow for sorting the grid data based on the choosen column
  * Credit: https://stackoverflow.com/a/49041392
  * @param {*} th - the header object th to sort
  * @param {boolean} ascX - sort ascending or vice versa
  */
 
- $.fn.sortTable = function (th, ascX) {
+$.fn.sortTable = function (th, ascX) {
 
     //  console.log('sorting', ascX);
     const getCellValue = (tr, idx) => {
         var child = $($(tr).children()[idx]);
         // console.log('idx: ', idx,  child);
         var text = child.find('input, select').is(":checked") || child.find('input, select').val() || child.text();
-        console.log(text);
+        //console.log(text);
         return text;
     };
 
@@ -260,10 +277,10 @@ $.fn.enableColumnReordering = function () {
     // Returns a function responsible for sorting a specific column index 
     // (idx = columnIndex, asc = ascending order?).
     var comparer = function (idx, asc) {
-         //console.log('idx: ', idx, 'asc: ', asc);
+        //console.log('idx: ', idx, 'asc: ', asc);
         // This is used by the array.sort() function...
         return function (a, b) {
-             //console.log('a: ', a, 'b: ', b);
+            //console.log('a: ', a, 'b: ', b);
 
             // This is a transient function, that is called straight away. 
             // It allows passing in different order of args, based on 
@@ -282,13 +299,17 @@ $.fn.enableColumnReordering = function () {
     // const table = th.closest('table');
     var rows = this.find('tbody>tr:visible');
     const tbody = this.find('tbody');
+    var $table = $(this);
+    var dataSourceName = $table.attr('data-datasource');
     // console.log(rows);
     Array.from(rows)
         .sort(comparer(Array.from(th.parentNode.children).indexOf(th), ascX = !ascX))
         .forEach(tr => $(tbody).append(tr));
 
-};
+    dataEventsService.notifyListeners(appDataEvents.ON_GRID_CONFIG_UPDATED,
+        { dataSourceName: dataSourceName, eventData: { th, asc: ascX }, source: $table, action: appActions.COL_SORTING });
 
+};
 
 //
 // auto register events to enable grid col configuration and allow for re-ordering of the columns
@@ -311,7 +332,16 @@ $.fn.enableColumnReordering = function () {
         // enables to re-order the columns
         //
         grid.enableColumnReordering();
-    }
+
+        //
+        // make the grid resixeable
+        //
+        grid.resizableGrid();
+    };
+
+    var onGridConfigurationChanged = function (eventArgs) {
+        console.log('grid configuration updated', eventArgs);
+    };
 
     $(document).ready(function () {
 
@@ -327,12 +357,17 @@ $.fn.enableColumnReordering = function () {
 
             //console.log(id, dsName);
 
-            if (!id || !dsName) return;
+            if (!id || !dsName) {
+                console.log('no datasource found');
+                return;
+            }
 
             registerCallback(id, appDataEvents.ON_GRID_DATA_BOUND, onGridDataBound, dsName);
+            registerCallback(id, appDataEvents.ON_GRID_CONFIG_UPDATED, onGridConfigurationChanged, dsName);
 
         })
 
     });
 
 })();
+

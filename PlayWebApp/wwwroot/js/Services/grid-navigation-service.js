@@ -192,7 +192,7 @@ var gridNavigationService = function (gridOptions) {
                 //
                 // notify that we need sorting of the column
                 //
-                var prop = $(e.target).attr('data-th-propname');
+                var prop = elem.attr('data-th-propname');
                 notifyListeners(appDataEvents.ON_SORTING_REQUESTED,
                     { dataSourceName: dataSource.dataSourceName, eventData: e, propName: prop, asc });
 
@@ -429,7 +429,7 @@ var gridNavigationService = function (gridOptions) {
     };
 
     var onSortingRequest = function (eventArgs) {
-        console.log(eventArgs);
+        // console.log(eventArgs);
 
         var ds = eventArgs.dataSourceName;
         var prop = eventArgs.propName;

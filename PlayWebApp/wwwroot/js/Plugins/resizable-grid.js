@@ -3,7 +3,12 @@
 // https://stackoverflow.com/questions/58660470/resizing-column-width-on-a-table
 //
 
-function resizableGrid(table) {
+$.fn.resizableGrid = function () {
+
+    var table = this[0];
+    var $table = this;
+    var dataSourceName = $table.attr('data-datasource');
+    // console.log(table);
     var row = table.getElementsByClassName('draggable')[0],
         cols = row ? row.children : undefined;
     if (!cols) return;
@@ -53,12 +58,19 @@ function resizableGrid(table) {
                 // document.getElementById('tableId').style.width = tableWidth + diffX + "px"
                 table.style.width = tableWidth + diffX + "px";
 
-               // console.log('MMove: diffX: ', diffX, 'curColW: ', curCol.style.width, 'TableW: ', table.style.width);
+                // console.log('MMove: diffX: ', diffX, 'curColW: ', curCol.style.width, 'TableW: ', table.style.width);
 
             }
         });
 
         document.addEventListener('mouseup', function (e) {
+
+            if (curCol) {
+                dataEventsService.notifyListeners(appDataEvents.ON_GRID_CONFIG_UPDATED,
+                    { dataSourceName: dataSourceName, eventData: { e, curCol }, source: $table, action: appActions.COL_RESIZED });
+
+            }
+
             curCol = undefined;
             nxtCol = undefined;
             pageX = undefined;
@@ -94,4 +106,4 @@ function resizableGrid(table) {
     function getStyleVal(elm, css) {
         return (window.getComputedStyle(elm, null).getPropertyValue(css));
     }
-};
+}
