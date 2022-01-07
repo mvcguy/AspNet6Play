@@ -61,6 +61,9 @@ $.fn.gridConfigure = function () {
 $.fn.enableColumnReordering = function () {
 
     var $table = $(this);
+    var dataSourceName = $table.attr('data-datasource');
+    //var gridId = $table.attr('id');
+    //console.log('datasource-name', dataSourceName);
     var addWaitMarker = function () {
         var dw = $('<div></div>');
         dw.addClass('wait-reorder').hide();
@@ -74,8 +77,8 @@ $.fn.enableColumnReordering = function () {
     };
 
     var thWrap = $('<div draggable="true" class="grid-header"></div>');
-    
-    $.each($table.find('.grid-cols>th:visible'), function () {
+
+    $.each($table.find('.grid-cols>th'), function () {
         var childs = $(this).children();
         if (childs.length === 0) {
             var txt = $(this).text();
@@ -140,15 +143,15 @@ $.fn.enableColumnReordering = function () {
             if (!$this.hasClass('grid-header')) return;
             if (srcElement === destElement) return;
 
-            var cols = $table.find('.grid-cols>th:visible');
+            var cols = $table.find('.grid-cols>th');
 
             // dest
-            var thParent = $this.parents('th');
-            var toIndex = cols.index(thParent);
+            var destParent = $this.parents('th');
+            var toIndex = cols.index(destParent);
 
             // src
-            var thParent2 = $(srcElement).parents('th');
-            var fromIndex = cols.index(thParent2);
+            var srcParent = $(srcElement).parents('th');
+            var fromIndex = cols.index(srcParent);
 
             console.log(toIndex, fromIndex);
 
@@ -156,20 +159,34 @@ $.fn.enableColumnReordering = function () {
 
             var hRow = $this.parents('tr');
 
+            //
+            // apply new order to the headers
+            //
             reOrder(hRow, cols, fromIndex, toIndex);
 
             var rows = $table.find('tbody>tr');
             $('.wait-reorder').css({ 'cursor': 'progress' }).show();
+
+            //
+            // apply new order to all the rows in the grid
+            //
             setTimeout(() => {
                 console.log('Reordering started, ', new Date());
                 for (let index = 0; index < rows.length; index++) {
                     var row = rows[index];
-                    var cells = $(row).find('td:visible');
+                    var cells = $(row).find('td');
                     if (toIndex == fromIndex) return;
                     reOrder(row, cells, fromIndex, toIndex);
                 }
-                $('.wait-reorder').css({ 'cursor': '' }).hide();
+
                 console.log('Reordering completed, ', new Date());
+                //
+                // notify about column re-ordering
+                //
+                notifyListeners(appDataEvents.ON_COLS_REORDERED,
+                    { dataSourceName: dataSourceName, eventData: e, source: $table });
+
+                $('.wait-reorder').css({ 'cursor': '' }).hide();
             }, 500);
 
         }
@@ -214,4 +231,108 @@ $.fn.enableColumnReordering = function () {
     };
 
     var directions = { rtl: 'RIGHT-TO-LEFT', ltr: 'LEFT-TO-RIGHT' };
-}
+
+
+    var notifyListeners = function (eventType, payload) {
+        dataEventsService.notifyListeners(eventType, payload);
+    };
+};
+
+
+/**
+ * Credit: https://stackoverflow.com/a/49041392
+ * @param {*} th - the header object th to sort
+ * @param {boolean} ascX - sort ascending or vice versa
+ */
+
+ $.fn.sortTable = function (th, ascX) {
+
+    //  console.log('sorting', ascX);
+    const getCellValue = (tr, idx) => {
+        var child = $($(tr).children()[idx]);
+        // console.log('idx: ', idx,  child);
+        var text = child.find('input, select').is(":checked") || child.find('input, select').val() || child.text();
+        console.log(text);
+        return text;
+    };
+
+
+    // Returns a function responsible for sorting a specific column index 
+    // (idx = columnIndex, asc = ascending order?).
+    var comparer = function (idx, asc) {
+         //console.log('idx: ', idx, 'asc: ', asc);
+        // This is used by the array.sort() function...
+        return function (a, b) {
+             //console.log('a: ', a, 'b: ', b);
+
+            // This is a transient function, that is called straight away. 
+            // It allows passing in different order of args, based on 
+            // the ascending/descending order.
+            return function (v1, v2) {
+                //  console.log('v1: ', v1, 'v2: ', v2);
+                // sort based on a numeric or localeCompare, based on type...
+                return (v1 !== '' && v2 !== '' && !isNaN(v1) && !isNaN(v2))
+                    ? v1 - v2
+                    : v1.toString().localeCompare(v2);
+            }(getCellValue(asc ? a : b, idx), getCellValue(asc ? b : a, idx));
+        }
+    };
+
+    // do the work...
+    // const table = th.closest('table');
+    var rows = this.find('tbody>tr:visible');
+    const tbody = this.find('tbody');
+    // console.log(rows);
+    Array.from(rows)
+        .sort(comparer(Array.from(th.parentNode.children).indexOf(th), ascX = !ascX))
+        .forEach(tr => $(tbody).append(tr));
+
+};
+
+
+//
+// auto register events to enable grid col configuration and allow for re-ordering of the columns
+//
+(function () {
+    var registerCallback = function (key, eventTypeX, callback, dataSourceNameX) {
+        dataEventsService.registerCallback(key, eventTypeX, callback, dataSourceNameX);
+    };
+
+    var onGridDataBound = function (eventArgs) {
+        //console.log('grid is data bounded', eventArgs);
+        var grid = eventArgs.source;
+
+        //
+        // enables the configuration of columns
+        //
+        grid.gridConfigure();
+
+        //
+        // enables to re-order the columns
+        //
+        grid.enableColumnReordering();
+    }
+
+    $(document).ready(function () {
+
+        //console.log('iffy invoked');
+        var grids = $(document).find('table');
+        //console.log(grids);
+
+        $.each(grids, function () {
+
+            var $grid = $(this);
+            var id = $grid.attr('id');
+            var dsName = $grid.attr('data-datasource');
+
+            //console.log(id, dsName);
+
+            if (!id || !dsName) return;
+
+            registerCallback(id, appDataEvents.ON_GRID_DATA_BOUND, onGridDataBound, dsName);
+
+        })
+
+    });
+
+})();

@@ -73,18 +73,7 @@ var gridNavigationService = function (gridOptions) {
         //                    
 
         var lastCell = rowInputs.last();
-        $(lastCell).on('keydown', function (e) {
-
-            if (e.which !== 9 || e.shiftKey === true) return;
-
-            var lastRowIndex = $('#' + gridId).find('tbody>tr:visible').last().attr('data-index');
-            var parentIndex = $(e.target).parents('tr').first().attr('data-index');
-
-            // console.log(gridRows, currentRowIndex);
-            if (lastRowIndex === parentIndex) {
-                addNewRowToGrid();
-            }
-        });
+        $(lastCell).on('keydown', onInputKeyDown);
 
         $(templateRow).on('click', function (e) {
             focusRow(this);
@@ -92,6 +81,18 @@ var gridNavigationService = function (gridOptions) {
 
         return templateRow;
 
+    };
+
+    var onInputKeyDown = function (e) {
+        if (e.which !== 9 || e.shiftKey === true) return;
+
+        var lastRowIndex = $('#' + gridId).find('tbody>tr:visible').last().attr('data-index');
+        var parentIndex = $(e.target).parents('tr').first().attr('data-index');
+
+        // console.log(gridRows, currentRowIndex);
+        if (lastRowIndex === parentIndex) {
+            addNewRowToGrid();
+        }
     };
 
     var focusRow = function (row) {
@@ -110,6 +111,7 @@ var gridNavigationService = function (gridOptions) {
 
     var bind = function () {
         var grid = $('#' + gridId);
+
         grid.css('width', 'inherit');
 
         var gridHeader = grid.find('thead');
@@ -212,14 +214,10 @@ var gridNavigationService = function (gridOptions) {
         bindDataSource(gridBody, dataSource.data);
 
         //
-        // enables the configuration of columns
+        // notify that grid is data-bound
         //
-        grid.gridConfigure();
 
-        //
-        // enables to re-order the columns
-        //
-        grid.enableColumnReordering();
+        notifyListeners(appDataEvents.ON_GRID_DATA_BOUND, { dataSourceName: dataSource.dataSourceName, eventData: {}, source: grid });
 
     };
 
@@ -435,8 +433,18 @@ var gridNavigationService = function (gridOptions) {
 
         var ds = eventArgs.dataSourceName;
         var prop = eventArgs.propName;
-        var table = $(eventArgs.eventData.target).parents('table');
+        var $target = $(eventArgs.eventData.target);
+        var table =$target.parents('table');
+        
+        var isTh = $target.prop('tagName').toLowerCase() === 'th';
 
+        if (!isTh) {
+            var th = $target.parents('th');
+            if (!th || th.length === 0) return;
+
+            eventArgs.eventData.target = th[0];
+        }
+        
         $(table).sortTable(eventArgs.eventData.target, eventArgs.asc);
     };
 
@@ -445,6 +453,25 @@ var gridNavigationService = function (gridOptions) {
             .find('.sorting_desc, .sorting_asc')
             .removeClass('sorting_desc')
             .removeClass('sorting_asc');
+    };
+
+    var onColsReordered = function (eventArgs) {
+
+        //
+        // modify 'keydown' events on the row inputs
+        //
+        var grid = eventArgs.source;
+
+        var rows = grid.find('tbody>tr');
+        $.each(rows, function () {
+            var $row = $(this);
+            var inputs = $row.find('input, select');
+            inputs.off('keydown');
+            var lastInput = inputs.last();
+            lastInput.on('keydown', onInputKeyDown);
+        });
+
+
     };
 
     var notifyListeners = function (eventType, payload) {
@@ -461,6 +488,9 @@ var gridNavigationService = function (gridOptions) {
         registerCallback(gridId, appDataEvents.ON_SAVE_RECORD, onSaveRecord, dataSource.dataSourceName);
         registerCallback(gridId, appDataEvents.ON_SAVE_ERROR, onSaveError, dataSource.dataSourceName);
         registerCallback(gridId, appDataEvents.ON_SORTING_REQUESTED, onSortingRequest, dataSource.dataSourceName);
+
+        registerCallback(gridId, appDataEvents.ON_COLS_REORDERED, onColsReordered, dataSource.dataSourceName);
+
     };
 
     var clearGrid = function () {

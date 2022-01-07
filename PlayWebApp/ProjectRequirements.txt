@@ -34,6 +34,9 @@ dotnet ef database update
 21. Add search possibility in the grid
 22. Add column configuration to the grid - SOLVED
 23. Save grid configuration in a cookie per user
-24. Allow the user to change the grid columns order - drag around
+24. Allow the user to change the grid columns order - drag around - SOLVED
 25. Show errors on the dropdowns in the grid
 26. Inform user about the errors in the hidden column of the grid.
+27. After re-ordering the columns, new rows in the grid do not follow column order - critical - SOLVED
+28. When columns are re-ordered, the focus moved from the last column does not add a new row to the grid - SOLVED
+29. Add generic impl to support sorting and col re-ordering without writing any script or doing function calls. - SOLVED
