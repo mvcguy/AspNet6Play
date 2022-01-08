@@ -1,6 +1,6 @@
 var gridNavigationService = function (gridOptions) {
 
-    var cols = gridOptions.cols;
+    var gridCols = gridOptions.cols;
     var dataSource = gridOptions.dataSource;
     var gridId = gridOptions.gridId;
 
@@ -102,15 +102,56 @@ var gridNavigationService = function (gridOptions) {
 
     var createEmptyRowData = function () {
         var record = {};
-        $.each(cols, function () {
+        $.each(gridCols, function () {
             record[this.propName] = undefined;
         });
         //debugger;
         return record;
     };
 
+    var getGridSettings = function () {
+        try {
+            var gridSettings = Cookie.getJSON(gridId);
+            //console.log('GridSettings Cookie: ', gridSettings ? 'settings found' : 'no settings found!');
+
+            return gridSettings;
+
+        } catch (error) {
+            console.log(error);
+            return undefined;
+        }
+    };
+
+    var applyColSettings = function (col, settings) {
+
+        if ($.isEmptyObject(settings)) return;
+
+        if (settings.visible === false) {
+            col.hide();
+        }
+
+        if (settings.width) {
+            col.css({ 'position': 'relative', 'width': settings.width });
+        }
+    };
+
+    var applyColSorting = function (settings) {        
+
+        if (!settings || $.isEmptyObject(settings)) return gridCols;
+        var sortedCols = [];
+        $.each(gridCols, function () {
+            var c = this;
+            var set = settings[c.propName];
+            sortedCols[set.position] = c;
+        });
+
+        return sortedCols;
+    };
+
     var bind = function () {
         var grid = $('#' + gridId);
+
+        var settings = getGridSettings() || {};
 
         grid.css('width', 'inherit');
 
@@ -121,7 +162,11 @@ var gridNavigationService = function (gridOptions) {
         gridBodyRow.attr('id', gridId + "_template_row_");
         gridBodyRow.css('display', 'none');
 
-        $.each(cols, function (index, colDef) {
+        var gc = applyColSorting(settings);
+
+        $.each(gc, function (index, colDef) {
+
+            var colSettings = settings[colDef.propName] || {};
 
             var gridHeaderCell = $("<th class='sorting ds-col'></th>");
             var gridBodyCell = $("<td></td>");
@@ -198,6 +243,8 @@ var gridNavigationService = function (gridOptions) {
 
             });
 
+            applyColSettings(gridHeaderCell, colSettings);
+            applyColSettings(gridBodyCell, colSettings);
             gridHeaderRow.append(gridHeaderCell);
             gridBodyRow.append(gridBodyCell);
         });
@@ -401,7 +448,7 @@ var gridNavigationService = function (gridOptions) {
                 var errorRow = getRowByIndex(grid, parseInt(clientIndex));
                 if (!errorRow || errorRow.length === 0) continue;
 
-                $.each(cols, function (x, col) {
+                $.each(gridCols, function (x, col) {
                     var propName = col.propName.toPascalCaseJson();
                     var inputError = errors[dsName + '[' + serverIndex + '].' + propName];
                     if (inputError && inputError.length > 0) {
@@ -434,8 +481,8 @@ var gridNavigationService = function (gridOptions) {
         var ds = eventArgs.dataSourceName;
         var prop = eventArgs.propName;
         var $target = $(eventArgs.eventData.target);
-        var table =$target.parents('table');
-        
+        var table = $target.parents('table');
+
         var isTh = $target.prop('tagName').toLowerCase() === 'th';
 
         if (!isTh) {
@@ -444,7 +491,7 @@ var gridNavigationService = function (gridOptions) {
 
             eventArgs.eventData.target = th[0];
         }
-        
+
         $(table).sortTable(eventArgs.eventData.target, eventArgs.asc);
     };
 

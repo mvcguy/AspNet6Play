@@ -47,15 +47,15 @@ $.fn.gridConfigure = function () {
 
             $.each(rows, function () {
                 var $row = $(this);
-                var cols = $row.find('td, th')[index];
+                var cells = $row.find('td, th')[index];
 
-                if (!cols || cols.length <= 0) return;
+                if (!cells || cells.length <= 0) return;
 
                 if ($chk.is(':checked') === true) {
-                    $(cols).show();
+                    $(cells).show();
                 }
                 else {
-                    $(cols).hide();
+                    $(cells).hide();
                 }
             });
 
@@ -322,6 +322,19 @@ $.fn.sortTable = function (th, ascX) {
     var onGridDataBound = function (eventArgs) {
         //console.log('grid is data bounded', eventArgs);
         var grid = eventArgs.source;
+        var gridId = grid.attr('id');
+
+        try {
+            var gridSettings = Cookie.getJSON(gridId);
+            console.log('GridSettings Cookie: ', gridSettings ? 'settings found' : 'no settings found!');
+
+            if (gridSettings) {
+
+            }
+
+        } catch (error) {
+            console.log(error);
+        }
 
         //
         // enables the configuration of columns
@@ -344,6 +357,7 @@ $.fn.sortTable = function (th, ascX) {
 
         var table = eventArgs.source;
         var action = eventArgs.action;
+        var gridId = table.attr('id');
 
         var cols = table.find('.ds-col');
         // console.log(cols);
@@ -368,7 +382,13 @@ $.fn.sortTable = function (th, ascX) {
             colsObj[prop] = propAttr;
         });
 
-        console.log('Colsobject: ', colsObj);
+
+
+        Cookie.delete(gridId);
+        setTimeout(() => {
+            // console.log('Colsobject: ', colsObj);
+            Cookie.setJSON(gridId, colsObj, { days: 30, secure: true, SameSite: 'strict' });
+        }, 500);
 
     };
 
