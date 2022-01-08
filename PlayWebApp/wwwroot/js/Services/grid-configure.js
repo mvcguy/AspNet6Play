@@ -340,7 +340,36 @@ $.fn.sortTable = function (th, ascX) {
     };
 
     var onGridConfigurationChanged = function (eventArgs) {
-        console.log('grid configuration updated', eventArgs);
+        //console.log('grid configuration updated', eventArgs);
+
+        var table = eventArgs.source;
+        var action = eventArgs.action;
+
+        var cols = table.find('.ds-col');
+        // console.log(cols);
+        var colsObj = {};
+        $.each(cols, function (index, val) {
+            var col = $(this);
+
+            var sort = 'asc';
+            if (col.hasClass('sorting_desc'))
+                sort = 'desc';
+
+            var prop = col.attr('data-th-propname');
+
+            var propAttr = {
+
+                width: col.css('width'),
+                visible: col.is(':visible'),
+                sort: sort,
+                position: index,
+            };
+
+            colsObj[prop] = propAttr;
+        });
+
+        console.log('Colsobject: ', colsObj);
+
     };
 
     $(document).ready(function () {
