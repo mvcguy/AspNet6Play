@@ -54,8 +54,17 @@ var InitShippingAddressesGrid = function (initData) {
 
     addressesGrid.registerCallbacks();
 
-    const bs = new BSGridOptions("gridId");
-    
+
+    var cols = [
+        new BSGridColDefinition("Ref Nbr.", "text", "230px", "Ref_Number", true),
+        new BSGridColDefinition("Description.", "text", "230px", "Description", false),
+    ];
+
+    var initialData = [{ Ref_Number: "1001", Description: "Home address" }];
+    var ds = new BSGridDataSource("addresses", initialData, false);
+    var bs = new BSGridOptions("addresses", cols, ds);
+    var gridd = new BootstrapDataGrid($, bs);
+    gridd.dumpOptions();
 
 }
 
