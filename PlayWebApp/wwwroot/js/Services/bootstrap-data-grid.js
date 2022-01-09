@@ -1,5 +1,8 @@
 // @ts-check
 
+import $ from "../../lib/jquery/dist/jquery";
+
+
 class BSGridBase {
 
     /**
@@ -13,13 +16,10 @@ class BSGridBase {
     children;
 
     constructor() {
-        // @ts-ignore
+
         this.jquery = $;
-        // @ts-ignore
         this.dataEventsService = dataEventsService;
-        // @ts-ignore
         this.appDataEvents = appDataEvents;
-        // @ts-ignore
         this.Cookie = Cookie;
     }
 
@@ -70,10 +70,7 @@ class BSGridBase {
      */
     props(props) {
         var _this = this;
-        this.jquery.each(props, function () {
-            var prop = this;
-            _this.prop(prop.key, prop.value);
-        });
+        props.forEach((p) => _this.prop(p.key, p.value))
     }
 
     prop(key, value) {
@@ -103,6 +100,10 @@ class BSGridBase {
         return this;
     }
 
+    hasClass(cssClass) {
+        return this.element.hasClass(cssClass);
+    }
+
     text(txt) {
         this.element.text(txt);
         return this;
@@ -112,8 +113,12 @@ class BSGridBase {
      * 
      * @param {BSGridBase} elem 
      */
-    append(elem) {
-        this.children.push(elem);
+    append(elem, pushToArray = true) {
+
+        if (pushToArray) {
+            this.children.push(elem);
+        }
+
         return this.element.append(elem.element);
     }
 
@@ -132,14 +137,12 @@ class BootstrapDataGrid extends BSGridBase {
 
     /**
      * 
-     * @param {object} jquery 
      * @param {BSGridOptions} options 
      */
-    constructor(jquery, options) {
+    constructor(options) {
         super();
-        this.jquery = jquery;
-        this.options = options;
 
+        this.options = options;
         // @ts-ignore
         this.Cookie = Cookie;
 
@@ -148,7 +151,16 @@ class BootstrapDataGrid extends BSGridBase {
 
         // @ts-ignore
         this.bootstrap = bootstrap;
+        this.appActions = appActions;
     }
+
+    clearGrid() {
+        this.find('.grid-row').remove();
+
+        // remove all except the template row
+        var templateRow = this.body.getTemplateRow();
+        this.body.rows = [templateRow];
+    };
 
     applyColSettings(col, settings) {
 
@@ -198,8 +210,6 @@ class BootstrapDataGrid extends BSGridBase {
 
     }
 
-
-
     render() {
 
         this.element = this.jquery('<table></table>');
@@ -210,10 +220,10 @@ class BootstrapDataGrid extends BSGridBase {
         var settings = _this.getGridSettings() || {};
         _this.css({ 'width': 'inherit' });
 
-        var gridHeaderRow = new BSGridRow({});
+        var gridHeaderRow = new BSGridRow({ dataSourceName: this.options.dataSource.name });
         gridHeaderRow.addClass('draggable').addClass('grid-cells');
 
-        var gridBodyRow = new BSGridRow({ isTemplateRow: true });
+        var gridBodyRow = new BSGridRow({ isTemplateRow: true, dataSourceName: this.options.dataSource.name });
         gridBodyRow.addClass('grid-rows');
 
         gridBodyRow.props([{ key: 'id', value: _this.options.gridId + "_template_row_" }])
@@ -221,8 +231,8 @@ class BootstrapDataGrid extends BSGridBase {
 
         var gridColumns = this.applyColSorting(settings);
 
-        _this.jquery.each(gridColumns, function () {
-            var gridCol = this;
+        gridColumns.forEach(function (gc) {
+            var gridCol = gc;
             var colSettings = settings[gridCol.propName] || {};
 
             var gridHeaderCell = new BSGridCell(gridCol);
@@ -257,7 +267,7 @@ class BootstrapDataGrid extends BSGridBase {
                 { key: 'placeholder', value: gridCol.name }
             ]);
 
-            if (gridCol.keyColumn === true) {
+            if (gridCol.isKey === true) {
                 cellInputVar.props([
                     { key: 'disabled', value: true },
                     { key: 'data-keycolumn', value: 'true' }
@@ -358,7 +368,7 @@ class BootstrapDataGrid extends BSGridBase {
             });
 
             input.element.on('focus', function (e) {
-                _this.focusRow(row);
+                _this.body.focusRow(row);
             });
 
             var isLastInput = i == inputs.length - 1;
@@ -372,7 +382,7 @@ class BootstrapDataGrid extends BSGridBase {
         });
 
         row.element.on('click', function (e) {
-            _this.focusRow(row);
+            _this.body.focusRow(row);
         });
 
         return row;
@@ -422,27 +432,245 @@ class BootstrapDataGrid extends BSGridBase {
         return record;
     };
 
+    /**
+     * 
+     * @param {BSGridEventArgs} eventArgs 
+     * @returns 
+     */
+    onHeaderNext(eventArgs) {
+
+        if (!eventArgs || !eventArgs.eventData) return;
+
+        this.resetSorting();
+        this.clearGrid();
+        this.bindDataSource(eventArgs.eventData[this.options.dataSource.name]);
+
+    };
+
+    onSaveRecord(eventArgs) {
+
+        //
+        // remove rows from the grid that has been deleted
+        //
+
+        this.body.find("tr[data-rowcategory='DELETED']").remove();
+        this.body.find("tr[data-rowcategory='ADDED_DELETED']").remove();
+
+        this.body.rows.filter((v) => {
+            if (v.prop('data-rowcategory') === 'DELETED' || v.prop('data-rowcategory') === 'ADDED_DELETED')
+                return v;
+        }).forEach((v) => this.body.removeRow(v));
+
+        //
+        // when main record is saved, disable the key columns of the grid,
+        //        
+        this.body.rows.forEach((v) => {
+
+            // mark all rows prestine
+            v.prop('data-rowcategory', 'PRESTINE');
+
+            // make id inputs disabled
+            v.getInputs().filter((x) => {
+                if (x.prop('data-keycolumn') === 'true')
+                    return x;
+            }).forEach((vx) => vx.prop('disabled', true));
+        });
+    };
 
     /**
-     * @param {BSGridRow} row
+     * 
+     * @param {BSGridEventArgs} eventArgs 
+     * @returns 
      */
-    rowSiblings(row) {
-        return this.body.rows.filter((v, i) => {
-            if (v !== row) return v; // return all except the current row
-        })
+    onSaveError(eventArgs) {
+
+        /*
+        // Its assumed that the .net mvc api will convert the model state errors into the following format
+        //
+        // {
+        //     "addresses.[0]": ["1"], // client row index
+        //     "addresses.[1]": ["2"],
+        //     "addresses.[2]": ["3"],
+        //     "addresses[1].City": ["The City: field is required.", "The City: must be at least 3 and at max 128 characters long."],
+        //     "addresses[1].Country": ["The Country: field is required.", "The Country: must be at least 2 and at max 128 characters long."],
+        //     "addresses[1].PostalCode": ["The Postal code: field is required.", "The Postal code: must be at least 3 and at max 128 characters long."],
+        //     "addresses[1].StreetAddress": ["The Street address: field is required.", "The Street address: must be at least 3 and at max 128 characters long."],
+        //     "addresses[2].City": ["The City: field is required.", "The City: must be at least 3 and at max 128 characters long."],
+        //     "addresses[2].Country": ["The Country: field is required.", "The Country: must be at least 2 and at max 128 characters long."],
+        //     "addresses[2].PostalCode": ["The Postal code: field is required.", "The Postal code: must be at least 3 and at max 128 characters long."],
+        //     "addresses[2].StreetAddress": ["The Street address: must be at least 3 and at max 128 characters long."]
+        / }
+        */
+
+        if (!eventArgs || !eventArgs.eventData || !eventArgs.eventData.responseJSON) return;
+        var errors = eventArgs.eventData.responseJSON;
+        var dsName = eventArgs.dsName;
+
+        var dirtyRows = this.body.getDirtyRows();
+
+        for (let i = 0; i < dirtyRows.length; i++) {
+            var errorProp = dsName + '[' + i + ']';
+            var im = errors[errorProp];
+            if (im && im.length > 0) {
+                var clientIndex = im[0];
+                var serverIndex = i;
+
+                var errorRow = this.getRowByIndex(parseInt(clientIndex));
+                if (!errorRow) continue;
+
+                this.options.colDefinition.forEach((col, i) => {
+
+                    // @ts-ignore
+                    var propName = col.propName.toPascalCaseJson();
+                    var inputError = errors[dsName + '[' + serverIndex + '].' + propName];
+                    if (inputError && inputError.length > 0) {
+                        var input = errorRow.find("input[data-propname=" + col.propName + "]");
+                        if (input && input.length > 0) {
+                            input.addClass('is-invalid');
+                            //console.log(inputError);
+                            var allErrors = '';
+                            Array.from(inputError).forEach(function (ie, er) {
+                                allErrors += er + ' ';
+                            });
+                            input.attr('title', allErrors);
+                            var tooltip = new this.bootstrap.Tooltip(input[0], { customClass: 'tooltip-error' });
+                        }
+                    }
+
+                });
+            }
+        }
+
+    }
+
+    getRowByIndex(index) {
+        return this.body.rows.find((v, i) => {
+            return v.element.getProp('data-index') === "'" + index + "'";
+        });
     }
 
     /**
-     * @param {BSGridRow} row
+     * @param {BSGridCell} th
+     * @param {boolean} ascX
      */
-    focusRow(row) {
-        row.removeClass('table-active').addClass('table-active');
-        var siblings = this.rowSiblings(row);
-        siblings.forEach((v, i) => v.removeClass('table-active'));
+    sortTable(th, ascX) {
+
+        //  console.log('sorting', ascX);
+        const getCellValue = (/** @type {BSGridRow} */ tr, /** @type {number} */ idx) => {
+            var child = tr.cells[idx].element;
+            // console.log('idx: ', idx,  child);
+            var text = child.find('input, select').is(":checked") || child.find('input, select').val() || child.text();
+            //console.log(text);
+            return text;
+        };
+
+
+        // Returns a function responsible for sorting a specific column index 
+        // (idx = columnIndex, asc = ascending order?).
+        var comparer = function (/** @type {number} */ idx, /** @type {boolean} */ asc) {
+            //console.log('idx: ', idx, 'asc: ', asc);
+            // This is used by the array.sort() function...
+            return function (/** @type {BSGridRow} */ a, /** @type {BSGridRow} */ b) {
+                //console.log('a: ', a, 'b: ', b);
+
+                // This is a transient function, that is called straight away. 
+                // It allows passing in different order of args, based on 
+                // the ascending/descending order.
+                return function (v1, v2) {
+                    //  console.log('v1: ', v1, 'v2: ', v2);
+                    // sort based on a numeric or localeCompare, based on type...
+                    return (v1 !== '' && v2 !== '' && !isNaN(v1) && !isNaN(v2))
+                        ? v1 - v2
+                        : v1.toString().localeCompare(v2);
+                }(getCellValue(asc ? a : b, idx), getCellValue(asc ? b : a, idx));
+            }
+        };
+
+        // do the work...
+        // const table = th.closest('table');
+
+        var dataSourceName = this.options.dataSource.name;
+        // console.log(rows);
+        var list = this.body.rows.sort(comparer(this.head.rows[0].cells.indexOf(th), ascX = !ascX));
+
+        list.forEach(tr => this.body.append(tr, false));
+
+        dataEventsService.notifyListeners(this.appDataEvents.ON_GRID_CONFIG_UPDATED,
+            { dataSourceName: dataSourceName, eventData: { th, asc: ascX }, source: this, action: this.appActions.COL_SORTING });
+
     };
 
-}
+    /**
+     * 
+     * @param {BSGridEventArgs} eventArgs 
+     * @returns 
+     */
+    onSortingRequest(eventArgs) {
+        // console.log(eventArgs);
 
+        var $target = this.jquery(eventArgs.eventData.target);
+
+        var isTh = $target.prop('tagName').toLowerCase() === 'th';
+
+        if (!isTh) {
+            var th = $target.parents('th');
+            if (!th || th.length === 0) return;
+
+            eventArgs.eventData.target = th[0];
+
+            var thx = this.head.rows[0].cells.find((v, i) => v.element === th[0]);
+        }
+
+        eventArgs.source.sortTable(thx, eventArgs.asc);
+    };
+
+    resetSorting() {
+
+        this.head.rows.forEach((v, i) => {
+            if (v.hasClass('sorting_desc' || v.hasClass('sorting_asc'))) {
+                v.removeClass('sorting_asc').removeClass('sorting_desc');
+            }
+        });
+    };
+
+    /**
+     * 
+     * @param {BSGridEventArgs} eventArgs 
+     */
+    onColsReordered(eventArgs) {
+
+        //
+        // modify 'keydown' events on the row inputs
+        //
+        var grid = eventArgs.source;
+
+        grid.body.rows.forEach((row, i) => {
+
+            var inputs = row.getInputs();
+            inputs.forEach((inp) => { inp.element.off('keydown') });
+            var lastInput = inputs[inputs.length - 1];
+            lastInput.element.on('keydown', (e) => { this.onInputKeyDown(row, e) });
+        });
+
+    };
+
+    registerCallback(key, eventTypeX, callback, dataSourceNameX) {
+        dataEventsService.registerCallback(key, eventTypeX, callback, dataSourceNameX);
+    };
+
+    registerCallbacks() {
+        var id = this.options.gridId;
+        var ds = this.options.dataSource.name;
+
+        this.registerCallback(id, appDataEvents.GRID_DATA, this.body.getDirtyRecords, ds);
+        this.registerCallback(id, appDataEvents.ON_ADD_RECORD, this.onHeaderNext, ds);
+        this.registerCallback(id, appDataEvents.ON_FETCH_RECORD, this.onHeaderNext, ds);
+        this.registerCallback(id, appDataEvents.ON_SAVE_RECORD, this.onSaveRecord, ds);
+        this.registerCallback(id, appDataEvents.ON_SAVE_ERROR, this.onSaveError, ds);
+        this.registerCallback(id, appDataEvents.ON_SORTING_REQUESTED, this.onSortingRequest, ds);
+        this.registerCallback(id, appDataEvents.ON_COLS_REORDERED, this.onColsReordered, ds);
+    };
+}
 
 class BSGridInput extends BSGridBase {
     constructor(options) {
@@ -474,6 +702,10 @@ class BSGridCheckBox extends BSGridInput {
         super(options);
     }
 
+    get val() {
+        return this.element.is(':checked');
+    }
+
     render() {
         this.element = this.jquery("<input type='checkbox' />");
     }
@@ -500,7 +732,7 @@ class BSGridSelect extends BSGridInput {
     addSelectOptions() {
         var sOptions = this.options.selectOptions;
         var _jq = this.jquery;
-        _jq.each(sOptions, function () {
+        sOptions.forEach(function () {
             var opt = this;
             var elem = _jq("<option></option>")
             elem.val(opt.value);
@@ -606,6 +838,25 @@ class BSGridBody extends BSGridRowCollection {
         this.element = this.jquery("<tbody></tbody>");
     }
 
+    /**
+    * @param {BSGridRow} row
+    */
+    rowSiblings(row) {
+        return this.rows.filter((v, i) => {
+            if (v !== row) return v; // return all except the current row
+        })
+    }
+
+    /**
+     * @param {BSGridRow} row
+     */
+    focusRow(row) {
+        row.removeClass('row-active').addClass('row-active');
+        var siblings = this.rowSiblings(row);
+        siblings.forEach((v, i) => v.removeClass('row-active'));
+    };
+
+
 
     getTemplateRow() {
         var result = this.rows.filter(function () {
@@ -614,6 +865,82 @@ class BSGridBody extends BSGridRowCollection {
 
         if (result && result.length > 0) return result[0];
     }
+
+    getDirtyRows() {
+        var rows = this.rows.filter((v, i) => {
+            if ((v.getProp('data-isdirty') === 'true')) return v;
+        });
+        return rows;
+    }
+
+    getDirtyRecords() {
+        var dirtyRows = this.getDirtyRows();
+
+        if (dirtyRows.length === 0) {
+            return [];
+        }
+        var records = [];
+        dirtyRows.forEach((row, i) => {
+
+            var rowInputs = row.getInputs();
+            var rowIndex = row.getProp('data-index');
+            if (rowIndex) {
+                rowIndex = parseInt(rowIndex);
+            }
+            var record = {};
+            var rowCat = row.getProp('data-rowcategory');
+            record['rowCategory'] = rowCat;
+
+            rowInputs.forEach((rowInput, i) => {
+                var cellPropName = rowInput.getProp('data-propname');
+                record[cellPropName] = rowInput.val;
+            });
+            record["clientRowNumber"] = rowIndex;
+            records.push(record);
+        })
+
+        return records;
+    }
+
+
+    getSelectedRow() {
+        return this.rows.find((v, i) => v.hasClass('table-active'));
+    }
+
+
+    markDeleted() {
+        var row = this.getSelectedRow();
+        if (!row) return;
+
+        var siblings = this.rowSiblings(row);
+        var lastSibling = siblings[siblings.length - 1];
+        row.removeClass('row-active');
+        row.prop('data-isdirty', 'true');
+        row.css({ 'display': 'none' });
+
+        var rowCat = row.getProp('data-rowcategory');
+        if (rowCat === 'ADDED') {
+            row.prop('data-rowcategory', 'ADDED_DELETED');
+        }
+        else {
+            row.prop('data-rowcategory', 'DELETED');
+        }
+
+        this.notifyListeners(this.appDataEvents.ON_GRID_UPDATED, { dataSourceName: row.dataSourceName, eventData: row });
+
+        this.focusRow(lastSibling);
+    }
+
+    /**
+     * Removes the row from rows collection
+     * @param {BSGridRow} row 
+     */
+    removeRow(row) {
+        var index = this.rows.indexOf(row);
+        if (index > -1)
+            this.rows.splice(index);
+    }
+
 }
 
 class BSGridRow extends BSGridBase {
@@ -627,6 +954,7 @@ class BSGridRow extends BSGridBase {
         super();
         this.options = options;
         this.isTemplateRow = options.isTemplateRow;
+        this.dataSourceName = options.dataSourceName;
 
         if (options.element) {
             this.element = options.element;
@@ -651,11 +979,11 @@ class BSGridRow extends BSGridBase {
 
     clone() {
         var clone = this.element.clone();
-        return new BSGridRow({ element: clone });
+        return new BSGridRow({ element: clone, dataSourceName: this.dataSourceName });
     }
 
     focusRow() {
-        this.removeClass('table-active').addClass('table-active');
+        this.removeClass('row-active').addClass('row-active');
     }
 
     getInputs() {
@@ -745,4 +1073,18 @@ class BSGridSelectListItem {
         this.isSelected = isSelected;
     }
 
+}
+
+class BSGridEventArgs {
+    /**
+     * @param {BootstrapDataGrid} source
+     * @param {object} eventData
+     * @param {string} dsName
+     */
+    constructor(source, eventData, dsName, asc = true) {
+        this.source = source;
+        this.eventData = eventData;
+        this.dsName = dsName;
+        this.asc = asc;
+    }
 }
