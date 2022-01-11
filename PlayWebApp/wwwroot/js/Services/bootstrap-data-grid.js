@@ -153,7 +153,7 @@ class BSGridBase {
     }
 
     /**
-     * 
+     * a shallow clone
      * @param {object} obj 
      * @returns 
      */
@@ -441,8 +441,8 @@ class BootstrapDataGrid extends BSGridBase {
             if (existingRecord === false) {
                 input.prop('disabled', false);
             }
-
-            input.element.on('chnage', function (e) {
+            
+            input.element.on('change', (e) => {
 
                 row.prop('data-isdirty', true);
 
@@ -458,7 +458,7 @@ class BootstrapDataGrid extends BSGridBase {
                 if (tooltip)
                     tooltip.dispose();
 
-                this.notifyListeners(_this.appDataEvents.ON_GRID_UPDATED,
+                row.notifyListeners(_this.appDataEvents.ON_GRID_UPDATED,
                     { dataSourceName: _this.options.dataSource.name, eventData: e });
 
             });
@@ -600,11 +600,12 @@ class BootstrapDataGrid extends BSGridBase {
 
         if (!eventArgs || !eventArgs.eventData || !eventArgs.eventData.responseJSON) return;
         var errors = eventArgs.eventData.responseJSON;
-        var dsName = eventArgs.dsName;
+        var dsName = this.options.dataSource.name;
 
         var dirtyRows = this.body.getDirtyRows();
 
         for (let i = 0; i < dirtyRows.length; i++) {
+            //debugger;
             var errorProp = dsName + '[' + i + ']';
             var im = errors[errorProp];
             if (im && im.length > 0) {
@@ -625,7 +626,7 @@ class BootstrapDataGrid extends BSGridBase {
                             input.addClass('is-invalid');
                             //console.log(inputError);
                             var allErrors = '';
-                            Array.from(inputError).forEach(function (ie, er) {
+                            Array.from(inputError).forEach(function (er) {
                                 allErrors += er + ' ';
                             });
                             input.attr('title', allErrors);
@@ -641,7 +642,8 @@ class BootstrapDataGrid extends BSGridBase {
 
     getRowByIndex(index) {
         return this.body.rows.find((v, i) => {
-            return v.element.getProp('data-index') === "'" + index + "'";
+            var prop = v.getProp('data-index');
+            return prop === index.toString();
         });
     }
 
@@ -988,9 +990,9 @@ class BSGridBody extends BSGridRowCollection {
      * @param {BSGridRow} row
      */
     focusRow(row) {
-        row.removeClass('row-active').addClass('row-active');
+        row.removeClass('table-active').addClass('table-active');
         var siblings = this.rowSiblings(row);
-        siblings.forEach((v, i) => v.removeClass('row-active'));
+        siblings.forEach((v, i) => v.removeClass('table-active'));
     };
 
 
@@ -1051,7 +1053,7 @@ class BSGridBody extends BSGridRowCollection {
 
         var siblings = this.rowSiblings(row);
         var lastSibling = siblings[siblings.length - 1];
-        row.removeClass('row-active');
+        row.removeClass('table-active');
         row.prop('data-isdirty', 'true');
         row.css({ 'display': 'none' });
 
@@ -1137,7 +1139,7 @@ class BSGridRow extends BSGridBase {
     }
 
     focusRow() {
-        this.removeClass('row-active').addClass('row-active');
+        this.removeClass('table-active').addClass('table-active');
     }
 
     getInputs() {
