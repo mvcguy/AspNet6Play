@@ -186,6 +186,7 @@ $.fn.enableColumnReordering = function () {
             setTimeout(() => {
                 //console.log('Reordering started, ', new Date());
                 for (let index = 0; index < rows.length; index++) {
+                    // debugger;
                     var row = rows[index];
                     var cells = $(row).find('td');
                     if (toIndex == fromIndex) return;
@@ -210,6 +211,7 @@ $.fn.enableColumnReordering = function () {
 
     var reOrder = function (row, cells, fromIndex, toIndex) {
 
+        // debugger;
         if (fromIndex == toIndex) return;
 
         var dir = directions.ltr;
@@ -321,7 +323,7 @@ $.fn.sortTable = function (th, ascX) {
 
     var onGridDataBound = function (eventArgs) {
         //console.log('grid is data bounded', eventArgs);
-        var grid = eventArgs.source;
+        var grid = eventArgs.source.element;
         var gridId = grid.attr('id');
 
         try {
@@ -355,7 +357,8 @@ $.fn.sortTable = function (th, ascX) {
     var onGridConfigurationChanged = function (eventArgs) {
         //console.log('grid configuration updated', eventArgs);
 
-        var table = eventArgs.source;
+        // debugger;
+        var table = eventArgs.source.element ?? eventArgs.source;
         var action = eventArgs.action;
         var gridId = table.attr('id');
 
@@ -392,31 +395,34 @@ $.fn.sortTable = function (th, ascX) {
 
     };
 
-    $(document).ready(function () {
+    registerCallback("customerAddresses", appDataEvents.ON_GRID_DATA_BOUND, onGridDataBound, "addresses");
+    registerCallback("customerAddresses", appDataEvents.ON_GRID_CONFIG_UPDATED, onGridConfigurationChanged, "addresses");
 
-        //console.log('iffy invoked');
-        var grids = $(document).find('table');
-        //console.log(grids);
+    // $(document).ready(function () {
 
-        $.each(grids, function () {
+    //     //console.log('iffy invoked');
+    //     var grids = $(document).find('table');
+    //     //console.log(grids);
 
-            var $grid = $(this);
-            var id = $grid.attr('id');
-            var dsName = $grid.attr('data-datasource');
+    //     $.each(grids, function () {
 
-            //console.log(id, dsName);
+    //         var $grid = $(this);
+    //         var id = $grid.attr('id');
+    //         var dsName = $grid.attr('data-datasource');
 
-            if (!id || !dsName) {
-                console.log('no datasource found');
-                return;
-            }
+    //         //console.log(id, dsName);
 
-            registerCallback(id, appDataEvents.ON_GRID_DATA_BOUND, onGridDataBound, dsName);
-            registerCallback(id, appDataEvents.ON_GRID_CONFIG_UPDATED, onGridConfigurationChanged, dsName);
+    //         if (!id || !dsName) {
+    //             console.log('no datasource found');
+    //             return;
+    //         }
 
-        })
+    //         registerCallback(id, appDataEvents.ON_GRID_DATA_BOUND, onGridDataBound, dsName);
+    //         registerCallback(id, appDataEvents.ON_GRID_CONFIG_UPDATED, onGridConfigurationChanged, dsName);
 
-    });
+    //     })
+
+    // });
 
 })();
 
