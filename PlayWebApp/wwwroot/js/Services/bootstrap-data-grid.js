@@ -410,7 +410,6 @@ class BootstrapDataGrid extends BSGridBase {
 
         data.forEach((v, i) => {
             var row = this.addNewRow(i, v, true);
-            this.body.addRow(row); // TODO: Fix
             row.prop('data-rowcategory', 'PRESTINE')
         });
 
@@ -479,19 +478,21 @@ class BootstrapDataGrid extends BSGridBase {
                 _this.body.focusRow(row);
             });
 
-            var isLastInput = i == inputs.length - 1;
-            if (isLastInput) {
-                //
-                // insert a new row if its the last input in the row
-                //                    
-                input.element.on('keydown', (e) => _this.onInputKeyDown(row, e));
-            }
-
         });
 
         row.element.on('click', function (e) {
             _this.body.focusRow(row);
         });
+
+        this.body.addRow(row);
+
+        var visibleInputs = row.getVisibleInputs();
+
+        if (visibleInputs.length > 0) {
+            var lastInput = visibleInputs[visibleInputs.length - 1];
+
+            lastInput.element.on('keydown', (e) => this.onInputKeyDown(row, e));
+        }
 
         return row;
 
@@ -504,28 +505,33 @@ class BootstrapDataGrid extends BSGridBase {
      * @returns 
      */
     onInputKeyDown(row, e) {
-        if (e.which !== 9 || e.shiftKey === true) return;
 
-        var lastRowIndex = this.body.rows[this.body.rows.length - 1].getProp('data-index');
+        //
+        // insert a new row if its the last input in the row
+        //   
+
+        if (e.which !== 9 || e.shiftKey === true) return;
+        // debugger;
+        var visibleRows = this.body.getVisibleRows();
+        if (visibleRows.length <= 0) return;
+        var lastRowIndex = visibleRows[visibleRows.length - 1].getProp('data-index');
         var parentIndex = row.getProp('data-index');
 
         // console.log(gridRows, currentRowIndex);
         if (lastRowIndex === parentIndex) {
-            this.addNewRowToGrid();
+            this.addEmptyRow();
         }
     };
 
-    addNewRowToGrid() {
+    addEmptyRow() {
         //var rowCount = this.jquery('#' + this.options.gridId).find('tbody>tr').length;
         var emptyRow = this.addNewRow(this.body.rows.length - 1, this.createEmptyRowData(), false);
-        this.body.addRow(emptyRow);
 
-        var inputs = emptyRow.getInputs();
-        inputs[0].focus();
+        var inputs = emptyRow.getVisibleInputs();
+        if (inputs.length > 0) {
+            //inputs[0].focus();
+        }
 
-        //
-        // rowcategory = ADDED || DELETED || UPDATED
-        //
         emptyRow.prop('data-rowcategory', 'ADDED');
         emptyRow.prop('data-isdirty', 'true');
 
@@ -706,7 +712,10 @@ class BootstrapDataGrid extends BSGridBase {
 
         list.forEach(tr => this.body.append(tr, false));
 
-        dataEventsService.notifyListeners(this.appDataEvents.ON_GRID_CONFIG_UPDATED,
+        this.notifyListeners(appDataEvents.ON_COLS_REORDERED,
+            { dataSourceName: dataSourceName, eventData: { th, asc: ascX }, source: this });
+
+        this.notifyListeners(this.appDataEvents.ON_GRID_CONFIG_UPDATED,
             { dataSourceName: dataSourceName, eventData: { th, asc: ascX }, source: this, action: this.appActions.COL_SORTING });
 
     };
@@ -733,7 +742,7 @@ class BootstrapDataGrid extends BSGridBase {
         }
         var thx = this.head.rows[0].cells.find((v, i) => v.element[0] === eventArgs.eventData.target);
         // debugger;
-        eventArgs.source.sortTable(thx, eventArgs.asc);
+        this.sortTable(thx, eventArgs.asc);
     };
 
     resetSorting() {
@@ -754,15 +763,16 @@ class BootstrapDataGrid extends BSGridBase {
         //
         // modify 'keydown' events on the row inputs
         //
-        //var grid = eventArgs.source;
         var grid = this;
+        console.log(eventArgs);
 
-        // TODO: Fix the insert of an empty row on the focus lost of final input
+        
         grid.body.rows.forEach((row, i) => {
-
             var inputs = row.getInputs();
             inputs.forEach((inp) => { inp.element.off('keydown') });
-            var lastInput = inputs[inputs.length - 1];
+            var visibleInputs = row.getVisibleInputs();
+            if (visibleInputs.length <= 0) return;
+            var lastInput = visibleInputs[visibleInputs.length - 1];
             lastInput.element.on('keydown', (e) => { this.onInputKeyDown(row, e) });
         });
 
@@ -971,6 +981,10 @@ class BSGridRowCollection extends BSGridBase {
         this.element.append(row.element);
         this.rows.push(row);
         return this;
+    }
+
+    getVisibleRows() {
+        return this.rows.filter((row) => row.visible === true);
     }
 }
 
@@ -1186,6 +1200,11 @@ class BSGridRow extends BSGridBase {
         });
         return inputs;
     }
+
+    getVisibleInputs() {
+        var inputs = this.getInputs();
+        return inputs.filter((input) => input.visible === true);
+    }
 }
 
 class BSGridOptions {
@@ -1273,7 +1292,7 @@ class BSGridEventArgs {
 }
 
 BootstrapDataGrid.prototype.configurableGrid = function () {
-    console.log('configurableGrid is reached', this);
+    // console.log('configurableGrid is reached', this);
     var headers = this.head.rows[0].cells;
     var dataSourceName = this.options.dataSource.name;
 
@@ -1342,16 +1361,18 @@ BootstrapDataGrid.prototype.configurableGrid = function () {
                 }
             });
 
-            dataEventsService.notifyListeners(appDataEvents.ON_GRID_CONFIG_UPDATED,
-                { dataSourceName: dataSourceName, eventData: e, source: this, action: appActions.COL_SHOW_HIDE });
+            this.notifyListeners(appDataEvents.ON_COLS_REORDERED,
+                { dataSourceName: dataSourceName, eventData: e, source: this });
 
+            this.notifyListeners(appDataEvents.ON_GRID_CONFIG_UPDATED,
+                { dataSourceName: dataSourceName, eventData: e, source: this, action: appActions.COL_SHOW_HIDE });
 
         });
     });
 }
 
 BootstrapDataGrid.prototype.resizableGrid = function () {
-    console.log('resizableGrid is reached', this);
+    // console.log('resizableGrid is reached', this);
 
     var dataSourceName = this.options.dataSource.name;
     // console.log(table);
@@ -1462,7 +1483,7 @@ BootstrapDataGrid.prototype.resizableGrid = function () {
 
 BootstrapDataGrid.prototype.enableColumnReordering = function () {
 
-    console.log('enableColumnReordering is reached', this);
+    // console.log('enableColumnReordering is reached', this);
 
     var dataSourceName = this.options.dataSource.name;
     var jq = this.jquery;
@@ -1479,7 +1500,7 @@ BootstrapDataGrid.prototype.enableColumnReordering = function () {
         dw.append(ct);
         _this.addClass('caption-top');
         var caption = jq('<caption></caption>').append(dw);
-        _this.append(caption);
+        _this.element.append(caption);
     };
 
     var thWrap = jq('<div draggable="true" class="grid-header"></div>');
@@ -1490,7 +1511,7 @@ BootstrapDataGrid.prototype.enableColumnReordering = function () {
     cells.forEach((cell) => {
         var childs = cell.element.children();
         if (childs.length === 0) {
-            var txt =cell.element.text();
+            var txt = cell.element.text();
             cell.element.text('');
             childs = jq('<div></div>').text(txt);
             cell.element.append(childs);
@@ -1602,10 +1623,10 @@ BootstrapDataGrid.prototype.enableColumnReordering = function () {
                 //
                 // notify about column re-ordering
                 //
-                notifyListeners(appDataEvents.ON_COLS_REORDERED,
+                _this.notifyListeners(appDataEvents.ON_COLS_REORDERED,
                     { dataSourceName: dataSourceName, eventData: e, source: _this });
 
-                notifyListeners(appDataEvents.ON_GRID_CONFIG_UPDATED,
+                _this.notifyListeners(appDataEvents.ON_GRID_CONFIG_UPDATED,
                     { dataSourceName: dataSourceName, eventData: e, source: _this, action: appActions.COL_REORDER });
 
                 jq('.wait-reorder').css({ 'cursor': '' }).hide();
@@ -1658,12 +1679,6 @@ BootstrapDataGrid.prototype.enableColumnReordering = function () {
     };
 
     var directions = { rtl: 'RIGHT-TO-LEFT', ltr: 'LEFT-TO-RIGHT' };
-
-
-    var notifyListeners = function (eventType, payload) {
-        dataEventsService.notifyListeners(eventType, payload);
-    };
-
 }
 
 BootstrapDataGrid.prototype.onGridConfigurationChanged = function (eventArgs) {
