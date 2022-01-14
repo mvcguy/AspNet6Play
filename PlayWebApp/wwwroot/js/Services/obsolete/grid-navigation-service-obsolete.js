@@ -1,3 +1,9 @@
+
+//
+// This code should not be in USE !!!
+// Obsolete - replace with @type {BootstrapDataGrid.js}
+//
+
 var gridNavigationService = function (gridOptions) {
 
     var gridCols = gridOptions.cols;

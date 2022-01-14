@@ -1,3 +1,10 @@
+
+
+//
+// This code should not be in USE !!!
+// Obsolete - replace with @type {BootstrapDataGrid.js}
+//
+
 // @ts-check
 
 //
