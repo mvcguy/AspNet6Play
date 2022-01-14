@@ -44,7 +44,7 @@
         <div class="tab-content" id="myTabContent">
             <div class="tab-pane fade show active" id="tabCustomerItemsContent" role="tabpanel" aria-labelledby="tabPrices">
                 <div class="" style="min-height: 250px;">
-                    <table class="table table-bordered resizable navTable nowrap" >
+                    <table class="table table-bordered resizable navTable nowrap">
                         <thead>
                             <tr>
                                 <th colspan="6">
@@ -80,7 +80,7 @@
                     </div>
                     <div class="modal-body">
                         <ul class="list-group grid-config-cols">
-                            
+
                         </ul>
                     </div>
                     <div class="modal-footer">
@@ -101,10 +101,9 @@
 
 
 <script>
-    
-$(document).ready(function () {    
-    InitShippingAddressesGrid(@Json.Serialize(Model.CustomerVm.Addresses));
-});
+    $(document).ready(function () {
+        ManageCustomers.initCustomersPage(@Json.Serialize(Model.CustomerVm.Addresses));
+    });    
 </script>
 
 }

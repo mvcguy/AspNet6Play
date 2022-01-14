@@ -56,7 +56,7 @@
     <div class="row">
 
 
-        <table class="table table-bordered" id="colReorder">            
+        <table class="table table-bordered" id="colReorder">
             <thead>
                 <tr class='grid-cols'>
                     @{
@@ -179,8 +179,22 @@
         //
         // draggable table columns
         //
-        $('#colReorder').enableColumnReordering();
+        @* $('#colReorder').enableColumnReordering(); *@
 
     });
+
+    class TestClass {
+        constructor(name) {
+            this.name = name;
+        }
+    }
+
+    TestClass.prototype.SayHello = function () {
+        console.log('Hello From ' + this.name);
+    }
+
+    var tc = new TestClass('Moniba');
+    tc.SayHello();
+
 </script>
 }

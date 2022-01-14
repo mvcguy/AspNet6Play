@@ -68,6 +68,8 @@ $.fn.gridConfigure = function () {
 
 }
 
+
+
 /**
  * Allow for re-ordering the grid columns
  */
@@ -395,8 +397,8 @@ $.fn.sortTable = function (th, ascX) {
 
     };
 
-    registerCallback("customerAddresses", appDataEvents.ON_GRID_DATA_BOUND, onGridDataBound, "addresses");
-    registerCallback("customerAddresses", appDataEvents.ON_GRID_CONFIG_UPDATED, onGridConfigurationChanged, "addresses");
+    //registerCallback("customerAddresses", appDataEvents.ON_GRID_DATA_BOUND, onGridDataBound, "addresses");
+    //registerCallback("customerAddresses", appDataEvents.ON_GRID_CONFIG_UPDATED, onGridConfigurationChanged, "addresses");
 
     // $(document).ready(function () {
 

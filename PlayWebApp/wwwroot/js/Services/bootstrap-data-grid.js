@@ -60,9 +60,14 @@ class BSGridBase {
             this.element.show();
     }
 
-    get css() {
-        return this.element.css();
+    getCss(t) {
+        return this.element.css(t);
     }
+
+    setCss(k, v) {
+        this.element.css(k, v);
+    }
+
     set css(css) {
         this.element.css(css);
     }
@@ -107,9 +112,13 @@ class BSGridBase {
         return this.element.hasClass(cssClass);
     }
 
-    text(txt) {
+    setText(txt) {
         this.element.text(txt);
         return this;
+    }
+
+    getText() {
+        return this.element.text();
     }
 
     /**
@@ -122,7 +131,8 @@ class BSGridBase {
             this.children.push(elem);
         }
 
-        return this.element.append(elem.element);
+        this.element.append(elem.element);
+        return this;
     }
 
     focus() {
@@ -183,7 +193,7 @@ class BootstrapDataGrid extends BSGridBase {
         // @ts-ignore
         this.bootstrap = bootstrap;
         this.appActions = appActions;
-        this.render();
+        // this.render(); // render manually
     }
 
     addHeader() {
@@ -198,10 +208,12 @@ class BootstrapDataGrid extends BSGridBase {
     render() {
 
         this.element = this
-            .jquery('<table class="table table-bordered resizable navTable nowrap" data-datasource="addresses"></table>');
+            .jquery('<table class="table table-bordered resizable navTable nowrap"></table>');
+
         var _this = this;
 
-        _this.prop('id', _this.options.gridId)
+        _this.prop('id', _this.options.gridId);
+        _this.prop('data-datasource', _this.options.dataSource.name);
 
         var settings = _this.getGridSettings(this.options.gridId) || {};
         _this.css = { 'width': 'inherit' };
@@ -223,7 +235,7 @@ class BootstrapDataGrid extends BSGridBase {
 
             var gridHeaderCell = new BSGridCell(gridCol, true);
             gridHeaderCell.addClass('sorting').addClass('ds-col');
-            gridHeaderCell.text(gridCol.name);
+            gridHeaderCell.setText(gridCol.name);
             gridHeaderCell.prop('data-th-propname', gridCol.propName);
 
             var gridBodyCell = new BSGridCell(null, false);
@@ -339,7 +351,7 @@ class BootstrapDataGrid extends BSGridBase {
             // TODO: fix
             //
             th.notifyListeners(th.appDataEvents.ON_SORTING_REQUESTED,
-                { dataSourceName: _this.options.dataSource.name, eventData: e, propName: prop, asc, source:_this });
+                { dataSourceName: _this.options.dataSource.name, eventData: e, propName: prop, asc, source: _this });
 
         });
     }
@@ -441,7 +453,7 @@ class BootstrapDataGrid extends BSGridBase {
             if (existingRecord === false) {
                 input.prop('disabled', false);
             }
-            
+
             input.element.on('change', (e) => {
 
                 row.prop('data-isdirty', true);
@@ -706,7 +718,7 @@ class BootstrapDataGrid extends BSGridBase {
      */
     onSortingRequest(eventArgs) {
         // console.log(eventArgs);
-        
+
         var $target = this.jquery(eventArgs.eventData.target);
 
         var isTh = $target.prop('tagName').toLowerCase() === 'th';
@@ -717,7 +729,7 @@ class BootstrapDataGrid extends BSGridBase {
 
             eventArgs.eventData.target = th[0];
 
-            
+
         }
         var thx = this.head.rows[0].cells.find((v, i) => v.element[0] === eventArgs.eventData.target);
         // debugger;
@@ -745,6 +757,7 @@ class BootstrapDataGrid extends BSGridBase {
         //var grid = eventArgs.source;
         var grid = this;
 
+        // TODO: Fix the insert of an empty row on the focus lost of final input
         grid.body.rows.forEach((row, i) => {
 
             var inputs = row.getInputs();
@@ -771,6 +784,8 @@ class BootstrapDataGrid extends BSGridBase {
         this.registerCallback(id, appDataEvents.ON_SAVE_ERROR, (a) => this.onSaveError(a), ds);
         this.registerCallback(id, appDataEvents.ON_SORTING_REQUESTED, (a) => this.onSortingRequest(a), ds);
         this.registerCallback(id, appDataEvents.ON_COLS_REORDERED, (a) => this.onColsReordered(a), ds);
+        this.registerCallback(id, appDataEvents.ON_GRID_CONFIG_UPDATED, (ev) => this.onGridConfigurationChanged(ev), ds);
+        this.registerCallback(id, appDataEvents.ON_GRID_DATA_BOUND, (ev) => this.onGridDataBound(ev), ds);
     };
 }
 
@@ -869,7 +884,7 @@ class BSGridSelectOption extends BSGridBase {
 
     clone() {
         var clone = super.clone();
-        clone.text(this.element.text());
+        clone.setText(this.element.text());
         return clone;
     }
 }
@@ -886,6 +901,10 @@ class BSGridSelect extends BSGridInput {
     set val(v) {
         this.element.val(v);
         this.element.change();
+    }
+
+    get val() {
+        return this.element.val();
     }
 
     render() {
@@ -1009,6 +1028,7 @@ class BSGridBody extends BSGridRowCollection {
         var rows = this.rows.filter((v, i) => {
             if ((v.getProp('data-isdirty') === 'true')) return v;
         });
+
         return rows;
     }
 
@@ -1041,7 +1061,6 @@ class BSGridBody extends BSGridRowCollection {
         return records;
     }
 
-
     getSelectedRow() {
         return this.rows.find((v, i) => v.hasClass('table-active'));
     }
@@ -1055,7 +1074,7 @@ class BSGridBody extends BSGridRowCollection {
         var lastSibling = siblings[siblings.length - 1];
         row.removeClass('table-active');
         row.prop('data-isdirty', 'true');
-        row.css({ 'display': 'none' });
+        row.css = { 'display': 'none' };
 
         var rowCat = row.getProp('data-rowcategory');
         if (rowCat === 'ADDED') {
@@ -1106,6 +1125,13 @@ class BSGridRow extends BSGridBase {
     addCell(cell) {
         this.element.append(cell.element);
         this.cells.push(cell);
+    }
+
+    /**
+     * @param {BSGridCell[]} cells
+     */
+    addCells(cells) {
+        cells.forEach((cell) => this.addCell(cell));
     }
 
     render() {
@@ -1243,5 +1269,487 @@ class BSGridEventArgs {
         this.eventData = eventData;
         this.dsName = dsName;
         this.asc = asc;
+    }
+}
+
+BootstrapDataGrid.prototype.configurableGrid = function () {
+    console.log('configurableGrid is reached', this);
+    var headers = this.head.rows[0].cells;
+    var dataSourceName = this.options.dataSource.name;
+
+    //
+    // an <ul> element which will be populated below with grid columns check-list.
+    // the checks can be used to show/hide a particular grid column
+    //
+    var colsList = this.jquery('.grid-config-cols');
+    headers.forEach((header, index) => {
+
+        var propName = header.getProp('data-th-propname');
+        if (!propName) return;
+
+        var colsListItem = this.jquery('<li class="list-group-item"></li>');
+
+        var chk = this.jquery('<input type="checkbox" value="" class="form-check-input me-1" />');
+        var chkId = 'col_config_chk_' + propName;
+        chk.attr('id', chkId);
+        chk.attr('data-config-propname', propName);
+        if (header.visible === true) {
+            chk.attr('checked', 'checked');
+        }
+
+        var chkLbl = this.jquery('<label for="' + chkId + '"></label>');
+        // debugger;
+        chkLbl.text(header.getText());
+
+        colsListItem.append(chk);
+        colsListItem.append(chkLbl);
+        colsList.append(colsListItem);
+
+        chk.on('click', (e) => {
+            var $chk = this.jquery(e.target);
+            var prop = $chk.attr('data-config-propname');
+            if (!prop) return;
+
+            var headerRow = this.head.rows[0];
+            // var col = this.find('th[data-th-propname=' + prop + ']');
+            var col = headerRow.cells.find((cell) => cell.getProp('data-th-propname') === prop);
+            if (!col) return;
+
+            var bodyRows = this.body.rows;
+
+            var rows = [...bodyRows, headerRow];
+
+            //var rows = this.find('.grid-cols, .grid-rows');
+
+
+            //var index = Array.from(col.parent('tr').children()).indexOf(col[0]);
+            var index = headerRow.cells.indexOf(col);
+            if (index < 0) return;
+
+            rows.forEach((row) => {
+
+                var cell = row.cells[index];
+
+                if (!cell) return;
+
+                if ($chk.is(':checked') === true) {
+                    // $(cell).show();
+                    cell.visible = true;
+                }
+                else {
+                    // $(cell).hide();
+                    cell.visible = false;
+                }
+            });
+
+            dataEventsService.notifyListeners(appDataEvents.ON_GRID_CONFIG_UPDATED,
+                { dataSourceName: dataSourceName, eventData: e, source: this, action: appActions.COL_SHOW_HIDE });
+
+
+        });
+    });
+}
+
+BootstrapDataGrid.prototype.resizableGrid = function () {
+    console.log('resizableGrid is reached', this);
+
+    var dataSourceName = this.options.dataSource.name;
+    // console.log(table);
+    var cols = this.head.rows[0].cells;
+    this.css = {};
+
+    this.setCss('overflow', 'hidden');
+
+    var tableHeight = this.element[0].offsetHeight;
+
+    for (var i = 0; i < cols.length; i++) {
+        var div = createDiv(tableHeight);
+        cols[i].element.append(div);
+        cols[i].setCss('position', 'relative');
+        setListeners(div, cols[i], this);
+    }
+
+    /**
+     * @param {HTMLDivElement} div
+     * @param {BootstrapDataGrid} table
+     * @param {BSGridCell} col
+     */
+    function setListeners(div, col, table) {
+        var pageX, /** @type {HTMLTableCellElement} */curCol, curColWidth, nxtColWidth, tableWidth;
+
+        div.addEventListener('mousedown', function (e) {
+
+            tableWidth = table.element[0].offsetWidth;
+
+            curCol = col.element[0];
+            pageX = e.pageX;
+
+            var padding = paddingDiff(curCol);
+
+            curColWidth = curCol.offsetWidth - padding;
+        });
+
+        div.addEventListener('mouseover', function (e) {
+            this.style.borderRight = '2px solid #0000ff';
+        })
+
+        div.addEventListener('mouseout', function (e) {
+            this.style.borderRight = '';
+        })
+
+        document.addEventListener('mousemove', function (e) {
+            if (curCol) {
+                var diffX = e.pageX - pageX;
+
+                curCol.style.width = (curColWidth + diffX) + 'px';
+                table.element[0].style.width = tableWidth + diffX + "px";
+
+            }
+        });
+
+        document.addEventListener('mouseup', function (e) {
+
+            if (curCol) {
+                table.notifyListeners(appDataEvents.ON_GRID_CONFIG_UPDATED,
+                    {
+                        dataSourceName: dataSourceName,
+                        eventData: { e, curCol },
+                        source: table,
+                        action: appActions.COL_RESIZED
+                    });
+
+            }
+
+            curCol = undefined;
+            pageX = undefined;
+            nxtColWidth = undefined;
+            curColWidth = undefined
+        });
+    }
+
+    /**
+     * @param {string} height
+     */
+    function createDiv(height) {
+        var div = document.createElement('div');
+        div.style.top = "0";
+        div.style.right = "0";
+        div.style.width = '5px';
+        div.style.position = 'absolute';
+        div.style.cursor = 'col-resize';
+        div.style.userSelect = 'none';
+        div.style.height = height + 'px';
+        return div;
+    }
+
+    function paddingDiff(col) {
+
+        if (getStyleVal(col, 'box-sizing') == 'border-box') {
+            return 0;
+        }
+
+        var padLeft = getStyleVal(col, 'padding-left');
+        var padRight = getStyleVal(col, 'padding-right');
+        return (parseInt(padLeft) + parseInt(padRight));
+
+    }
+
+    function getStyleVal(elm, css) {
+        return (window.getComputedStyle(elm, null).getPropertyValue(css));
+    }
+
+}
+
+BootstrapDataGrid.prototype.enableColumnReordering = function () {
+
+    console.log('enableColumnReordering is reached', this);
+
+    var dataSourceName = this.options.dataSource.name;
+    var jq = this.jquery;
+    var _this = this;
+    //var gridId = $table.attr('id');
+    //console.log('datasource-name', dataSourceName);
+    var addWaitMarker = function () {
+        var dw = jq('<div></div>');
+        dw.addClass('wait-reorder').hide();
+        var ct = jq('<div class="d-flex justify-content-center"></div>');
+        var ds = jq('<div></div>').addClass('spinner-border');
+        ds.append('<span class="visually-hidden">Wait...</span>');
+        ct.append(ds);
+        dw.append(ct);
+        _this.addClass('caption-top');
+        var caption = jq('<caption></caption>').append(dw);
+        _this.append(caption);
+    };
+
+    var thWrap = jq('<div draggable="true" class="grid-header"></div>');
+
+    var headerRow = _this.head.rows[0];
+    var cells = headerRow.cells;
+
+    cells.forEach((cell) => {
+        var childs = cell.element.children();
+        if (childs.length === 0) {
+            var txt =cell.element.text();
+            cell.element.text('');
+            childs = jq('<div></div>').text(txt);
+            cell.element.append(childs);
+        }
+        jq(childs).wrap(thWrap);
+    });
+
+    addWaitMarker();
+
+    var srcElement;
+
+    //jQuery.event.props.push('dataTransfer');
+    _this.find('.grid-header').on({
+        dragstart: function (e) {
+            if (!jq(this).hasClass('grid-header')) {
+                srcElement = undefined;
+                return;
+            };
+
+            srcElement = e.target;
+            jq(this).css('opacity', '0.5');
+        },
+        dragleave: function (e) {
+            e.preventDefault();
+            if (!srcElement) return;
+
+            if (!jq(this).hasClass('grid-header')) return;
+            jq(this).removeClass('over');
+        },
+        dragenter: function (e) {
+            e.preventDefault();
+            if (!srcElement) return;
+
+            if (!jq(this).hasClass('grid-header')) return;
+            jq(this).addClass('over');
+            // e.preventDefault();
+        },
+        dragover: function (e) {
+            e.preventDefault();
+            if (!srcElement) return;
+
+            if (!jq(this).hasClass('grid-header')) return;
+            jq(this).addClass('over');
+
+
+        },
+        dragend: function (e) {
+            e.preventDefault();
+            if (!srcElement) return;
+            jq(this).css('opacity', '1');
+        },
+        drop: function (e) {
+            e.preventDefault();
+            if (!srcElement) return;
+            var $this = jq(this);
+            $this.removeClass('over');
+            var destElement = e.target;
+            if (!$this.hasClass('grid-header')) return;
+            if (srcElement === destElement) return;
+
+            //var cols = _this.head.rows[0].cells;
+
+            // dest
+            var destParent = $this.parents('th');
+            if (!destParent || destParent.length <= 0) return;
+
+            // lookup in cells
+            var desParentCell = cells.find((el) => el.element[0] === destParent[0]);
+            if (!desParentCell) return;
+
+            var toIndex = cells.indexOf(desParentCell);
+
+            // src
+            var srcParent = jq(srcElement).parents('th');
+            if (!srcParent || srcParent.length <= 0) return;
+
+            // lookup in cells
+            var srcParentCell = cells.find((el) => el.element[0] === srcParent[0]);
+            if (!desParentCell) return;
+
+            var fromIndex = cells.indexOf(srcParentCell);
+
+            //console.log(toIndex, fromIndex);
+
+            if (toIndex == fromIndex) return;
+
+            //
+            // apply new order to the headers
+            //
+            reOrder(headerRow, cells, fromIndex, toIndex);
+
+            var rows = _this.body.rows;
+            jq('.wait-reorder').css({ 'cursor': 'progress' }).show();
+
+            //
+            // apply new order to all the rows in the grid
+            //
+            setTimeout(() => {
+                //console.log('Reordering started, ', new Date());
+                for (let index = 0; index < rows.length; index++) {
+                    // debugger;
+                    var row = rows[index];
+                    var cells = row.cells
+                    if (toIndex == fromIndex) return;
+                    reOrder(row, cells, fromIndex, toIndex);
+                }
+
+                //console.log('Reordering completed, ', new Date());
+                //
+                // notify about column re-ordering
+                //
+                notifyListeners(appDataEvents.ON_COLS_REORDERED,
+                    { dataSourceName: dataSourceName, eventData: e, source: _this });
+
+                notifyListeners(appDataEvents.ON_GRID_CONFIG_UPDATED,
+                    { dataSourceName: dataSourceName, eventData: e, source: _this, action: appActions.COL_REORDER });
+
+                jq('.wait-reorder').css({ 'cursor': '' }).hide();
+            }, 500);
+
+        }
+    });
+
+    var reOrder = function (/** @type {BSGridRow} */ row, /** @type {BSGridCell[]} */ cells, /** @type {number} */ fromIndex, /** @type {number} */ toIndex) {
+
+        // debugger;
+        if (fromIndex == toIndex) return;
+
+        var dir = directions.ltr;
+
+        if (fromIndex > toIndex) {
+            dir = directions.rtl;
+        }
+
+        if (dir === directions.rtl) {
+            swapRtl(cells, fromIndex, toIndex)
+        }
+        else {
+            swapLtr(cells, fromIndex, toIndex);
+        }
+
+        // debugger;
+        row.cells = [];
+        row.addCells(cells);
+
+        //jq(row).append(cells);
+    };
+
+    var swapRtl = function (/** @type {BSGridCell[]} */ cells, /** @type {number} */ fromIndex, /** @type {number} */ toIndex) {
+        for (let i = fromIndex; i > toIndex; i--) {
+            swap(cells, i, i - 1);
+        }
+    };
+
+    var swapLtr = function (/** @type {BSGridCell[]} */ cells, /** @type {number} */ fromIndex, /** @type {number} */ toIndex) {
+        for (let i = fromIndex; i < toIndex; i++) {
+            swap(cells, i, i + 1);
+        }
+    };
+
+    var swap = function (/** @type {BSGridCell[]} */ arr, /** @type {number} */ ia, /** @type {number} */ ib) {
+        var temp = arr[ia];
+        arr[ia] = arr[ib];
+        arr[ib] = temp;
+    };
+
+    var directions = { rtl: 'RIGHT-TO-LEFT', ltr: 'LEFT-TO-RIGHT' };
+
+
+    var notifyListeners = function (eventType, payload) {
+        dataEventsService.notifyListeners(eventType, payload);
+    };
+
+}
+
+BootstrapDataGrid.prototype.onGridConfigurationChanged = function (eventArgs) {
+    // console.log('grid configuration updated', eventArgs);
+
+    // debugger;
+
+    var action = eventArgs.action;
+    var gridId = this.options.gridId;
+
+    var cols = this.head.rows[0].cells;
+    // console.log(cols);
+    var colsObj = {};
+    cols.forEach((col, index) => {
+
+        var sort = 'asc';
+        if (col.hasClass('sorting_desc'))
+            sort = 'desc';
+
+        var prop = col.getProp('data-th-propname');
+
+        var colAttr = new BSGridColSettings(col.getCss('width'), col.visible, sort, index);
+
+        colsObj[prop] = colAttr;
+    });
+
+
+
+    Cookie.delete(gridId);
+    setTimeout(() => {
+        // console.log('Colsobject: ', colsObj);
+        Cookie.setJSON(gridId, colsObj, { days: 30, secure: true, SameSite: 'strict' });
+    }, 500);
+}
+
+BootstrapDataGrid.prototype.onGridDataBound = function (eventArgs) {
+    console.log(eventArgs);
+
+    // var grid = eventArgs.source;
+    //
+    // enables the configuration of columns
+    //
+    this.configurableGrid();
+
+    //
+    // enables to re-order the columns
+    //
+    this.enableColumnReordering();
+
+    //
+    // make the grid resixeable
+    //
+    this.resizableGrid();
+};
+
+class BSGridConfigOptions {
+
+
+    /**
+     * @type {BSGridColSettings[]}
+     */
+    colSettings;
+    /**
+     * @param {BSGridColSettings[]} colSettings
+     */
+    constructor(colSettings) {
+        this.colSettings = colSettings;
+    }
+
+    // TODO: is it needed?
+    toJson() {
+
+    }
+}
+
+class BSGridColSettings {
+    /**
+     * @param {string} width
+     * @param {boolean} visible
+     * @param {string} sort asc|desc
+     * @param {number} position
+     */
+    constructor(width, visible, sort, position) {
+        this.width = width;
+        this.visible = visible;
+        this.sort = sort;
+        this.position = position;
     }
 }
