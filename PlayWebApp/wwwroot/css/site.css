@@ -95,3 +95,13 @@ table.navTable .form-control {
   overflow-y: auto;
   overflow-x: auto;
 }
+
+.grid-toolbar-action {
+  margin: 2px;
+  line-height: 20px;
+  width: 30px;
+}
+
+.grid-toolbar {
+  padding: 2px!important;
+}

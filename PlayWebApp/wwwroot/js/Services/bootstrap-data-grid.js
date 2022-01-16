@@ -220,7 +220,8 @@ class BootstrapDataGrid extends BSGridBase {
         var settings = _this.getGridSettings(this.options.gridId) || {};
         _this.css = { 'width': 'inherit' };
 
-        var gridHeaderRow = new BSGridRow({ dataSourceName: _this.options.dataSource.name });
+
+        var gridHeaderRow = new BSGridRow({ dataSourceName: _this.options.dataSource.name, hasGridTitles: true });
         gridHeaderRow.addClass('draggable').addClass('grid-cols');
 
         var gridBodyRow = new BSGridRow({ isTemplateRow: true, dataSourceName: _this.options.dataSource.name });
@@ -235,12 +236,13 @@ class BootstrapDataGrid extends BSGridBase {
             var gridCol = gc;
             var colSettings = settings[gridCol.propName] || {};
 
-            var gridHeaderCell = new BSGridCell(gridCol, true);
+            gridCol.isHeader = true;
+            var gridHeaderCell = new BSGridCell(gridCol);
             gridHeaderCell.addClass('sorting').addClass('ds-col');
             gridHeaderCell.setText(gridCol.name);
             gridHeaderCell.prop('data-th-propname', gridCol.propName);
 
-            var gridBodyCell = new BSGridCell(null, false);
+            var gridBodyCell = new BSGridCell();
 
 
             //var cellInput = '<input class="form-control" type="' + gridCol.dataType + '" />';
@@ -290,6 +292,23 @@ class BootstrapDataGrid extends BSGridBase {
             gridBodyRow.addCell(gridBodyCell);
         });
 
+        
+        //
+        // add grid actions toolbar
+        //
+
+        var gridActionsRow = new BSGridRow({ dataSourceName: _this.options.dataSource.name, isActionsRow: true });
+        var gridActions = new BSGridActions();
+        gridActions.addNewRecordAction().addDeleteAction().addGridSettingsAction();
+        var colDef = new BSGridColDefinition();
+        colDef.isHeader = true;
+        colDef.colSpan = gridHeaderRow.cells.length;
+        var actionsCell = new BSGridCell(colDef);
+        actionsCell.removeClass('sorting').removeClass('ds-col').addClass('grid-toolbar');
+        actionsCell.append(gridActions);
+        gridActionsRow.addCell(actionsCell);
+
+        _this.head.addRow(gridActionsRow);              
         _this.head.addRow(gridHeaderRow);
         _this.body.addRow(gridBodyRow)
 
@@ -722,7 +741,7 @@ class BootstrapDataGrid extends BSGridBase {
         //debugger;
         var dataSourceName = this.options.dataSource.name;
         // console.log(rows);
-        var list = this.body.rows.sort(comparer(this.head.rows[0].cells.indexOf(th), ascX = !ascX));
+        var list = this.body.rows.sort(comparer(this.head.getGridTitlesRow().cells.indexOf(th), ascX = !ascX));
 
         list.forEach(tr => this.body.append(tr, false));
 
@@ -754,7 +773,7 @@ class BootstrapDataGrid extends BSGridBase {
 
 
         }
-        var thx = this.head.rows[0].cells.find((v, i) => v.element[0] === eventArgs.eventData.target);
+        var thx = this.head.getGridTitlesRow().cells.find((v, i) => v.element[0] === eventArgs.eventData.target);
         // debugger;
         this.sortTable(thx, eventArgs.asc);
     };
@@ -965,31 +984,68 @@ class BSGridSelect extends BSGridInput {
 class BSGridCell extends BSGridBase {
 
     /**
-     * @param {BSGridColDefinition} options
-     * @param {boolean} isHeader
+     * @param {BSGridColDefinition} [options]
      */
-    constructor(options, isHeader) {
+    constructor(options) {
         super();
         this.options = options;
-        this.isHeader = isHeader;
         this.render();
     }
 
     render() {
+        var rowSpan = this.options ? this.options.rowSpan : undefined;
+        var colSpan = this.options ? this.options.colSpan : undefined;
+
         this.element =
-            this.isHeader
+            this.options && this.options.isHeader
                 ? this.jquery("<th class='sorting ds-col'></th>")
                 : this.jquery("<td></td>");
+
+        if (rowSpan)
+            this.element.attr('rowSpan', rowSpan);
+
+        if (colSpan)
+            this.element.attr('colSpan', colSpan);
     }
 
     clone() {
         // debugger;
         var sc = super.clone();
-        var c = new BSGridCell(this.shClone(this.options), this.isHeader);
+        var c = new BSGridCell(this.shClone(this.options));
         c.children = sc.children;
         c.element = sc.element;
         return c;
     }
+}
+
+class BSGridActions extends BSGridBase {
+
+    constructor() {
+        super();
+        this.render();
+    }
+
+    render() {
+        this.element = this.jquery('<div class="actions-container"></div>')
+    }
+
+    addDeleteAction(title = '-') {
+        this.element.append('<button type="button" class="btn btn-sm btn-outline-danger grid-toolbar-action" id="btnDeleteRow">' + title + '</button>');
+        return this;
+    }
+
+    addNewRecordAction(title = '+') {
+        this.element.append('<button type="button" class="btn btn-sm btn-outline-primary grid-toolbar-action" id="btnAddRow">' + title + '</button>');
+        return this;
+    }
+
+    addGridSettingsAction() {
+        var flRight = this.jquery('<div style="float:right"></div>');
+        flRight.append('<button type="button" class="btn btn-sm btn-outline-primary grid-toolbar-action" data-bs-toggle="modal" data-bs-target="#staticBackdrop" id="btnSettings"><i class="bi bi-gear"></i></button>');
+        this.element.append(flRight);
+        return this;
+    }
+
 }
 
 class BSGridRowCollection extends BSGridBase {
@@ -1016,9 +1072,14 @@ class BSGridRowCollection extends BSGridBase {
     getVisibleRows() {
         return this.rows.filter((row) => row.visible === true);
     }
+
+    getGridTitlesRow() {
+        return this.rows.find((row) => row.options.hasGridTitles === true);
+    }
 }
 
 class BSGridHeader extends BSGridRowCollection {
+
     constructor(options) {
         super(options);
         this.render();
@@ -1152,6 +1213,9 @@ class BSGridRow extends BSGridBase {
      */
     cells = [];
 
+    /**
+     * @param {{ dataSourceName: string; hasGridTitles?: boolean; isTemplateRow?: boolean; isActionsRow?:boolean }} options
+     */
     constructor(options) {
         super();
         this.options = options;
@@ -1257,21 +1321,26 @@ class BSGridOptions {
 class BSGridColDefinition {
 
     /**
-     * @param {string} name
-     * @param {string} dataType
-     * @param {string} width
-     * @param {string} propName
-     * @param {boolean} isKey
-     * @param {BSGridSelectListItem[]} dataSource
+     * @param {string} [name]
+     * @param {string} [dataType]
+     * @param {string} [width]
+     * @param {string} [propName]
+     * @param {boolean} [isKey]
+     * @param {BSGridSelectListItem[]} [dataSource]
+     * @param {boolean} [isHeader]
+     * @param {number} [colSpan]
+     * @param {number} [rowSpan]
      */
-    constructor(name, dataType, width, propName, isKey, dataSource = undefined) {
+    constructor(name, dataType, width, propName, isKey, dataSource, isHeader, colSpan, rowSpan) {
         this.name = name;
         this.dataType = dataType;
         this.width = width;
         this.propName = propName;
         this.isKey = isKey;
         this.dataSource = dataSource;
-
+        this.isHeader = isHeader;
+        this.colSpan = colSpan;
+        this.rowSpan = rowSpan;
     }
 }
 
@@ -1325,7 +1394,7 @@ class BSGridEventArgs {
 
 BootstrapDataGrid.prototype.configurableGrid = function () {
     // console.log('configurableGrid is reached', this);
-    var headers = this.head.rows[0].cells;
+    var headers = this.head.getGridTitlesRow().cells;
     var dataSourceName = this.options.dataSource.name;
 
     //
@@ -1361,7 +1430,7 @@ BootstrapDataGrid.prototype.configurableGrid = function () {
             var prop = $chk.attr('data-config-propname');
             if (!prop) return;
 
-            var headerRow = this.head.rows[0];
+            var headerRow = this.head.getGridTitlesRow();
             // var col = this.find('th[data-th-propname=' + prop + ']');
             var col = headerRow.cells.find((cell) => cell.getProp('data-th-propname') === prop);
             if (!col) return;
@@ -1408,7 +1477,7 @@ BootstrapDataGrid.prototype.resizableGrid = function () {
 
     var dataSourceName = this.options.dataSource.name;
     // console.log(table);
-    var cols = this.head.rows[0].cells;
+    var cols = this.head.getGridTitlesRow().cells;
     this.css = {};
 
     this.setCss('overflow', 'hidden');
@@ -1537,7 +1606,7 @@ BootstrapDataGrid.prototype.enableColumnReordering = function () {
 
     var thWrap = jq('<div draggable="true" class="grid-header"></div>');
 
-    var headerRow = _this.head.rows[0];
+    var headerRow = _this.head.getGridTitlesRow();
     var cells = headerRow.cells;
 
     cells.forEach((cell) => {
@@ -1721,7 +1790,7 @@ BootstrapDataGrid.prototype.onGridConfigurationChanged = function (eventArgs) {
     var action = eventArgs.action;
     var gridId = this.options.gridId;
 
-    var cols = this.head.rows[0].cells;
+    var cols = this.head.getGridTitlesRow().cells;
     // console.log(cols);
     var colsObj = {};
     cols.forEach((col, index) => {
