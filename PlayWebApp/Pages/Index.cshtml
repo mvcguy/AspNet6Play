@@ -5,34 +5,6 @@
 }
 
 <div class="text-center">
-    <h1 class="display-4">Welcome</h1>
-    <p>Play project to demonstrate skills in ASP.NET core and Entity framework 6.</p>
-    <p>Click <a asp-area="logistics" asp-page="home/index">here</a> to check out the <a asp-area="logistics"
-            asp-page="home/index">LOGISTICS</a> module.</p>
-    <div style="display: none;">
-        <p>Test the functions for pascal and camal casing</p>
-        <p>
-            <input type="text" id="sampleText" /> <br />
-
-            <input type="radio" name="function" id="pascal" value="pascal" />
-            <label for="pascal">Pascal case</label>
-
-            <input type="radio" name="function" id="pascalJson" value="pascalJson" />
-            <label for="pascalJson">Pascal case (Json)</label>
-
-            <input type="radio" name="function" id="camal" value="camal" />
-            <label for="camal">Camel case</label>
-            <br />
-            <button id="btnConvert" type="button">Convert</button>
-
-        <div>
-            <span>Converted Text:</span>
-            <span id="lblOutput"></span>
-        </div>
-
-        </p>
-    </div>
-
     <div style="display: none;">
         <h4>Jquery validation</h4>
         <p>
@@ -58,7 +30,23 @@
 
         <div id="dummy-data-container">
 
-        </div>        
+        </div>
+
+    </div>
+    <div class="row">
+        <nav aria-label="Page navigation example">
+            <ul class="pagination justify-content-end">
+                <li class="page-item disabled">
+                    <a class="page-link" href="#" tabindex="-1" aria-disabled="true">Previous</a>
+                </li>
+                <li class="page-item"><a class="page-link" href="#">1</a></li>
+                <li class="page-item"><a class="page-link" href="#">2</a></li>
+                <li class="page-item"><a class="page-link" href="#">3</a></li>
+                <li class="page-item">
+                    <a class="page-link" href="#">Next</a>
+                </li>
+            </ul>
+        </nav>
     </div>
 </div>
 

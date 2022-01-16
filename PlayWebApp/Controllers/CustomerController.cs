@@ -1,8 +1,8 @@
 using System.Globalization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
-using PlayWebApp.Services.CustomerManagement;
-using PlayWebApp.Services.CustomerManagement.ViewModels;
+using PlayWebApp.Services.Logistics.CustomerManagement;
+using PlayWebApp.Services.Logistics.CustomerManagement.ViewModels;
 using PlayWebApp.Services.Logistics.ViewModels;
 
 namespace PlayWebApp.Controllers

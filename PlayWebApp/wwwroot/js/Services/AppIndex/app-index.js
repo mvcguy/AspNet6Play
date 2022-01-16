@@ -7,12 +7,12 @@ $(function () {
     var cols = [];
     var initData = [];
 
-    var totCols = 10, tolRows = 100;
+    var totCols = 10, totRows = 6;
     for (let i = 0; i < totCols; i++) {
         cols.push(new BSGridColDefinition("COL-" + i, "text", "180px", "col-" + i, false));
     }
 
-    for (let i = 0; i < tolRows; i++) {
+    for (let i = 0; i < totRows; i++) {
 
         var record = {};
         for (let j = 0; j < totCols; j++) {

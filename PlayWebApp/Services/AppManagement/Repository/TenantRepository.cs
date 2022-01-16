@@ -13,6 +13,11 @@ namespace PlayWebApp.Services.AppManagement.Repository
         {
         }
 
+        public override IQueryable<Tenant> GetQueryByParentId(string parentId)
+        {
+            throw new NotImplementedException();
+        }
+
         public override IQueryable<Tenant> GetTenantBasedQuery(bool includeSubItems = true)
         {
             return dbContext.Tenants;

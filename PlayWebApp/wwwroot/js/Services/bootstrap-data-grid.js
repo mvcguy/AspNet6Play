@@ -1,5 +1,7 @@
 // @ts-check
 
+// const jquery = require("../../lib/jquery/dist/jquery");
+
 //import $ from "../../lib/jquery/dist/jquery";
 
 
@@ -407,6 +409,7 @@ class BootstrapDataGrid extends BSGridBase {
     bindDataSource(data) {
 
         if (!data || data.length <= 0) return;
+        //TODO: lets do remote calls
 
         data.forEach((v, i) => {
             var row = this.addNewRow(i, v, true);
@@ -555,9 +558,20 @@ class BootstrapDataGrid extends BSGridBase {
 
         if (!eventArgs || !eventArgs.eventData) return;
 
+        console.log(eventArgs);
         this.resetSorting();
         this.clearGrid();
-        this.bindDataSource(eventArgs.eventData[this.options.dataSource.name]);
+
+        //
+        // fetch grid data
+        //
+
+        var mainFormIdField = eventArgs.eventData[eventArgs.idField];
+
+        if (!mainFormIdField) return;
+        var options = new BSGridHttpClientOptions("https://localhost:7096/api/v1/customers/address/" + mainFormIdField + "/1", "GET");
+        var client = new BSGridHttpClient();
+        client.get(options);
 
     };
 
@@ -766,7 +780,7 @@ class BootstrapDataGrid extends BSGridBase {
         var grid = this;
         console.log(eventArgs);
 
-        
+
         grid.body.rows.forEach((row, i) => {
             var inputs = row.getInputs();
             inputs.forEach((inp) => { inp.element.off('keydown') });
@@ -782,6 +796,20 @@ class BootstrapDataGrid extends BSGridBase {
         dataEventsService.registerCallback(key, eventTypeX, callback, dataSourceNameX);
     };
 
+    onFetchData(eventArgs) {
+
+        console.log('onFetchData:', eventArgs);
+
+        //
+        // populate the grid with the fetched data
+        //
+        this.bindDataSource(eventArgs.eventData.items);
+    }
+
+    onFetchDataError(eventArgs) {
+        console.error('onFetchDataError: ', eventArgs);
+    }
+
     registerCallbacks() {
         // debugger;
         var id = this.options.gridId;
@@ -796,6 +824,8 @@ class BootstrapDataGrid extends BSGridBase {
         this.registerCallback(id, appDataEvents.ON_COLS_REORDERED, (a) => this.onColsReordered(a), ds);
         this.registerCallback(id, appDataEvents.ON_GRID_CONFIG_UPDATED, (ev) => this.onGridConfigurationChanged(ev), ds);
         this.registerCallback(id, appDataEvents.ON_GRID_DATA_BOUND, (ev) => this.onGridDataBound(ev), ds);
+        this.registerCallback(id, appDataEvents.ON_FETCH_GRID_RECORD, (ev) => this.onFetchData(ev), ds);
+        this.registerCallback(id, appDataEvents.ON_FETCH_GRID_RECORD_ERROR, (ev) => this.onFetchDataError(ev), ds);
     };
 }
 
@@ -1282,12 +1312,14 @@ class BSGridEventArgs {
      * @param {BootstrapDataGrid} source
      * @param {object} eventData
      * @param {string} dsName
+     * @param {string} idField
      */
-    constructor(source, eventData, dsName, asc = true) {
+    constructor(source, eventData, dsName, asc = true, idField = undefined) {
         this.source = source;
         this.eventData = eventData;
         this.dsName = dsName;
         this.asc = asc;
+        this.idField = idField;
     }
 }
 
@@ -1715,7 +1747,7 @@ BootstrapDataGrid.prototype.onGridConfigurationChanged = function (eventArgs) {
 }
 
 BootstrapDataGrid.prototype.onGridDataBound = function (eventArgs) {
-    console.log(eventArgs);
+    // console.log(eventArgs);
 
     // var grid = eventArgs.source;
     //
@@ -1766,5 +1798,52 @@ class BSGridColSettings {
         this.visible = visible;
         this.sort = sort;
         this.position = position;
+    }
+}
+
+class BSGridHttpClient extends BSGridBase {
+    constructor() {
+        super();
+        //@ts-ignore
+        this.jq = jQuery;
+        this.appDataEvents = appDataEvents;
+    }
+
+
+    /**
+     * @param {BSGridHttpClientOptions} options
+     */
+    get(options) {
+        var _this = this;
+        var ajaxOptions = {
+            url: options.url,
+            method: 'GET',
+            headers: options.headers ? options.headers : {}
+        };
+        this.jq.ajax(ajaxOptions).then(function done(response) {
+            console.log(response);
+            _this.notifyListeners(_this.appDataEvents.ON_FETCH_GRID_RECORD, { eventData: response });
+
+        }, function error(error) {
+            _this.notifyListeners(_this.appDataEvents.ON_FETCH_GRID_RECORD_ERROR,
+                { eventData: error, recordId: options.recordId });
+        });
+
+    };
+}
+
+class BSGridHttpClientOptions {
+
+    /**
+     * @param {string} url
+     * @param {string} method
+     * @param {object[]} headers
+     * @param {string} recordId
+     */
+    constructor(url, method, headers = undefined, recordId = undefined) {
+        this.url = url;
+        this.method = method;
+        this.headers = headers;
+        this.recordId = recordId;
     }
 }

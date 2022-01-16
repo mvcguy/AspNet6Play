@@ -17,7 +17,7 @@ namespace PlayWebApp.Services.DataNavigation
 
         public virtual int MaxPerPage { get; set; }
 
-        private int DefaultMaxPerPage = 100;
+        private int DefaultMaxPerPage = 3;
 
         public NavigationService(INavigationRepository<TDbModel> repository)
         {
@@ -71,11 +71,32 @@ namespace PlayWebApp.Services.DataNavigation
             return await repository.SaveChanges();
         }
 
-        public virtual async Task<IEnumerable<TDto>> GetAll(int page = 1)
+        public virtual async Task<DtoCollection<TDto>> GetAllByParentId(string parentId, int page = 1)
         {
+            int take, skip;
+            GetPagingInfo(page, out take, out skip);
+
+            var items = await repository.GetAllByParentId(parentId, take, skip);
+            var result = new DtoCollection<TDto>() { Items = items.Select(x => ToDto(x)) };
+            return result;
+        }
+
+        public virtual async Task<DtoCollection<TDto>> GetAll(int page = 1)
+        {
+            int take, skip;
+            GetPagingInfo(page, out take, out skip);
+
+            var items = await repository.GetAll(take, skip);
+            var result = new DtoCollection<TDto>() { Items = items.Select(x => ToDto(x)) };
+            return result;
+        }
+
+        private void GetPagingInfo(int page, out int take, out int skip)
+        {
+            var iPage = page;
             if (page <= 0)
             {
-                page = 1;
+                iPage = 1;
             }
 
             if (MaxPerPage <= 0)
@@ -83,18 +104,12 @@ namespace PlayWebApp.Services.DataNavigation
                 MaxPerPage = DefaultMaxPerPage;
             }
 
-            var take = MaxPerPage;
-            var skip = 0;
-
-            if (page > 1)
+            take = MaxPerPage;
+            skip = 0;
+            if (iPage > 1)
             {
-                skip = (page - 1) * MaxPerPage;
+                skip = (iPage - 1) * MaxPerPage;
             }
-
-            var items = await repository.GetAll(take, skip);
-            return items.Select(x => ToDto(x));
         }
-
-
     }
 }

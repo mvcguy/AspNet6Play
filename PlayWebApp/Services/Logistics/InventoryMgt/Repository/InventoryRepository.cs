@@ -12,6 +12,11 @@ namespace PlayWebApp.Services.Logistics.InventoryMgt.Repository
     public class InventoryRepository : NavigationRepository<StockItem>
     {        public InventoryRepository(ApplicationDbContext dbContext, IPlayAppContext context): base(dbContext, context){}
 
+        public override IQueryable<StockItem> GetQueryByParentId(string parentId)
+        {
+            throw new NotImplementedException();
+        }
+
         public override IQueryable<StockItem> GetTenantBasedQuery(bool includePrices = true)
         {
             var query = dbContext.Set<StockItem>().Where(x => x.TenantId == context.TenantId);

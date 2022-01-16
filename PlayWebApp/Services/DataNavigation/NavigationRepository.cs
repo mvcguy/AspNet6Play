@@ -26,7 +26,9 @@ namespace PlayWebApp.Services.DataNavigation
                 throw new Exception("Failed to access tenant or user info");
         }
 
-        public abstract IQueryable<TModel> GetTenantBasedQuery(bool includeSubItems = true);
+        public abstract IQueryable<TModel> GetTenantBasedQuery(bool includeSubItems = false);
+
+        public abstract IQueryable<TModel> GetQueryByParentId(string parentId);
 
         public virtual async Task<TModel> GetFirst()
         {
@@ -101,6 +103,16 @@ namespace PlayWebApp.Services.DataNavigation
         {
             return await GetTenantBasedQuery().OrderBy(x => x.RefNbr).Skip(skip).Take(take).ToListAsync();
         }
+        
+        public async Task<IEnumerable<TModel>> GetAllByParentId(string parentId, int take, int skip)
+        {
+             return await GetQueryByParentId(parentId).OrderBy(x => x.RefNbr).Skip(skip).Take(take).ToListAsync();
+        }
+
+        public async Task<IEnumerable<TModel>> GetAllByParentId(string parentId)
+        {
+             return await GetQueryByParentId(parentId).OrderBy(x => x.RefNbr).ToListAsync();
+        }
 
         public virtual async Task<int> SaveChanges()
         {
@@ -121,5 +133,6 @@ namespace PlayWebApp.Services.DataNavigation
             model.ModifiedOn = DateTime.UtcNow;
             model.ModifiedBy = context.UserId;
         }
+
     }
 }

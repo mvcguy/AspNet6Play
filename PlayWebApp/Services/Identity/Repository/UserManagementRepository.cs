@@ -15,6 +15,11 @@ namespace PlayWebApp.Services.Identity.Repository
         {
         }
 
+        public override IQueryable<ApplicationUser> GetQueryByParentId(string parentId)
+        {
+            throw new NotImplementedException();
+        }
+
         public override IQueryable<ApplicationUser> GetTenantBasedQuery(bool includeSubItems = true)
         {
             return dbContext.Users.Where(x => x.TenantId == context.TenantId);

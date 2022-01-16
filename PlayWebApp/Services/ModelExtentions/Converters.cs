@@ -1,5 +1,5 @@
 using PlayWebApp.Services.AppManagement.ViewModels;
-using PlayWebApp.Services.CustomerManagement.ViewModels;
+using PlayWebApp.Services.Logistics.CustomerManagement.ViewModels;
 using PlayWebApp.Services.Database.Model;
 using PlayWebApp.Services.Identity.ViewModels;
 using PlayWebApp.Services.Logistics.ViewModels;
@@ -63,7 +63,7 @@ namespace PlayWebApp.Services.ModelExtentions
                 RefNbr = model.RefNbr,
                 StreetAddress = model.StreetAddress,
                 City = model.City,
-                PostalCode = model.PostalCode,                
+                PostalCode = model.PostalCode,
                 Country = model.Country,
             };
         }
@@ -125,27 +125,43 @@ namespace PlayWebApp.Services.ModelExtentions
         {
             if (model == null) return null;
 
-            return new CustomerDto
+            var result = new CustomerDto
             {
                 RefNbr = model.RefNbr,
                 InternalId = model.Id,
                 Active = model.Active,
                 Name = model.Name,
-                Addresses = model.Addresses?.Select(x=>x.ToDto()).ToList()
             };
+
+            if (model.Addresses != null)
+            {
+                result.Addresses = new DtoCollection<AddressDto>()
+                {
+                    Items = model.Addresses.Select(x => x.ToDto()).ToList()
+                };
+            }
+
+            return result;
         }
 
         public static CustomerUpdateVm ToVm(this CustomerDto model)
         {
             if (model == null) return null;
 
-            return new CustomerUpdateVm
+            var result = new CustomerUpdateVm
             {
-                RefNbr = model.RefNbr,                
+                RefNbr = model.RefNbr,
                 Active = model.Active,
                 Name = model.Name,
-                Addresses = model.Addresses?.Select(x=>x.ToVm()).ToList()
             };
+
+            if (model.Addresses != null && model.Addresses.Items != null)
+            {
+                result.Addresses = model.Addresses.Items.Select(x => x.ToVm()).ToList();
+            }
+
+            return result;
+
         }
 
         public static void AddAuditData<TModel>(this TModel model, string tenantId, string userId) where TModel : EntityBase

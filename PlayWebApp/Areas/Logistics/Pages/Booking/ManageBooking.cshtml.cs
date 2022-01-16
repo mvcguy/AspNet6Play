@@ -1,7 +1,7 @@
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
-using PlayWebApp.Services.CustomerManagement;
+using PlayWebApp.Services.Logistics.CustomerManagement;
 using PlayWebApp.Services.Database;
 using PlayWebApp.Services.Logistics.BookingMgt;
 using PlayWebApp.Services.Logistics.ViewModels;
@@ -34,7 +34,7 @@ namespace PlayWebApp.Areas.Logistics.Pages.Booking
             }
             Customers = new List<SelectListItem>();
             Customers.Add(new SelectListItem { Text = "Select customer", Value = "", Selected = true });
-            Customers.AddRange((await customerService.GetAll(page: 1)).Select(x => new SelectListItem
+            Customers.AddRange((await customerService.GetAll(page: 1)).Items.Select(x => new SelectListItem
             {
                 Value = x.RefNbr,
                 Text = $"{x.RefNbr} - {x.Name}",

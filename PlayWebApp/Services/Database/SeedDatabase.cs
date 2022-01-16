@@ -2,8 +2,8 @@ using Microsoft.AspNetCore.Identity;
 using PlayWebApp.Services.AppManagement;
 using PlayWebApp.Services.AppManagement.Repository;
 using PlayWebApp.Services.AppManagement.ViewModels;
-using PlayWebApp.Services.CustomerManagement;
-using PlayWebApp.Services.CustomerManagement.ViewModels;
+using PlayWebApp.Services.Logistics.CustomerManagement;
+using PlayWebApp.Services.Logistics.CustomerManagement.ViewModels;
 using PlayWebApp.Services.Database.Model;
 using PlayWebApp.Services.Identity;
 using PlayWebApp.Services.Identity.Repository;
@@ -47,7 +47,8 @@ public class SeedDatabase
         var inRepo = new InventoryRepository(context, appContext);
         var inSrv = new InventoryService(inRepo);
         var cusRepo = new CustomerRepository(context, appContext);
-        var cusSrv = new CustomerService(cusRepo);
+        var curLocRepo = new CustomerLocationRepository(context, appContext);
+        var cusSrv = new CustomerService(cusRepo, curLocRepo);
 
         if (context.StockItems.Count() == 0)
         {

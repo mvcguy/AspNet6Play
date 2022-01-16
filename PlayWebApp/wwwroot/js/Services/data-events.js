@@ -10,8 +10,11 @@ var appDataEvents = {
     ON_FETCH_RECORD: "ON_FETCH_RECORD",
     ON_FETCH_RECORD_ERROR: "ON_FETCH_RECORD_ERROR",
 
+    ON_FETCH_GRID_RECORD: "ON_FETCH_GRID_RECORD",
+    ON_FETCH_GRID_RECORD_ERROR: "ON_FETCH_GRID_RECORD_ERROR",
 
-    ON_NAVIGATING_RECORD: "ON_NAVIGATING", // raised when the main record is about to navigate
+
+    ON_NAVIGATING_RECORD: "ON_NAVIGATING_RECORD", // raised when the main record is about to navigate
 
     ON_GRID_UPDATED: "ON_GRID_UPDATED",
 

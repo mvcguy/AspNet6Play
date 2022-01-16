@@ -1,14 +1,9 @@
-using System.Text.Json;
-using System.Text.Json.Serialization;
 using Microsoft.AspNetCore.Authentication;
-using Microsoft.AspNetCore.Authentication.OpenIdConnect;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
-using Newtonsoft.Json.Serialization;
 using PlayWebApp.Services.AppManagement;
 using PlayWebApp.Services.AppManagement.Repository;
-using PlayWebApp.Services.CustomerManagement;
+using PlayWebApp.Services.Logistics.CustomerManagement;
 using PlayWebApp.Services.Database;
 using PlayWebApp.Services.Database.Model;
 using PlayWebApp.Services.DataNavigation;

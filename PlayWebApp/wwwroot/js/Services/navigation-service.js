@@ -2,6 +2,7 @@
 var persistenceService = function (serviceParams) {
     var url = serviceParams.url;
     var formId = serviceParams.formId;
+    var responseKeyCol = serviceParams.responseKeyCol;
     var msgContainer = serviceParams.msgContainer;
     var getIdCallback = serviceParams.getIdCallback;
     var nextEndpoint = serviceParams.nextEndpoint;
@@ -35,7 +36,7 @@ var persistenceService = function (serviceParams) {
     };
 
     var onGridUpdated = function (eventArgs) {
-        console.log('Grid-eventData: ', eventArgs);
+        // console.log('Grid-eventData: ', eventArgs);
         isRecordDirty = true;
         enableSaveButton(true);
     };
@@ -67,7 +68,7 @@ var persistenceService = function (serviceParams) {
     var onSaveRecord = function (eventArgs) {
 
         var response = eventArgs.eventData;
-        console.log(response);
+        // console.log(response);
 
         $('#' + msgContainer).attr('class', 'alert alert-success')
             .text("Record is successfully saved").show(0).delay(8000).hide(0);
@@ -104,7 +105,7 @@ var persistenceService = function (serviceParams) {
 
     var registerCallbacks = function () {
         registerCallback(formId, appDataEvents.ON_GRID_UPDATED, onGridUpdated, 'mainForm');
-        registerCallback(formId, appDataEvents.ON_NAVIGATING, onNavigating, 'mainForm');
+        registerCallback(formId, appDataEvents.ON_NAVIGATING_RECORD, onNavigating, 'mainForm');
         registerCallback(formId, appDataEvents.ON_FETCH_RECORD, onFetchRecord, 'mainForm');
         registerCallback(formId, appDataEvents.ON_FETCH_RECORD_ERROR, onFetchRecordError, 'mainForm');
 
@@ -116,7 +117,7 @@ var persistenceService = function (serviceParams) {
     };
 
     var onNavigating = function (eventArgs) {
-        console.log('ON_NAVIGATING: EventData: ', eventArgs);
+        // console.log('ON_NAVIGATING_RECORD: EventData: ', eventArgs);
 
         var navigate = shouldNavigate();
         if (navigate) {
@@ -149,7 +150,7 @@ var persistenceService = function (serviceParams) {
             var recordId = $(this).val();
             if (!recordId || recordId === '') return;
 
-            console.log('getting record by ID');
+            // console.log('getting record by ID');
             var getParams = {
                 url: url + recordId,
                 recordId: recordId
@@ -167,7 +168,7 @@ var persistenceService = function (serviceParams) {
         $("#btnNext").on('click', function (e) {
 
             var ev = { eventData: e };
-            notifyListeners(appDataEvents.ON_NAVIGATING, ev);
+            notifyListeners(appDataEvents.ON_NAVIGATING_RECORD, ev);
             if (ev.eventData.cancelAction === true) {
                 return;
             }
@@ -182,7 +183,7 @@ var persistenceService = function (serviceParams) {
         $("#btnPrev").on('click', function (e) {
 
             var ev = { eventData: e };
-            notifyListeners(appDataEvents.ON_NAVIGATING, ev);
+            notifyListeners(appDataEvents.ON_NAVIGATING_RECORD, ev);
             if (ev.eventData.cancelAction === true) {
                 return;
             }
@@ -196,7 +197,7 @@ var persistenceService = function (serviceParams) {
 
         $('#btnFirst').on('click', function (e) {
             var ev = { eventData: e };
-            notifyListeners(appDataEvents.ON_NAVIGATING, ev);
+            notifyListeners(appDataEvents.ON_NAVIGATING_RECORD, ev);
             if (ev.eventData.cancelAction === true) {
                 return;
             }
@@ -206,7 +207,7 @@ var persistenceService = function (serviceParams) {
 
         $('#btnLast').on('click', function (e) {
             var ev = { eventData: e };
-            notifyListeners(appDataEvents.ON_NAVIGATING, ev);
+            notifyListeners(appDataEvents.ON_NAVIGATING_RECORD, ev);
             if (ev.eventData.cancelAction === true) {
                 return;
             }
@@ -216,7 +217,7 @@ var persistenceService = function (serviceParams) {
 
         $("#btnAdd").on('click', function (e) {
             var ev = { eventData: e };
-            notifyListeners(appDataEvents.ON_NAVIGATING, ev);
+            notifyListeners(appDataEvents.ON_NAVIGATING_RECORD, ev);
             if (ev.eventData.cancelAction === true) {
                 return;
             }
@@ -237,7 +238,7 @@ var persistenceService = function (serviceParams) {
     // save record
     //
     var saveRecord = function () {
-        console.log('saving changes ...');
+        // console.log('saving changes ...');
         var postParams = {
             data: $('#' + formId).serializeObject(),
             url: url,
@@ -252,9 +253,9 @@ var persistenceService = function (serviceParams) {
     // move to next record
     //
     var moveNext = function () {
-        console.log('moving to next record');
+        // console.log('moving to next record');
         var getParams = {
-            url: url + nextEndpoint(),
+            url: url + nextEndpoint()
         };
 
         getRequest(getParams);
@@ -264,7 +265,7 @@ var persistenceService = function (serviceParams) {
     // move to prev record
     //
     var movePrev = function () {
-        console.log('moving to prev record');
+        // console.log('moving to prev record');
         var getParams = {
             url: url + prevEndpoint(),
         };
@@ -275,7 +276,7 @@ var persistenceService = function (serviceParams) {
     // move to first
     //
     var moveFirst = function () {
-        console.log('moving to First record');
+        // console.log('moving to First record');
         var getParams = {
             url: url + firstEndpoint,
         };
@@ -286,7 +287,7 @@ var persistenceService = function (serviceParams) {
     // move to last
     //
     var moveLast = function () {
-        console.log('moving to last record');
+        // console.log('moving to last record');
         var getParams = {
             url: url + lastEndpoint,
         };
@@ -297,7 +298,7 @@ var persistenceService = function (serviceParams) {
     // delete record
     //
     var deleteItem = function () {
-        console.log('deleting record');
+        // console.log('deleting record');
         var deleteParams = {
             url: url + deleteEndpoint()
         };
@@ -305,7 +306,7 @@ var persistenceService = function (serviceParams) {
     };
 
     var resetOnNotFound = function (error, recordId) {
-        console.log('error-status', error.status);
+        // console.log('error-status', error.status);
         if (error.status === 404) {
             onAdd(recordId);
             //
@@ -367,6 +368,8 @@ var persistenceService = function (serviceParams) {
     };
 
     var getRequest = function (getParams) {
+
+        var _idField = responseKeyCol;
         var ajaxOptions = {
             url: getParams.url,
             method: 'GET',
@@ -374,7 +377,7 @@ var persistenceService = function (serviceParams) {
         };
         var _notifyListeners = notifyListeners;
         $.ajax(ajaxOptions).then(function done(response) {
-            _notifyListeners(appDataEvents.ON_FETCH_RECORD, { eventData: response });
+            _notifyListeners(appDataEvents.ON_FETCH_RECORD, { idField: _idField, eventData: response });
 
         }, function error(error) {
             _notifyListeners(appDataEvents.ON_FETCH_RECORD_ERROR, { eventData: error, recordId: getParams.recordId });

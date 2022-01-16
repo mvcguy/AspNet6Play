@@ -20,6 +20,7 @@ dataEventsService.winPopstate = function () {
 dataEventsService.winPopstate();
 
 dataEventsService.notifyListeners = function (eventType, eventArgs) {
+    if (!eventType) return;
     try {
         $.each(this.callbacks, function () {
             if (this.eventType !== eventType) return;
@@ -35,6 +36,7 @@ dataEventsService.registerCallback = function (keyX, eventTypeX, callback, dataS
     //
     // search if callback exist from before
     //
+    if (!eventTypeX) return;
     var index = this.callbacks
         .findIndex(({ key, eventType, dataSourceName }) => key === keyX
             && eventType === eventTypeX

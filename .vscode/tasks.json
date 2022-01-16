@@ -6,8 +6,9 @@
             "command": "dotnet",
             "type": "process",
             "args": [
+                // "build",
                 "watch",
-                "run",
+                "build",
                 "${workspaceFolder}/PlayWebApp/PlayWebApp.csproj",
                 "/property:GenerateFullPaths=true",
                 "/consoleloggerparameters:NoSummary"

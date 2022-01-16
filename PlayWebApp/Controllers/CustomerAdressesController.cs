@@ -2,7 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using PlayWebApp.Services.Database;
 using PlayWebApp.Services.Database.Model;
-using PlayWebApp.Services.Logistics.LocationMgt;
+using PlayWebApp.Services.Logistics.CustomerManagement;
 using PlayWebApp.Services.Logistics.ViewModels;
 using PlayWebApp.Services.Logistics.ViewModels.Requests;
 using PlayWebApp.Services.ModelExtentions;
@@ -11,10 +11,10 @@ using PlayWebApp.Services.ModelExtentions;
 namespace PlayWebApp.Controllers
 {
     [Route("api/v1/customers/address")]
-    public class AddressController : BaseController
+    public class CustomerAdressesController : BaseController
     {
         private readonly CustomerLocationService service;
-        public AddressController(CustomerLocationService addressMgtService)
+        public CustomerAdressesController(CustomerLocationService addressMgtService)
         {
             this.service = addressMgtService;
         }
@@ -47,6 +47,16 @@ namespace PlayWebApp.Controllers
             return Ok(item.RefNbr); // TODO: need to return URI to the newly created item
         }
 
+        [HttpGet]
+        [Route("{customerId}/{page}")]
+        public async Task<IActionResult> GetAll(string customerId, int page = 1)
+        {
+            if(string.IsNullOrWhiteSpace(customerId) || page<0) return BadRequest("Params CustomerID or Page are invalid");
+            var items = await service.GetAllByParentId(customerId.ToString(), page);
+            
+            return Ok(items);
+        }
+
         [HttpGet()]
         [Route("{id}")]
         public async Task<IActionResult> GetById(string id)
@@ -64,7 +74,7 @@ namespace PlayWebApp.Controllers
         public async Task<IActionResult> GetNextRecord(string currentRecord)
         {
             var model = await service.GetNext(CreateRequest(currentRecord));
-            if(model == null) return NotFound();
+            if (model == null) return NotFound();
             return Ok(model);
 
         }
@@ -74,7 +84,7 @@ namespace PlayWebApp.Controllers
         public async Task<IActionResult> GetPreviousRecord(string currentRecord)
         {
             var model = await service.GetPrevious(CreateRequest(currentRecord));
-            if(model == null) return NotFound();
+            if (model == null) return NotFound();
             return Ok(model);
         }
 

@@ -1,15 +1,19 @@
-using PlayWebApp.Services.CustomerManagement.ViewModels;
+using PlayWebApp.Services.Logistics.CustomerManagement.ViewModels;
 using PlayWebApp.Services.Database.Model;
 using PlayWebApp.Services.DataNavigation;
 using PlayWebApp.Services.Logistics.ViewModels;
 using PlayWebApp.Services.ModelExtentions;
 
-namespace PlayWebApp.Services.CustomerManagement
+namespace PlayWebApp.Services.Logistics.CustomerManagement
 {
     public class CustomerService : NavigationService<Customer, CustomerRequestDto, CustomerUpdateVm, CustomerDto>
     {
-        public CustomerService(INavigationRepository<Customer> repository) : base(repository)
+        private readonly INavigationRepository<CustomerAddress> locRepository;
+
+        public CustomerService(INavigationRepository<Customer> repository, 
+        INavigationRepository<CustomerAddress> locationService) : base(repository)
         {
+            this.locRepository = locationService;
         }
 
         public override async Task<CustomerDto> Add(CustomerUpdateVm model)
@@ -42,7 +46,7 @@ namespace PlayWebApp.Services.CustomerManagement
             item.Name = model.Name;
             item.Active = model.Active;
 
-            item.Addresses = item.Addresses ?? new List<CustomerAddress>();
+            item.Addresses = (await locRepository.GetAllByParentId(model.RefNbr)).ToList();
 
             UpdateCustomerAddresses(model, item);
 

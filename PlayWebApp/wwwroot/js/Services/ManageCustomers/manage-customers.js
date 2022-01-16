@@ -12,6 +12,7 @@ class ManageCustomers {
             formId: "frmCustomer",
             idField: keyCol,
             msgContainer: "serverMessages",
+            responseKeyCol: 'refNbr',
             getIdCallback: function () {
                 // @ts-ignore
                 return $('#' + keyCol).val();

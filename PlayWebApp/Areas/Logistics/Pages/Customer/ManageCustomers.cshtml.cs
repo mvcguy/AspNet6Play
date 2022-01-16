@@ -1,6 +1,6 @@
 using Microsoft.AspNetCore.Mvc.RazorPages;
-using PlayWebApp.Services.CustomerManagement;
-using PlayWebApp.Services.CustomerManagement.ViewModels;
+using PlayWebApp.Services.Logistics.CustomerManagement;
+using PlayWebApp.Services.Logistics.CustomerManagement.ViewModels;
 using PlayWebApp.Services.Logistics.ViewModels;
 using PlayWebApp.Services.ModelExtentions;
 #nullable disable
@@ -10,10 +10,12 @@ namespace PlayWebApp.Areas.Logistics.Pages.Booking
     public class ManageCustomersModel : PageModel
     {
         private readonly CustomerService customerService;
+        private readonly CustomerLocationService locService;
 
-        public ManageCustomersModel(CustomerService customerService)
+        public ManageCustomersModel(CustomerService customerService, CustomerLocationService locService)
         {
             this.customerService = customerService;
+            this.locService = locService;
         }
 
         public CustomerUpdateVm CustomerVm { get; set; }
@@ -35,6 +37,16 @@ namespace PlayWebApp.Areas.Logistics.Pages.Booking
                     CustomerVm = top1.ToVm();
                 }
             }
+
+            if(!string.IsNullOrWhiteSpace(CustomerVm.RefNbr))
+            {
+                var addresses = await locService.GetAllByParentId(CustomerVm.RefNbr, 1);
+                if(addresses!=null && addresses.Items!=null && addresses.Items.Any())
+                {
+                    CustomerVm.Addresses = addresses.Items.Select(x => x.ToVm()).ToList();
+                }
+            }
+            
         }
     }
 }

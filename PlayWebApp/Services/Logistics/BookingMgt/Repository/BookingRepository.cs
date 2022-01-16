@@ -12,6 +12,11 @@ namespace PlayWebApp.Services.Logistics.BookingMgt.Repository
     {
         public BookingRepository(ApplicationDbContext dbContext, IPlayAppContext context) : base(dbContext, context) { }
 
+        public override IQueryable<Booking> GetQueryByParentId(string parentId)
+        {
+            throw new NotImplementedException();
+        }
+
         public override IQueryable<Booking> GetTenantBasedQuery(bool includeSubItems = true)
         {
             var query = dbContext.Set<Booking>().Where(x => x.TenantId == context.TenantId);

@@ -4,7 +4,7 @@ using PlayWebApp.Services.Logistics.ViewModels;
 using PlayWebApp.Services.Logistics.ViewModels.Dtos;
 using PlayWebApp.Services.Logistics.ViewModels.Requests;
 
-namespace PlayWebApp.Services.CustomerManagement.ViewModels
+namespace PlayWebApp.Services.Logistics.CustomerManagement.ViewModels
 {
     public class CustomerUpdateVm : ViewModelBase
     {
@@ -32,7 +32,7 @@ namespace PlayWebApp.Services.CustomerManagement.ViewModels
 
         public bool Active { get; set; }
 
-        public List<AddressDto> Addresses { get; set; }
+        public DtoCollection<AddressDto> Addresses { get; set; }
     }
 
     public class CustomerRequestDto : RequestBase
