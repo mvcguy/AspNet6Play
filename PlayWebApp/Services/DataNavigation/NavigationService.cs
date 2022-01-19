@@ -7,7 +7,7 @@ using PlayWebApp.Services.Logistics.ViewModels.Requests;
 namespace PlayWebApp.Services.DataNavigation
 {
     public abstract class NavigationService<TDbModel, TRequest, TViewModel, TDto>
-    where TDbModel : EntityBase
+    where TDbModel : EntityBase, new()
     where TRequest : RequestBase
     where TViewModel : ViewModelBase
     where TDto : BaseDto
@@ -15,13 +15,14 @@ namespace PlayWebApp.Services.DataNavigation
     {
         protected readonly INavigationRepository<TDbModel> repository;
 
-        public virtual int MaxPerPage { get; set; }
+        protected virtual int MaxPerPage { get; set; }
 
         private int DefaultMaxPerPage = 3;
 
         public NavigationService(INavigationRepository<TDbModel> repository)
         {
             this.repository = repository;
+            this.MaxPerPage = this.MaxPerPage <= 0 ? DefaultMaxPerPage : this.MaxPerPage;
         }
 
         public abstract TDto ToDto(TDbModel model);
@@ -73,43 +74,36 @@ namespace PlayWebApp.Services.DataNavigation
 
         public virtual async Task<DtoCollection<TDto>> GetAllByParentId(string parentId, int page = 1)
         {
-            int take, skip;
-            GetPagingInfo(page, out take, out skip);
 
-            var items = await repository.GetAllByParentId(parentId, take, skip);
-            var result = new DtoCollection<TDto>() { Items = items.Select(x => ToDto(x)) };
+            var pagedResult = await repository.GetAllByParentId(parentId, page, MaxPerPage);
+            var result = new DtoCollection<TDto>()
+            {
+                Items = pagedResult.Records.Select(x => ToDto(x)),
+                MetaData = new CollectionMetaData
+                {
+                    PageSize = pagedResult.PageSize,
+                    PageIndex = pagedResult.PageIndex,
+                    TotalRecords = pagedResult.TotalRecords,
+                }
+            };
             return result;
         }
 
         public virtual async Task<DtoCollection<TDto>> GetAll(int page = 1)
         {
-            int take, skip;
-            GetPagingInfo(page, out take, out skip);
-
-            var items = await repository.GetAll(take, skip);
-            var result = new DtoCollection<TDto>() { Items = items.Select(x => ToDto(x)) };
+            var pagedResult = await repository.GetAll(page, MaxPerPage);
+            var result = new DtoCollection<TDto>()
+            {
+                Items = pagedResult.Records.Select(x => ToDto(x)),
+                MetaData = new CollectionMetaData
+                {
+                    PageSize = pagedResult.PageSize,
+                    PageIndex = pagedResult.PageIndex,
+                    TotalRecords = pagedResult.TotalRecords,
+                }
+            };
             return result;
         }
 
-        private void GetPagingInfo(int page, out int take, out int skip)
-        {
-            var iPage = page;
-            if (page <= 0)
-            {
-                iPage = 1;
-            }
-
-            if (MaxPerPage <= 0)
-            {
-                MaxPerPage = DefaultMaxPerPage;
-            }
-
-            take = MaxPerPage;
-            skip = 0;
-            if (iPage > 1)
-            {
-                skip = (iPage - 1) * MaxPerPage;
-            }
-        }
     }
 }

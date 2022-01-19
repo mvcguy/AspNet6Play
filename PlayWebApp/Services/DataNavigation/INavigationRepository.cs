@@ -4,7 +4,7 @@ using PlayWebApp.Services.Database.Model;
 
 namespace PlayWebApp.Services.DataNavigation
 {
-    public interface INavigationRepository<TModel> where TModel : EntityBase
+    public interface INavigationRepository<TModel> where TModel : EntityBase, new()
     {
         EntityEntry<TModel> Add(TModel model);
         EntityEntry<TModel> Delete(TModel model);
@@ -14,11 +14,11 @@ namespace PlayWebApp.Services.DataNavigation
         Task<TModel> GetNext(string refNbr);
         Task<TModel> GetPrevious(string refNbr);
 
-        Task<IEnumerable<TModel>> GetAll(int take, int skip);
+        Task<PagedResult<TModel>> GetAll(int pageIndex, int pageSize);
 
         Task<IEnumerable<TModel>> GetAllByParentId(string parentId);
 
-        Task<IEnumerable<TModel>> GetAllByParentId(string parentId, int take, int skip);
+        Task<PagedResult<TModel>> GetAllByParentId(string parentId, int pageIndex, int pageSize);
 
         IQueryable<TModel> GetTenantBasedQuery(bool includeSubItems = true);
         Task<int> SaveChanges();

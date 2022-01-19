@@ -195,7 +195,14 @@ class BootstrapDataGrid extends BSGridBase {
         // @ts-ignore
         this.bootstrap = bootstrap;
         this.appActions = appActions;
+        this.httpClient = new BSGridHttpClient();
+
+        this.paginator = new BSGridPagination(
+            new BSGridPaginationOptions(this.options.dataSource.name, new PagingMetaData(), this.paginatorCallback));
         // this.render(); // render manually
+    }
+    paginatorCallback(page) {
+        console.log(`Page.Nbr: ${page} is requested`);
     }
 
     addHeader() {
@@ -205,7 +212,6 @@ class BootstrapDataGrid extends BSGridBase {
     addBody() {
         this.element.append(this.body.element);
     }
-
 
     render() {
 
@@ -292,14 +298,16 @@ class BootstrapDataGrid extends BSGridBase {
             gridBodyRow.addCell(gridBodyCell);
         });
 
-        
+
         //
         // add grid actions toolbar
         //
 
         var gridActionsRow = new BSGridRow({ dataSourceName: _this.options.dataSource.name, isActionsRow: true });
         var gridActions = new BSGridActions();
-        gridActions.addNewRecordAction().addDeleteAction().addGridSettingsAction();
+        gridActions.addNewRecordAction((e) => this.addEmptyRow())
+            .addDeleteAction((e) => this.body.markDeleted())
+            .addGridSettingsAction(this.options.dataSource.name);
         var colDef = new BSGridColDefinition();
         colDef.isHeader = true;
         colDef.colSpan = gridHeaderRow.cells.length;
@@ -308,7 +316,7 @@ class BootstrapDataGrid extends BSGridBase {
         actionsCell.append(gridActions);
         gridActionsRow.addCell(actionsCell);
 
-        _this.head.addRow(gridActionsRow);              
+        _this.head.addRow(gridActionsRow);
         _this.head.addRow(gridHeaderRow);
         _this.body.addRow(gridBodyRow)
 
@@ -334,9 +342,6 @@ class BootstrapDataGrid extends BSGridBase {
         //
         _this.notifyListeners(_this.appDataEvents.ON_GRID_DATA_BOUND,
             { dataSourceName: _this.options.dataSource.name, eventData: {}, source: _this });
-
-
-
     };
 
     /**
@@ -421,20 +426,33 @@ class BootstrapDataGrid extends BSGridBase {
     }
 
     /**
-     * 
-     * @param {object[]} data 
-     * @returns 
+     * @param {object[]} data
+     * @param {PagingMetaData} [metaData]
+     * @returns
      */
-    bindDataSource(data) {
+    bindDataSource(data, metaData) {
 
         if (!data || data.length <= 0) return;
-        //TODO: lets do remote calls
 
         data.forEach((v, i) => {
             var row = this.addNewRow(i, v, true);
             row.prop('data-rowcategory', 'PRESTINE')
         });
 
+        //
+        // update the pagination component
+        //
+        this.bindPaginator(metaData);
+    }
+
+
+    /**
+     * @param {PagingMetaData} [paginationModel]
+     */
+    bindPaginator(paginationModel = new PagingMetaData()) {
+        this.paginator.options.pagingMetaData = paginationModel;
+        this.paginator.render();
+        this.jquery('#' + this.options.containerId).append(this.paginator.element);
     }
 
     addNewRow(rowNumber, rowData, existingRecord) {
@@ -577,7 +595,7 @@ class BootstrapDataGrid extends BSGridBase {
 
         if (!eventArgs || !eventArgs.eventData) return;
 
-        console.log(eventArgs);
+        // console.log(eventArgs);
         this.resetSorting();
         this.clearGrid();
 
@@ -586,11 +604,14 @@ class BootstrapDataGrid extends BSGridBase {
         //
 
         var mainFormIdField = eventArgs.eventData[eventArgs.idField];
+        var page = 1;
+        // @ts-ignore
+        var url = this.options.dataSource.url.format(mainFormIdField, page);
 
         if (!mainFormIdField) return;
-        var options = new BSGridHttpClientOptions("https://localhost:7096/api/v1/customers/address/" + mainFormIdField + "/1", "GET");
-        var client = new BSGridHttpClient();
-        client.get(options);
+        var options = new BSGridHttpClientOptions(url, "GET");
+
+        this.httpClient.get(options);
 
     };
 
@@ -822,7 +843,8 @@ class BootstrapDataGrid extends BSGridBase {
         //
         // populate the grid with the fetched data
         //
-        this.bindDataSource(eventArgs.eventData.items);
+        var md = eventArgs.eventData.metaData;
+        this.bindDataSource(eventArgs.eventData.items, new PagingMetaData(md.pageIndex, md.pageSize, md.totalRecords));
     }
 
     onFetchDataError(eventArgs) {
@@ -1029,19 +1051,32 @@ class BSGridActions extends BSGridBase {
         this.element = this.jquery('<div class="actions-container"></div>')
     }
 
-    addDeleteAction(title = '-') {
-        this.element.append('<button type="button" class="btn btn-sm btn-outline-danger grid-toolbar-action" id="btnDeleteRow">' + title + '</button>');
+    /**
+     * @param {(arg0: object) => any} [callback]
+     */
+    addDeleteAction(callback, title = '-') {
+        var btn = this.jquery('<button type="button" class="btn btn-sm btn-outline-danger grid-toolbar-action" id="btnDeleteRow">' + title + '</button>');
+        btn.on('click', callback);
+        this.element.append(btn);
         return this;
     }
 
-    addNewRecordAction(title = '+') {
-        this.element.append('<button type="button" class="btn btn-sm btn-outline-primary grid-toolbar-action" id="btnAddRow">' + title + '</button>');
+    /**
+     * @param {(arg0: object) => any} [callback]
+     */
+    addNewRecordAction(callback, title = '+') {
+        var btn = this.jquery('<button type="button" class="btn btn-sm btn-outline-primary grid-toolbar-action" id="btnAddRow">' + title + '</button>');
+        btn.on('click', callback);
+        this.element.append(btn);
         return this;
     }
 
-    addGridSettingsAction() {
+    /**
+     * @param {string} [dsName]
+     */
+    addGridSettingsAction(dsName) {
         var flRight = this.jquery('<div style="float:right"></div>');
-        flRight.append('<button type="button" class="btn btn-sm btn-outline-primary grid-toolbar-action" data-bs-toggle="modal" data-bs-target="#staticBackdrop" id="btnSettings"><i class="bi bi-gear"></i></button>');
+        flRight.append(`<button type="button" class="btn btn-sm btn-outline-primary grid-toolbar-action" data-bs-toggle="modal" data-bs-target="#staticBackdrop_${dsName}" id="btnSettings"><i class="bi bi-gear"></i></button>`);
         this.element.append(flRight);
         return this;
     }
@@ -1398,9 +1433,36 @@ BootstrapDataGrid.prototype.configurableGrid = function () {
     var dataSourceName = this.options.dataSource.name;
 
     //
-    // an <ul> element which will be populated below with grid columns check-list.
+    // A modal for configuring grid columns.
+    // The modal ahs an <ul> element which will be populated below with grid columns check-list.
     // the checks can be used to show/hide a particular grid column
     //
+    var modelTemplate =
+        `<div class="settings-menu grid-config-template">
+            <div class="modal fade" id="staticBackdrop_${this.options.dataSource.name}" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1"
+            aria-labelledby="staticBackdropLabel" aria-hidden="true">
+                <div class="modal-dialog modal-dialog-scrollable">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="staticBackdropLabel_${this.options.dataSource.name}">Configure columns</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">
+                            <ul class="list-group grid-config-cols">
+
+                            </ul>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Ok</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>`;
+    var modalElem = this.jquery(modelTemplate);
+    this.jquery('#' + this.options.containerId).append(modalElem);
+    // this.append(modalElem, false);
+
     var colsList = this.jquery('.grid-config-cols');
     headers.forEach((header, index) => {
 
@@ -1914,5 +1976,71 @@ class BSGridHttpClientOptions {
         this.method = method;
         this.headers = headers;
         this.recordId = recordId;
+    }
+}
+
+class BSGridPaginationOptions {
+
+    /**
+     * @param {string} dsName
+     * @param {PagingMetaData} pagingMetaData
+     */
+    constructor(dsName, pagingMetaData, nextPageCallback = (/** @type {Number} */ page) => { }) {
+        this.dsName = dsName;
+        this.pagingMetaData = pagingMetaData;
+        this.nextPageCallback = nextPageCallback;
+    }
+}
+
+class BSGridPagination extends BSGridBase {
+
+    /**
+     * @param {BSGridPaginationOptions} options
+     */
+    constructor(options) {
+        super();
+        this.options = options;
+    }
+
+    render() {
+        if (this.element)
+            this.element.remove();
+        this.element =
+            this.jquery(
+                    `<div class="bsgrid-pagination" id="pg_container_${this.options.dsName}">
+                        <nav aria-label="Page navigation">
+                            
+                        </nav>
+                    </div>`);
+        var pageList = this.jquery(`<ul class="pagination justify-content-end" id="pg_list_${this.options.dsName}"></ul>`);
+
+        for (let index = 1; index <= this.options.pagingMetaData.totalPages && index <= 5; index++) {
+            var li = this.jquery('<li class="page-item"></li>');
+            var link = this.jquery(`<a class="page-link" href="#" data-p-index="${index}">${index}</a>`);
+            li.append(link);
+            pageList.append(li);
+
+            link.on('click', (e) => {
+                e.preventDefault();
+                var index = this.jquery(e.target).attr('data-p-index');
+                this.options.nextPageCallback(index);
+            });
+        };
+
+        this.element.find('nav').append(pageList);
+    }
+}
+
+class PagingMetaData {
+    /**
+     * @param {number} pageIndex
+     * @param {number} pageSize
+     * @param {number} totalRecords
+     */
+    constructor(pageIndex = 1, pageSize = 10, totalRecords = 10) {
+        this.pageIndex = pageIndex;
+        this.pageSize = !pageSize || pageSize <= 0 ? 10 : pageSize;
+        this.totalRecords = totalRecords;
+        this.totalPages = Math.ceil(this.totalRecords / this.pageSize);
     }
 }

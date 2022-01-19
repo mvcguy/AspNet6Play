@@ -81,7 +81,7 @@ class ManageCustomers {
             new BSGridSelectListItem('Sweden', 'SE')]));
 
         var dataSource = new BSGridDataSource('addresses',
-            initData, true, 'https://localhost:7096/api/v1/Customers/address');
+            initData, true, 'https://localhost:7096/api/v1/customers/address/{0}/{1}');
 
         var bs = new BSGridOptions("customerAddresses", "customerAddresses_Container", cols, dataSource);
 

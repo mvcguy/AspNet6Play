@@ -7,7 +7,7 @@ using PlayWebApp.Services.Database.Model;
 
 namespace PlayWebApp.Services.DataNavigation
 {
-    public abstract class NavigationRepository<TModel> : INavigationRepository<TModel> 
+    public abstract class NavigationRepository<TModel> : INavigationRepository<TModel>
     where TModel : EntityBase, new()
     {
         protected readonly ApplicationDbContext dbContext;
@@ -99,19 +99,38 @@ namespace PlayWebApp.Services.DataNavigation
             return dbContext.Set<TModel>().Remove(model);
         }
 
-        public virtual async Task<IEnumerable<TModel>> GetAll(int take, int skip)
+        public virtual async Task<PagedResult<TModel>> GetAll(int pageIndex, int pageSize)
         {
-            return await GetTenantBasedQuery().OrderBy(x => x.RefNbr).Skip(skip).Take(take).ToListAsync();
+            GetPagingInfo(pageIndex, pageSize, out var take, out var skip);
+            var totalRecords = GetTenantBasedQuery().Count();
+            var records = await GetTenantBasedQuery().OrderBy(x => x.RefNbr).Skip(skip).Take(take).ToListAsync();
+
+            return new PagedResult<TModel>
+            {
+                PageIndex = pageIndex,
+                PageSize = pageSize,
+                TotalRecords = totalRecords,
+                Records = records
+            };
         }
-        
-        public async Task<IEnumerable<TModel>> GetAllByParentId(string parentId, int take, int skip)
+
+        public async Task<PagedResult<TModel>> GetAllByParentId(string parentId, int pageIndex, int pageSize)
         {
-             return await GetQueryByParentId(parentId).OrderBy(x => x.RefNbr).Skip(skip).Take(take).ToListAsync();
+            GetPagingInfo(pageIndex, pageSize, out var take, out var skip);
+            var totalRecords = GetQueryByParentId(parentId).Count();
+            var records = await GetQueryByParentId(parentId).OrderBy(x => x.RefNbr).Skip(skip).Take(take).ToListAsync();
+            return new PagedResult<TModel>
+            {
+                PageIndex = pageIndex,
+                PageSize = pageSize,
+                TotalRecords = totalRecords,
+                Records = records
+            };
         }
 
         public async Task<IEnumerable<TModel>> GetAllByParentId(string parentId)
         {
-             return await GetQueryByParentId(parentId).OrderBy(x => x.RefNbr).ToListAsync();
+            return await GetQueryByParentId(parentId).OrderBy(x => x.RefNbr).ToListAsync();
         }
 
         public virtual async Task<int> SaveChanges()
@@ -133,6 +152,35 @@ namespace PlayWebApp.Services.DataNavigation
             model.ModifiedOn = DateTime.UtcNow;
             model.ModifiedBy = context.UserId;
         }
+
+        private void GetPagingInfo(int page, int pageSize, out int take, out int skip)
+        {
+            var iPage = page;
+            if (page <= 0)
+            {
+                iPage = 1;
+            }
+
+            take = pageSize;
+            skip = 0;
+            if (iPage > 1)
+            {
+                skip = (iPage - 1) * pageSize;
+            }
+        }
+
+    }
+
+    public class PagedResult<TModel> where TModel : EntityBase, new()
+    {
+        public IEnumerable<TModel> Records { get; set; }
+
+        public int PageIndex { get; set; }
+
+        public int PageSize { get; set; }
+
+        public int TotalRecords { get; set; }
+
 
     }
 }
