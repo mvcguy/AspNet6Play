@@ -44,6 +44,7 @@ namespace PlayWebApp.Areas.Logistics.Pages.Booking
                 if(addresses!=null && addresses.Items!=null && addresses.Items.Any())
                 {
                     CustomerVm.Addresses = addresses.Items.Select(x => x.ToVm()).ToList();
+                    CustomerVm.AddressesMetaData = addresses.MetaData;
                 }
             }
             

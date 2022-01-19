@@ -18,12 +18,14 @@ namespace PlayWebApp.Services.Logistics.CustomerManagement.ViewModels
         [Required]
         [Display(Name = "Name")]
         [JsonProperty("CustomerVm.Name")]
-        [StringLength(128, ErrorMessage = "The {0} must be at least {2} and at max {1} characters long.", MinimumLength = 3)]        
+        [StringLength(128, ErrorMessage = "The {0} must be at least {2} and at max {1} characters long.", MinimumLength = 3)]
         public string Name { get; set; }
 
         public bool Active { get; set; }
 
         public List<AddressUpdateVm> Addresses { get; set; }
+
+        public CollectionMetaData AddressesMetaData { get; set; }
     }
 
     public class CustomerDto : BaseDto
@@ -37,7 +39,7 @@ namespace PlayWebApp.Services.Logistics.CustomerManagement.ViewModels
 
     public class CustomerRequestDto : RequestBase
     {
-        
+
     }
 
 

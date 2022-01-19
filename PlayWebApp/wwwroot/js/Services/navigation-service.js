@@ -440,7 +440,8 @@ var persistenceService = function (serviceParams) {
         registerCallbacks,
         dumpParams,
         postRequest,
-        getRequest
+        getRequest, 
+        getIdCallback,
     };
 
 };

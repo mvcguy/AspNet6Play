@@ -59,7 +59,7 @@
 
 <script>
     $(document).ready(function () {
-        ManageCustomers.initCustomersPage(@Json.Serialize(Model.CustomerVm.Addresses));
+        ManageCustomers.initCustomersPage('@Model.CustomerVm.RefNbr', @Json.Serialize(Model.CustomerVm.Addresses), @Json.Serialize(Model.CustomerVm.AddressesMetaData));
     });    
 </script>
 

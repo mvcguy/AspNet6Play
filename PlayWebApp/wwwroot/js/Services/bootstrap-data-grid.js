@@ -198,11 +198,19 @@ class BootstrapDataGrid extends BSGridBase {
         this.httpClient = new BSGridHttpClient();
 
         this.paginator = new BSGridPagination(
-            new BSGridPaginationOptions(this.options.dataSource.name, new PagingMetaData(), this.paginatorCallback));
+            new BSGridPaginationOptions(this.options.dataSource.name,
+                new PagingMetaData(),
+                (page) => this.paginatorCallback(page)));
+
         // this.render(); // render manually
+
     }
+    /**
+     * @param {number} page
+     */
     paginatorCallback(page) {
         console.log(`Page.Nbr: ${page} is requested`);
+        this.fetchGridPage(page);
     }
 
     addHeader() {
@@ -335,7 +343,10 @@ class BootstrapDataGrid extends BSGridBase {
         //
         // add data to the grid
         //
-        _this.bindDataSource(_this.options.dataSource.initData);
+        var data = _this.options.dataSource.data.initData;
+        var mdata = _this.options.dataSource.data.metaData;
+        var pmeta = mdata ? new PagingMetaData(mdata.pageIndex, mdata.pageSize, mdata.totalRecords) : undefined;
+        _this.bindDataSource(data, pmeta);
 
         //
         // notify that grid is data-bound
@@ -436,7 +447,7 @@ class BootstrapDataGrid extends BSGridBase {
 
         data.forEach((v, i) => {
             var row = this.addNewRow(i, v, true);
-            row.prop('data-rowcategory', 'PRESTINE')
+            row.prop('data-rowcategory', 'PRESTINE');
         });
 
         //
@@ -598,22 +609,27 @@ class BootstrapDataGrid extends BSGridBase {
         // console.log(eventArgs);
         this.resetSorting();
         this.clearGrid();
+        this.paginator.clear();
 
         //
         // fetch grid data
-        //
+        //        
+        this.fetchGridPage(1);
+    };
 
-        var mainFormIdField = eventArgs.eventData[eventArgs.idField];
-        var page = 1;
+    /**
+     * @param {number} pageIndex
+     */
+    fetchGridPage(pageIndex) {
+
         // @ts-ignore
-        var url = this.options.dataSource.url.format(mainFormIdField, page);
+        var url = this.options.dataSource.url(pageIndex);
+        if (!url) return;
 
-        if (!mainFormIdField) return;
         var options = new BSGridHttpClientOptions(url, "GET");
 
         this.httpClient.get(options);
-
-    };
+    }
 
     onSaveRecord(eventArgs) {
 
@@ -843,6 +859,7 @@ class BootstrapDataGrid extends BSGridBase {
         //
         // populate the grid with the fetched data
         //
+        this.clearGrid();
         var md = eventArgs.eventData.metaData;
         this.bindDataSource(eventArgs.eventData.items, new PagingMetaData(md.pageIndex, md.pageSize, md.totalRecords));
     }
@@ -1379,17 +1396,28 @@ class BSGridColDefinition {
     }
 }
 
+
+
+/**
+ * Url CB type
+ * @callback getUrlCallback
+ * @param {number} pageIndex
+ * @returns {string} url to access next page
+ */
+
+
 class BSGridDataSource {
+
 
     /**
      * @param {string} name
-     * @param {any[]} initData
+     * @param {{initData: object[];metaData: object;}} initData
      * @param {boolean} isRemote
-     * @param {string} url
+     * @param {getUrlCallback} url - A cb that will accept a page number and returns the url to the next page
      */
     constructor(name, initData, isRemote, url) {
         this.name = name;
-        this.initData = initData;
+        this.data = initData;
         this.isRemote = isRemote;
         this.url = url;
     }
@@ -2000,19 +2028,22 @@ class BSGridPagination extends BSGridBase {
     constructor(options) {
         super();
         this.options = options;
+        this.listId = `pg_list_${this.options.dsName}`;
+        this.containerId = `pg_container_${this.options.dsName}`;
     }
 
     render() {
         if (this.element)
             this.element.remove();
+
         this.element =
             this.jquery(
-                    `<div class="bsgrid-pagination" id="pg_container_${this.options.dsName}">
+                `<div class="bsgrid-pagination" id="${this.containerId}">
                         <nav aria-label="Page navigation">
                             
                         </nav>
                     </div>`);
-        var pageList = this.jquery(`<ul class="pagination justify-content-end" id="pg_list_${this.options.dsName}"></ul>`);
+        var pageList = this.jquery(`<ul class="pagination justify-content-end" id="${this.listId}"></ul>`);
 
         for (let index = 1; index <= this.options.pagingMetaData.totalPages && index <= 5; index++) {
             var li = this.jquery('<li class="page-item"></li>');
@@ -2028,6 +2059,10 @@ class BSGridPagination extends BSGridBase {
         };
 
         this.element.find('nav').append(pageList);
+    }
+
+    clear() {
+        this.jquery('#' + this.listId).children('li').remove();
     }
 }
 

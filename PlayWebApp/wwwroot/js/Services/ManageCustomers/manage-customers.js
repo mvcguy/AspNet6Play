@@ -4,7 +4,7 @@ class ManageCustomers {
 
     }
 
-    static initCustomersPage(initData) {
+    static initCustomersPage(initRefNbr, addresses, addressesMetaData) {
         var keyCol = 'CustomerVm_RefNbr';
         // @ts-ignore
         var srv = new persistenceService({
@@ -81,11 +81,20 @@ class ManageCustomers {
             new BSGridSelectListItem('Sweden', 'SE')]));
 
         var dataSource = new BSGridDataSource('addresses',
-            initData, true, 'https://localhost:7096/api/v1/customers/address/{0}/{1}');
+            {
+                initData: addresses,
+                metaData: addressesMetaData
+            },
+            true,
+            (page) => {     
+                var refNbr = srv.getIdCallback();
+                if (!refNbr) return undefined;
+                return `https://localhost:7096/api/v1/Customers/address/${refNbr}/${page}`;
+            }); 
 
         var bs = new BSGridOptions("customerAddresses", "customerAddresses_Container", cols, dataSource);
 
-        var grid = new BootstrapDataGrid(bs);        
+        var grid = new BootstrapDataGrid(bs);
         grid.registerCallbacks();
         grid.render();
 
