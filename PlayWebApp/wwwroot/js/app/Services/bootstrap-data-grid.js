@@ -1,10 +1,5 @@
 // @ts-check
 
-// const jquery = require("../../lib/jquery/dist/jquery");
-
-//import $ from "../../lib/jquery/dist/jquery";
-
-
 class BSGridBase {
 
     /**
@@ -201,6 +196,9 @@ class BootstrapDataGrid extends BSGridBase {
             new BSGridPaginationOptions(this.options.dataSource.name,
                 new PagingMetaData(),
                 (page) => this.paginatorCallback(page)));
+        
+        // @ts-ignore
+        this.sessionCache = new SessionStorageService();
 
         // this.render(); // render manually
 

@@ -31,8 +31,8 @@
             "name": "PlayWebApp",
             "type": "coreclr",
             "request": "launch",
-            //"preLaunchTask": "run-playwebapp",
-            "preLaunchTask": "build-playwebapp",
+            "preLaunchTask": "run-playwebapp",
+            // "preLaunchTask": "build-playwebapp",
             "launchBrowser": {
                 "enabled": false
             },

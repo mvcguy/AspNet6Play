@@ -8,7 +8,7 @@
             "args": [
                 // "build",
                 "watch",
-                "build",
+                "run",
                 "${workspaceFolder}/PlayWebApp/PlayWebApp.csproj",
                 "/property:GenerateFullPaths=true",
                 "/consoleloggerparameters:NoSummary"
