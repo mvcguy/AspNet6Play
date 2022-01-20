@@ -4,7 +4,7 @@ class ManageCustomers {
 
     }
 
-    static initCustomersPage(initRefNbr, addresses, addressesMetaData) {
+    static initCustomersPage(initRefNbr, data, mData) {
         var keyCol = 'CustomerVm_RefNbr';
         // @ts-ignore
         var srv = new persistenceService({
@@ -82,15 +82,15 @@ class ManageCustomers {
 
         var dataSource = new BSGridDataSource('addresses',
             {
-                initData: addresses,
-                metaData: addressesMetaData
+                initData: data,
+                metaData: mData ? new PagingMetaData(mData.pageIndex, mData.pageSize, mData.totalRecords) : undefined
             },
             true,
-            (page) => {     
+            (page) => {
                 var refNbr = srv.getIdCallback();
                 if (!refNbr) return undefined;
                 return `https://localhost:7096/api/v1/Customers/address/${refNbr}/${page}`;
-            }); 
+            });
 
         var bs = new BSGridOptions("customerAddresses", "customerAddresses_Container", cols, dataSource);
 

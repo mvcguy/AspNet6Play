@@ -196,7 +196,7 @@ class BootstrapDataGrid extends BSGridBase {
             new BSGridPaginationOptions(this.options.dataSource.name,
                 new PagingMetaData(),
                 (page) => this.paginatorCallback(page)));
-        
+
         // @ts-ignore
         this.sessionCache = new SessionStorageService();
 
@@ -343,8 +343,8 @@ class BootstrapDataGrid extends BSGridBase {
         //
         var data = _this.options.dataSource.data.initData;
         var mdata = _this.options.dataSource.data.metaData;
-        var pmeta = mdata ? new PagingMetaData(mdata.pageIndex, mdata.pageSize, mdata.totalRecords) : undefined;
-        _this.bindDataSource(data, pmeta);
+        //_this.bindDataSource(data, mdata);
+        this.notifyListeners(_this.appDataEvents.ON_FETCH_GRID_RECORD, { eventData: { items: data, metaData: mdata } });
 
         //
         // notify that grid is data-bound
@@ -443,7 +443,12 @@ class BootstrapDataGrid extends BSGridBase {
 
         if (!data || data.length <= 0) return;
 
-        data.forEach((v, i) => {
+        var pagedData = data;
+        if (this.options.dataSource.isRemote === false) {
+            pagedData = this.options.dataSource.getPageOfflineCB(metaData.pageIndex, this.options.dataSource.data.initData, metaData);
+        }
+
+        pagedData.forEach((v, i) => {
             var row = this.addNewRow(i, v, true);
             row.prop('data-rowcategory', 'PRESTINE');
         });
@@ -620,13 +625,24 @@ class BootstrapDataGrid extends BSGridBase {
      */
     fetchGridPage(pageIndex) {
 
-        // @ts-ignore
-        var url = this.options.dataSource.url(pageIndex);
-        if (!url) return;
+        if (this.options.dataSource.isRemote === true) {
+            var url = this.options.dataSource.url(pageIndex);
+            if (!url) return;
 
-        var options = new BSGridHttpClientOptions(url, "GET");
+            var options = new BSGridHttpClientOptions(url, "GET");
 
-        this.httpClient.get(options);
+            this.httpClient.get(options);
+        }
+        else {
+            var data = this.options.dataSource.data.initData;
+            var mdata = this.options.dataSource.data.metaData;
+            //var cb = this.options.dataSource.getPageOfflineCB;
+            //var pageData = cb(pageIndex, data, mdata);
+            this.notifyListeners(this.appDataEvents.ON_FETCH_GRID_RECORD,
+                { eventData: { items: data, metaData: new PagingMetaData(pageIndex, mdata.pageSize, mdata.totalRecords) } });
+
+        }
+
     }
 
     onSaveRecord(eventArgs) {
@@ -1403,21 +1419,32 @@ class BSGridColDefinition {
  * @returns {string} url to access next page
  */
 
+/**
+ * A callback type to get the next page in the offline mode
+ * @callback getNextPageOffline
+ * @param {number} pageIndex
+ * @param {object[]} data - dataset
+ * @param {PagingMetaData} metadata - dataseta metadata
+ * @returns {object[]} returns the data model for the request page
+ */
+
 
 class BSGridDataSource {
 
 
     /**
      * @param {string} name
-     * @param {{initData: object[];metaData: object;}} initData
+     * @param {{initData: object[];metaData: PagingMetaData;}} initData
      * @param {boolean} isRemote
      * @param {getUrlCallback} url - A cb that will accept a page number and returns the url to the next page
+     * @param {getNextPageOffline} getPageOffline - A callback type to get the next page in the offline mode
      */
-    constructor(name, initData, isRemote, url) {
+    constructor(name, initData, isRemote, url = (page) => undefined, getPageOffline = undefined) {
         this.name = name;
         this.data = initData;
         this.isRemote = isRemote;
         this.url = url;
+        this.getPageOfflineCB = getPageOffline;
     }
 
 }
@@ -2052,7 +2079,8 @@ class BSGridPagination extends BSGridBase {
             link.on('click', (e) => {
                 e.preventDefault();
                 var index = this.jquery(e.target).attr('data-p-index');
-                this.options.nextPageCallback(index);
+
+                this.options.nextPageCallback(parseInt(index));
             });
         };
 
