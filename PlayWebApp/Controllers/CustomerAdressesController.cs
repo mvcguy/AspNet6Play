@@ -3,8 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using PlayWebApp.Services.Database;
 using PlayWebApp.Services.Database.Model;
 using PlayWebApp.Services.Logistics.CustomerManagement;
-using PlayWebApp.Services.Logistics.ViewModels;
-using PlayWebApp.Services.Logistics.ViewModels.Requests;
+using PlayWebApp.Services.Logistics.LocationMgt.ViewModels;
 using PlayWebApp.Services.ModelExtentions;
 #nullable disable
 
@@ -51,9 +50,9 @@ namespace PlayWebApp.Controllers
         [Route("{customerId}/{page}")]
         public async Task<IActionResult> GetAll(string customerId, int page = 1)
         {
-            if(string.IsNullOrWhiteSpace(customerId) || page<0) return BadRequest("Params CustomerID or Page are invalid");
-            var items = await service.GetAllByParentId(customerId.ToString(), page);
-            
+            if (string.IsNullOrWhiteSpace(customerId) || page < 0) return BadRequest("Params CustomerID or Page are invalid");
+            var items = await service.GetPaginatedCollection(x => x.Customer.RefNbr == customerId.ToString(), page);
+
             return Ok(items);
         }
 
@@ -119,7 +118,7 @@ namespace PlayWebApp.Controllers
             //
             // default address cannot be deleted
             //    
-            if (record.PreferredAddress)
+            if (record.IsDefault)
             {
                 return BadRequest("Default address cannot be deleted. Please change the default address from the profile page first!");
             }

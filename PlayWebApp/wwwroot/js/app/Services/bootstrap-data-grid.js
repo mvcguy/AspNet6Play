@@ -959,6 +959,14 @@ class BSGridCheckBox extends BSGridInput {
         return this.element.is(':checked');
     }
 
+    /**
+     * @param {string} v
+     */
+    set val(v) {
+        this.element.val(v);
+    }
+
+
     render() {
         this.element = this.jquery("<input type='checkbox' />");
     }

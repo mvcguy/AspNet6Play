@@ -3,7 +3,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace PlayWebApp.Services.Database.Model
 {
-    
+
     public abstract class BusinessEntity : EntityBase
     {
         [Required]
@@ -14,10 +14,16 @@ namespace PlayWebApp.Services.Database.Model
         [Column(TypeName = "bit")]
         public virtual bool Active { get; set; }
 
+        [MaxLength(128)]
+        [Column(TypeName = "nvarchar")]
+        public string DefaultAddressId { get; set; }
+
+        public Address DefaultAddress { get; set; }
+
     }
 
     public class Customer : BusinessEntity
-    {        
+    {
         public virtual ICollection<Booking> Bookings { get; set; }
 
         public virtual ICollection<CustomerAddress> Addresses { get; set; }

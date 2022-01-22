@@ -10,25 +10,13 @@ using PlayWebApp.Services.DataNavigation;
 namespace PlayWebApp.Services.Logistics.InventoryMgt.Repository
 {
     public class InventoryRepository : NavigationRepository<StockItem>
-    {        public InventoryRepository(ApplicationDbContext dbContext, IPlayAppContext context): base(dbContext, context){}
+    {
+        public InventoryRepository(ApplicationDbContext dbContext, IPlayAppContext context) : base(dbContext, context) { }
 
-        public override IQueryable<StockItem> GetQueryByParentId(string parentId)
+        public override IQueryable<StockItem> GetQuery()
         {
-            throw new NotImplementedException();
+            return dbContext.Set<StockItem>().Where(x => x.TenantId == context.TenantId);
         }
-
-        public override IQueryable<StockItem> GetTenantBasedQuery(bool includePrices = true)
-        {
-            var query = dbContext.Set<StockItem>().Where(x => x.TenantId == context.TenantId);
-            if (includePrices)
-            {
-                return query.Include(x => x.StockItemPrices);
-            }
-            return query;
-        }
-
-
-
     }
 
 }

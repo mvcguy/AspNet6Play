@@ -11,13 +11,7 @@ namespace PlayWebApp.Services.Logistics.LocationMgt.Repository
         public SupplierLocationRepository(ApplicationDbContext dbContext, IPlayAppContext context) : base(dbContext, context)
         {
         }
-
-        public override IQueryable<SupplierAddress> GetQueryByParentId(string parentId)
-        {
-            return GetTenantBasedQuery().Where(x => x.SupplierId == parentId);
-        }
-
-        public override IQueryable<SupplierAddress> GetTenantBasedQuery(bool includeSubItems = true)
+        public override IQueryable<SupplierAddress> GetQuery()
         {
             return dbContext.SupplierAddresses.Where(x => x.TenantId == context.TenantId);
         }

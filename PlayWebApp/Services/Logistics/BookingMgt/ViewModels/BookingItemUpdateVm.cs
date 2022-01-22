@@ -1,9 +1,12 @@
 #nullable disable
-namespace PlayWebApp.Services.Logistics.ViewModels
+using PlayWebApp;
+using PlayWebApp.Services.Logistics.ViewModels;
+
+namespace PlayWebApp.Services.Logistics.BookingMgt.ViewModels
 {
     public class BookingItemUpdateVm : ViewModelBase
     {
-        public string BookingRefNbr { get; set; }
+        public new string RefNbr { get; set; }
         public string Description { get; set; }
         public decimal? Discount { get; set; }
         public decimal? ExtCost { get; set; }

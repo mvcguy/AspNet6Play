@@ -1,7 +1,7 @@
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using PlayWebApp.Services.Logistics.CustomerManagement;
 using PlayWebApp.Services.Logistics.CustomerManagement.ViewModels;
-using PlayWebApp.Services.Logistics.ViewModels;
+using PlayWebApp.Services.Logistics.LocationMgt.ViewModels;
 using PlayWebApp.Services.ModelExtentions;
 #nullable disable
 
@@ -38,16 +38,17 @@ namespace PlayWebApp.Areas.Logistics.Pages.Booking
                 }
             }
 
-            if(!string.IsNullOrWhiteSpace(CustomerVm.RefNbr))
+            if (!string.IsNullOrWhiteSpace(CustomerVm.RefNbr))
             {
-                var addresses = await locService.GetAllByParentId(CustomerVm.RefNbr, 1);
-                if(addresses!=null && addresses.Items!=null && addresses.Items.Any())
+                var addresses = await locService
+                    .GetPaginatedCollection(x => x.Customer.RefNbr == CustomerVm.RefNbr, 1);
+                if (addresses != null && addresses.Items != null && addresses.Items.Any())
                 {
                     CustomerVm.Addresses = addresses.Items.Select(x => x.ToVm()).ToList();
                     CustomerVm.AddressesMetaData = addresses.MetaData;
                 }
             }
-            
+
         }
     }
 }

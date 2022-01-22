@@ -3,7 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
 using PlayWebApp.Services.Logistics.CustomerManagement;
 using PlayWebApp.Services.Logistics.CustomerManagement.ViewModels;
-using PlayWebApp.Services.Logistics.ViewModels;
+using PlayWebApp.Services.Logistics.LocationMgt.ViewModels;
 
 namespace PlayWebApp.Controllers
 {

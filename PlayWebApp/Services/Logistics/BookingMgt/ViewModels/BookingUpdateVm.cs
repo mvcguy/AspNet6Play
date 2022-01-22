@@ -1,7 +1,8 @@
 using System.ComponentModel.DataAnnotations;
 using Newtonsoft.Json;
+using PlayWebApp.Services.Logistics.ViewModels;
 #nullable disable
-namespace PlayWebApp.Services.Logistics.ViewModels
+namespace PlayWebApp.Services.Logistics.BookingMgt.ViewModels
 {
     public class BookingUpdateVm : ViewModelBase
     {

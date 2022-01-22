@@ -1,8 +1,8 @@
 using PlayWebApp.Services.Logistics.CustomerManagement.ViewModels;
 using PlayWebApp.Services.Database.Model;
 using PlayWebApp.Services.DataNavigation;
-using PlayWebApp.Services.Logistics.ViewModels;
 using PlayWebApp.Services.ModelExtentions;
+using PlayWebApp.Services.Logistics.LocationMgt.ViewModels;
 
 namespace PlayWebApp.Services.Logistics.CustomerManagement
 {
@@ -10,10 +10,10 @@ namespace PlayWebApp.Services.Logistics.CustomerManagement
     {
         private readonly INavigationRepository<CustomerAddress> locRepository;
 
-        public CustomerService(INavigationRepository<Customer> repository, 
-        INavigationRepository<CustomerAddress> locationService) : base(repository)
+        public CustomerService(INavigationRepository<Customer> repository,
+                                 INavigationRepository<CustomerAddress> locRepository) : base(repository)
         {
-            this.locRepository = locationService;
+            this.locRepository = locRepository;
         }
 
         public override async Task<CustomerDto> Add(CustomerUpdateVm model)
@@ -46,7 +46,7 @@ namespace PlayWebApp.Services.Logistics.CustomerManagement
             item.Name = model.Name;
             item.Active = model.Active;
 
-            item.Addresses = (await locRepository.GetAllByParentId(model.RefNbr)).ToList();
+            item.Addresses = (await locRepository.GetCollection(x => x.Customer.RefNbr == model.RefNbr)).ToList();
 
             UpdateCustomerAddresses(model, item);
 
@@ -56,36 +56,43 @@ namespace PlayWebApp.Services.Logistics.CustomerManagement
 
         }
 
-        private void UpdateCustomerAddresses(CustomerUpdateVm model, Customer item)
+        private void UpdateCustomerAddresses(CustomerUpdateVm model, Customer customer)
         {
             model.Addresses = model.Addresses ?? new List<AddressUpdateVm>();
+            var customerDefaultAddress = customer.DefaultAddress?.RefNbr;
             foreach (var addressVm in model.Addresses)
             {
+                CustomerAddress address = null;
                 switch (addressVm.UpdateType)
                 {
                     case UpdateType.New:
-                        AddNewAddress(item, addressVm);
+                        address = AddNewAddress(customer, addressVm);
+
                         break;
                     case UpdateType.Update:
-                        UpdateExistingAddress(item, addressVm);
+                        address = UpdateExistingAddress(customer, addressVm);
                         break;
                     case UpdateType.Delete:
-                        DeleteExistingAddress(item, addressVm);
+                        DeleteExistingAddress(customer, addressVm);
                         break;
                 }
+
+                if (addressVm.IsDefault && address != null)
+                    customer.DefaultAddress = address;
             }
         }
 
-        private static void DeleteExistingAddress(Customer item, AddressUpdateVm addressVm)
+        private CustomerAddress DeleteExistingAddress(Customer item, AddressUpdateVm addressVm)
         {
             var address = item.Addresses.FirstOrDefault(x => x.RefNbr == addressVm.RefNbr);
             if (address != null)
             {
                 item.Addresses.Remove(address);
             }
+            return address;
         }
 
-        private void UpdateExistingAddress(Customer item, AddressUpdateVm addressVm)
+        private CustomerAddress UpdateExistingAddress(Customer item, AddressUpdateVm addressVm)
         {
             var address = item.Addresses.FirstOrDefault(x => x.RefNbr == addressVm.RefNbr);
             if (address != null)
@@ -96,9 +103,10 @@ namespace PlayWebApp.Services.Logistics.CustomerManagement
                 address.StreetAddress = addressVm.StreetAddress;
                 repository.UpdateAuditData(address);
             }
+            return address;
         }
 
-        private void AddNewAddress(Customer item, AddressUpdateVm addressVm)
+        private CustomerAddress AddNewAddress(Customer item, AddressUpdateVm addressVm)
         {
             var address = new CustomerAddress
             {
@@ -111,6 +119,7 @@ namespace PlayWebApp.Services.Logistics.CustomerManagement
             };
             repository.AddAuditData(address);
             item.Addresses.Add(address);
+            return address;
         }
     }
 }

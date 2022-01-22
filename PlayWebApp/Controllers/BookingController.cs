@@ -1,6 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using PlayWebApp.Services.Logistics.BookingMgt;
-using PlayWebApp.Services.Logistics.ViewModels;
+using PlayWebApp.Services.Logistics.BookingMgt.ViewModels;
 using PlayWebApp.Services.Logistics.ViewModels.Requests;
 #nullable disable
 

@@ -1,8 +1,6 @@
 using PlayWebApp.Services.Database.Model;
 using PlayWebApp.Services.DataNavigation;
-using PlayWebApp.Services.Logistics.ViewModels;
-using PlayWebApp.Services.Logistics.ViewModels.Dtos;
-using PlayWebApp.Services.Logistics.ViewModels.Requests;
+using PlayWebApp.Services.Logistics.BookingMgt.ViewModels;
 using PlayWebApp.Services.ModelExtentions;
 
 #nullable disable
@@ -26,7 +24,7 @@ namespace PlayWebApp.Services.Logistics.BookingMgt
                     Description = model.Description,
                     BookingItems = model.Lines?.Select(x => new BookingItem
                     {
-                        BookingId = x.BookingRefNbr,
+                        BookingId = model.RefNbr,
                         RefNbr = x.RefNbr,
                         Description = x.Description,
                         Discount = x.Discount,

@@ -1,3 +1,4 @@
+using System.Linq.Expressions;
 using PlayWebApp.Services.Database.Model;
 using PlayWebApp.Services.Logistics.ViewModels;
 using PlayWebApp.Services.Logistics.ViewModels.Dtos;
@@ -72,10 +73,26 @@ namespace PlayWebApp.Services.DataNavigation
             return await repository.SaveChanges();
         }
 
-        public virtual async Task<DtoCollection<TDto>> GetAllByParentId(string parentId, int page = 1)
-        {
+        // public virtual async Task<DtoCollection<TDto>> GetAllByParentId(string parentId, int page = 1)
+        // {
 
-            var pagedResult = await repository.GetAllByParentId(parentId, page, MaxPerPage);
+        //     var pagedResult = await repository.GetAllByParentId(parentId, page, MaxPerPage);
+        //     var result = new DtoCollection<TDto>()
+        //     {
+        //         Items = pagedResult.Records.Select(x => ToDto(x)),
+        //         MetaData = new CollectionMetaData
+        //         {
+        //             PageSize = pagedResult.PageSize,
+        //             PageIndex = pagedResult.PageIndex,
+        //             TotalRecords = pagedResult.TotalRecords,
+        //         }
+        //     };
+        //     return result;
+        // }
+
+        public virtual async Task<DtoCollection<TDto>> GetPaginatedCollection(Expression<Func<TDbModel, bool>> filter, int page = 1)
+        {
+                var pagedResult = await repository.GetPaginatedCollection(filter, page, MaxPerPage);
             var result = new DtoCollection<TDto>()
             {
                 Items = pagedResult.Records.Select(x => ToDto(x)),

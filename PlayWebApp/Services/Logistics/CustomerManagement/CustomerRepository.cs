@@ -12,19 +12,12 @@ namespace PlayWebApp.Services.Logistics.CustomerManagement
         {
         }
 
-        public override IQueryable<Customer> GetQueryByParentId(string parentId)
+        public override IQueryable<Customer> GetQuery()
         {
-            throw new NotImplementedException();
-        }
+            var query = base.GetQuery();
 
-        public override IQueryable<Customer> GetTenantBasedQuery(bool includeSubItems = false)
-        {
-            if(includeSubItems)
-            {
-                return dbContext.Customers.Include(x => x.Addresses).Where(x => x.TenantId == context.TenantId);
-            }
+            return query.Include(x => x.Addresses).Include(x => x.DefaultAddress);
 
-            return dbContext.Customers.Where(x => x.TenantId == context.TenantId);
         }
     }
 }

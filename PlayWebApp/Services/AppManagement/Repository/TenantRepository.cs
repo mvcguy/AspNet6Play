@@ -1,8 +1,6 @@
-using Microsoft.EntityFrameworkCore;
 using PlayWebApp.Services.Database;
 using PlayWebApp.Services.Database.Model;
 using PlayWebApp.Services.DataNavigation;
-using PlayWebApp.Services.GenericModels;
 #nullable disable
 
 namespace PlayWebApp.Services.AppManagement.Repository
@@ -13,12 +11,7 @@ namespace PlayWebApp.Services.AppManagement.Repository
         {
         }
 
-        public override IQueryable<Tenant> GetQueryByParentId(string parentId)
-        {
-            throw new NotImplementedException();
-        }
-
-        public override IQueryable<Tenant> GetTenantBasedQuery(bool includeSubItems = true)
+        public override IQueryable<Tenant> GetQuery()
         {
             return dbContext.Tenants;
         }

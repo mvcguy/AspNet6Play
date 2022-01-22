@@ -4,8 +4,8 @@ using Microsoft.EntityFrameworkCore;
 using PlayWebApp.Services.Logistics.CustomerManagement;
 using PlayWebApp.Services.Database;
 using PlayWebApp.Services.Logistics.BookingMgt;
-using PlayWebApp.Services.Logistics.ViewModels;
 using System.Linq;
+using PlayWebApp.Services.Logistics.BookingMgt.ViewModels;
 #nullable disable
 
 namespace PlayWebApp.Areas.Logistics.Pages.Booking

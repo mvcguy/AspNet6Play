@@ -1,3 +1,4 @@
+using System.Linq.Expressions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.ChangeTracking;
 using PlayWebApp.Services.AppManagement;
@@ -26,18 +27,39 @@ namespace PlayWebApp.Services.DataNavigation
                 throw new Exception("Failed to access tenant or user info");
         }
 
-        public abstract IQueryable<TModel> GetTenantBasedQuery(bool includeSubItems = false);
+        public virtual IQueryable<TModel> GetQuery()
+        {
+            return dbContext.Set<TModel>().Where(x => x.TenantId == context.TenantId);
+        }
 
-        public abstract IQueryable<TModel> GetQueryByParentId(string parentId);
+        public async Task<PagedResult<TModel>> GetPaginatedCollection(Expression<Func<TModel, bool>> filter, int page, int pageLength)
+        {
+            var count = await GetQuery().Where(filter).CountAsync();
+            GetPagingInfo(page, pageLength, out var take, out var skip);
+            var records = await dbContext.Set<TModel>().Where(filter).Skip(skip).Take(take).ToListAsync();
 
+            return new PagedResult<TModel>
+            {
+                Records = records,
+                PageIndex = page,
+                PageSize = pageLength,
+                TotalRecords = count
+            };
+        }
+
+        public async Task<IEnumerable<TModel>> GetCollection(Expression<Func<TModel, bool>> filter)
+        {
+            return await GetQuery().Where(filter).ToListAsync();
+        }
+        
         public virtual async Task<TModel> GetFirst()
         {
-            return await GetTenantBasedQuery().OrderBy(x => x.RefNbr).FirstOrDefaultAsync();
+            return await GetQuery().OrderBy(x => x.RefNbr).FirstOrDefaultAsync();
         }
 
         public virtual async Task<TModel> GetLast()
         {
-            return await GetTenantBasedQuery().OrderByDescending(x => x.RefNbr).FirstOrDefaultAsync();
+            return await GetQuery().OrderByDescending(x => x.RefNbr).FirstOrDefaultAsync();
         }
 
         public virtual async Task<TModel> GetNext(string refNbr)
@@ -46,11 +68,11 @@ namespace PlayWebApp.Services.DataNavigation
 
             if (string.IsNullOrWhiteSpace(refNbr))
             {
-                record = await GetTenantBasedQuery().OrderBy(x => x.RefNbr).Take(1).FirstOrDefaultAsync();
+                record = await GetQuery().OrderBy(x => x.RefNbr).Take(1).FirstOrDefaultAsync();
             }
             else
             {
-                record = await GetTenantBasedQuery().OrderBy(x => x.RefNbr)
+                record = await GetQuery().OrderBy(x => x.RefNbr)
                             .Where(x => x.RefNbr.CompareTo(refNbr) > 0).
                             Take(1).FirstOrDefaultAsync();
             }
@@ -64,11 +86,11 @@ namespace PlayWebApp.Services.DataNavigation
 
             if (string.IsNullOrWhiteSpace(refNbr))
             {
-                record = await GetTenantBasedQuery().OrderByDescending(x => x.RefNbr).Take(1).FirstOrDefaultAsync();
+                record = await GetQuery().OrderByDescending(x => x.RefNbr).Take(1).FirstOrDefaultAsync();
             }
             else
             {
-                record = await GetTenantBasedQuery().OrderByDescending(x => x.RefNbr)
+                record = await GetQuery().OrderByDescending(x => x.RefNbr)
                             .Where(x => x.RefNbr.CompareTo(refNbr) < 0).
                             Take(1).FirstOrDefaultAsync();
             }
@@ -78,7 +100,7 @@ namespace PlayWebApp.Services.DataNavigation
 
         public virtual async Task<TModel> GetById(string refNbr)
         {
-            return await GetTenantBasedQuery().FirstOrDefaultAsync(x => x.RefNbr == refNbr);
+            return await GetQuery().FirstOrDefaultAsync(x => x.RefNbr == refNbr);
         }
 
         public virtual EntityEntry<TModel> Update(TModel model)
@@ -102,8 +124,8 @@ namespace PlayWebApp.Services.DataNavigation
         public virtual async Task<PagedResult<TModel>> GetAll(int pageIndex, int pageSize)
         {
             GetPagingInfo(pageIndex, pageSize, out var take, out var skip);
-            var totalRecords = GetTenantBasedQuery().Count();
-            var records = await GetTenantBasedQuery().OrderBy(x => x.RefNbr).Skip(skip).Take(take).ToListAsync();
+            var totalRecords = await GetQuery().CountAsync();
+            var records = await GetQuery().OrderBy(x => x.RefNbr).Skip(skip).Take(take).ToListAsync();
 
             return new PagedResult<TModel>
             {
@@ -112,25 +134,6 @@ namespace PlayWebApp.Services.DataNavigation
                 TotalRecords = totalRecords,
                 Records = records
             };
-        }
-
-        public async Task<PagedResult<TModel>> GetAllByParentId(string parentId, int pageIndex, int pageSize)
-        {
-            GetPagingInfo(pageIndex, pageSize, out var take, out var skip);
-            var totalRecords = GetQueryByParentId(parentId).Count();
-            var records = await GetQueryByParentId(parentId).OrderBy(x => x.RefNbr).Skip(skip).Take(take).ToListAsync();
-            return new PagedResult<TModel>
-            {
-                PageIndex = pageIndex,
-                PageSize = pageSize,
-                TotalRecords = totalRecords,
-                Records = records
-            };
-        }
-
-        public async Task<IEnumerable<TModel>> GetAllByParentId(string parentId)
-        {
-            return await GetQueryByParentId(parentId).OrderBy(x => x.RefNbr).ToListAsync();
         }
 
         public virtual async Task<int> SaveChanges()

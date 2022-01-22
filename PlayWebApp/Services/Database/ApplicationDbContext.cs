@@ -88,7 +88,8 @@ public class ApplicationDbContext : DbContext
         //
         customer.HasMany(x => x.Addresses).WithOne(b => b.Customer).HasForeignKey(x => x.CustomerId).IsRequired(false);
         supplier.HasMany(x => x.Addresses).WithOne(b => b.Supplier).HasForeignKey(x => x.SupplierId).IsRequired(false);
-       
+
+        bEntity.HasOne(x => x.DefaultAddress).WithOne().IsRequired(false);
 
     }
 }

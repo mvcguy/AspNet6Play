@@ -2,8 +2,9 @@ using PlayWebApp.Services.AppManagement.ViewModels;
 using PlayWebApp.Services.Logistics.CustomerManagement.ViewModels;
 using PlayWebApp.Services.Database.Model;
 using PlayWebApp.Services.Identity.ViewModels;
-using PlayWebApp.Services.Logistics.ViewModels;
 using PlayWebApp.Services.Logistics.ViewModels.Dtos;
+using PlayWebApp.Services.Logistics.BookingMgt.ViewModels;
+using PlayWebApp.Services.Logistics.LocationMgt.ViewModels;
 #nullable disable
 
 namespace PlayWebApp.Services.ModelExtentions
@@ -65,6 +66,7 @@ namespace PlayWebApp.Services.ModelExtentions
                 City = model.City,
                 PostalCode = model.PostalCode,
                 Country = model.Country,
+                IsDefault = model.IsDefault
             };
         }
 
@@ -135,10 +137,17 @@ namespace PlayWebApp.Services.ModelExtentions
 
             if (model.Addresses != null)
             {
+                var defaultAddress = model.DefaultAddress?.RefNbr;
                 result.Addresses = new DtoCollection<AddressDto>()
                 {
-                    Items = model.Addresses.Select(x => x.ToDto()).ToList()
+                    Items = model.Addresses.Select(x =>
+                    {
+                        var dto = x.ToDto();
+                        if (dto.RefNbr == defaultAddress) dto.IsDefault = true;
+                        return dto;
+                    }).ToList()
                 };
+
             }
 
             return result;
@@ -156,7 +165,7 @@ namespace PlayWebApp.Services.ModelExtentions
             };
 
             if (model.Addresses != null && model.Addresses.Items != null)
-            {
+            {                
                 result.Addresses = model.Addresses.Items.Select(x => x.ToVm()).ToList();
             }
 

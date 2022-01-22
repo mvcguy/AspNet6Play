@@ -4,7 +4,7 @@ class ManageCustomers {
 
     }
 
-    static initCustomersPage(initRefNbr, data, mData) {
+    static initCustomersPage(initRefNbr, addresses, addressesMetadata) {
         var keyCol = 'CustomerVm_RefNbr';
         // @ts-ignore
         var srv = new persistenceService({
@@ -82,8 +82,8 @@ class ManageCustomers {
 
         var dataSource = new BSGridDataSource('addresses',
             {
-                initData: data,
-                metaData: mData ? new PagingMetaData(mData.pageIndex, mData.pageSize, mData.totalRecords) : undefined
+                initData: addresses,
+                metaData: addressesMetadata ? new PagingMetaData(addressesMetadata.pageIndex, addressesMetadata.pageSize, addressesMetadata.totalRecords) : undefined
             },
             true,
             (page) => {

@@ -1,5 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 using Newtonsoft.Json;
+using PlayWebApp.Services.Logistics.LocationMgt.ViewModels;
 using PlayWebApp.Services.Logistics.ViewModels;
 using PlayWebApp.Services.Logistics.ViewModels.Dtos;
 using PlayWebApp.Services.Logistics.ViewModels.Requests;

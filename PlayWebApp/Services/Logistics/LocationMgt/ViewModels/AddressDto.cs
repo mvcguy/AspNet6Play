@@ -1,7 +1,8 @@
 #nullable disable
 using PlayWebApp;
+using PlayWebApp.Services.Logistics.ViewModels.Dtos;
 
-namespace PlayWebApp.Services.Logistics.ViewModels.Dtos
+namespace PlayWebApp.Services.Logistics.LocationMgt.ViewModels
 {
     public class AddressDto : BaseDto
     {
@@ -13,7 +14,7 @@ namespace PlayWebApp.Services.Logistics.ViewModels.Dtos
 
         public string Country { get; set; }
 
-        public bool PreferredAddress { get; set; }
+        public bool IsDefault { get; set; }        
     }
 
 }

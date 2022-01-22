@@ -1,8 +1,9 @@
 using System.ComponentModel.DataAnnotations;
 using System.Text.Json.Serialization;
 using PlayWebApp.Services.JsonConverters;
+using PlayWebApp.Services.Logistics.ViewModels;
 #nullable disable
-namespace PlayWebApp.Services.Logistics.ViewModels
+namespace PlayWebApp.Services.Logistics.LocationMgt.ViewModels
 {
     public class AddressUpdateVm : ViewModelBase
     {
@@ -33,10 +34,13 @@ namespace PlayWebApp.Services.Logistics.ViewModels
         public string Country { get; set; }
 
         public UpdateType UpdateType { get; set; }
-        
+
         [Required]
-        [Range(0, 20000)]        
+        [Range(0, 20000)]
         public int ClientRowNumber { get; set; }
+
+        [Display(Name ="Default")]
+        public bool IsDefault { get; set; }
 
     }
 
