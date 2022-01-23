@@ -6,7 +6,9 @@ using PlayWebApp.Services.Database;
 using PlayWebApp.Services.Logistics.BookingMgt;
 using System.Linq;
 using PlayWebApp.Services.Logistics.BookingMgt.ViewModels;
-#nullable disable
+using PlayWebApp.Services.Logistics.ViewModels.Dtos;
+using PlayWebApp.Services.ModelExtentions;
+
 
 namespace PlayWebApp.Areas.Logistics.Pages.Booking
 {
@@ -27,18 +29,41 @@ namespace PlayWebApp.Areas.Logistics.Pages.Booking
 
         public async Task OnGet()
         {
+            BookingVm = new BookingUpdateVm
+            {
+                Lines = new List<BookingItemUpdateVm>(),
+                LinesMetaData = new CollectionMetaData()
+            };
             var top1 = await bookingService.GetFirst();
             if (top1 != null)
             {
-                BookingVm = new BookingUpdateVm { RefNbr = top1.RefNbr, Description = top1.Description };
+                BookingVm = new BookingUpdateVm
+                {
+                    RefNbr = top1.RefNbr,
+                    Description = top1.Description,
+                    CustomerRefNbr = top1.CustomerRefNbr,
+                };
             }
-            Customers = new List<SelectListItem>();
-            Customers.Add(new SelectListItem { Text = "Select customer", Value = "", Selected = true });
-            Customers.AddRange((await customerService.GetAll(page: 1)).Items.Select(x => new SelectListItem
+
+            if (!string.IsNullOrWhiteSpace(BookingVm.RefNbr))
             {
-                Value = x.RefNbr,
-                Text = $"{x.RefNbr} - {x.Name}",
-            }));
+                var details = await bookingService.GetBookingLines(BookingVm.RefNbr, 1);
+                if (details != null && details.Items != null && details.Items.Any())
+                {
+                    BookingVm.Lines = details.Items.Select(x => x.ToVm()).ToList();
+                    BookingVm.LinesMetaData = details.MetaData;
+                }
+            }
+
+            Customers = new List<SelectListItem>();
+            Customers.Add(new SelectListItem { Text = "Select customer", Value = "", Selected = top1 == null });
+            Customers.AddRange((await customerService.GetAll(page: 1))
+                .Items.Select(x => new SelectListItem
+                {
+                    Value = x.RefNbr,
+                    Text = $"{x.RefNbr} - {x.Name}",
+                    Selected = top1?.CustomerRefNbr == x.RefNbr
+                }));
 
         }
     }

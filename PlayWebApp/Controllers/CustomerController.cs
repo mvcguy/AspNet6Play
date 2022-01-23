@@ -16,32 +16,10 @@ namespace PlayWebApp.Controllers
             this.service = service;
         }
 
-        private List<string> GetModelKeys(string prefix)
-        {
-            return new List<string>
-                            {
-                                $"{prefix}.{nameof(AddressUpdateVm.StreetAddress)}",
-                                $"{prefix}.{nameof(AddressUpdateVm.PostalCode)}",
-                                $"{prefix}.{nameof(AddressUpdateVm.City)}",
-                                $"{prefix}.{nameof(AddressUpdateVm.Country)}",
-                            };
-        }
-
-        private void RemoveErrorsFromModelState(List<string> keys)
-        {
-            if (ModelState.IsValid) return;
-            foreach (var key in keys)
-            {
-                if (ModelState.Keys.Contains(key))
-                    ModelState.Remove(key);
-            }
-
-        }
-
         [HttpPut]
         public async Task<IActionResult> Put(CustomerUpdateVm model)
         {
-            AdaptModelStateForAddressesArray(model);
+            AdaptModelStateForAddressesArray(model.Addresses, nameof(model.Addresses));
 
             if (!ModelState.IsValid) return BadRequest(ModelState);
 
@@ -54,42 +32,11 @@ namespace PlayWebApp.Controllers
             return Ok(item);
         }
 
-        private void AdaptModelStateForAddressesArray(CustomerUpdateVm model)
-        {
-            if (!ModelState.IsValid)
-            {
-                for (int i = 0; i < model.Addresses.Count; i++)
-                {
-                    var prefix = $"{nameof(model.Addresses)}[{i}]";
-                    var row = model.Addresses[i];
-                    if (row.UpdateType == UpdateType.Delete && !string.IsNullOrWhiteSpace(row.RefNbr))
-                    {
-                        RemoveErrorsFromModelState(GetModelKeys(prefix));
-                    }
-                }
-
-                var addressErrors = ModelState.FindKeysWithPrefix("Addresses");
-
-                if (addressErrors.Any())
-                {
-                    //
-                    // provide a mapping of server and client array indexes
-                    //
-                    for (int i = 0; i < model.Addresses.Count; i++)
-                    {
-                        ModelState
-                        .AddModelError($"{nameof(model.Addresses)}[{i}]",
-                                model.Addresses[i].ClientRowNumber.ToString(CultureInfo.InvariantCulture));
-                    }
-                }
-            }
-        }
-
         [HttpPost]
         public async Task<IActionResult> Post(CustomerUpdateVm model)
         {
 
-            AdaptModelStateForAddressesArray(model);
+            AdaptModelStateForAddressesArray(model.Addresses, nameof(model.Addresses));
 
             if (!ModelState.IsValid) return BadRequest(ModelState);
 

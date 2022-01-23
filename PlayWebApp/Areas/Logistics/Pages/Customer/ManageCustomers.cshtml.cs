@@ -41,7 +41,7 @@ namespace PlayWebApp.Areas.Logistics.Pages.Booking
             if (!string.IsNullOrWhiteSpace(CustomerVm.RefNbr))
             {
                 var addresses = await locService
-                    .GetPaginatedCollection(x => x.Customer.RefNbr == CustomerVm.RefNbr, 1);
+                    .GetAllByCustomerId(CustomerVm.RefNbr, 1);
                 if (addresses != null && addresses.Items != null && addresses.Items.Any())
                 {
                     CustomerVm.Addresses = addresses.Items.Select(x => x.ToVm()).ToList();

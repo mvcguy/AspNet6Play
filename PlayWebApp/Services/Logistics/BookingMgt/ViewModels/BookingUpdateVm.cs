@@ -1,6 +1,7 @@
 using System.ComponentModel.DataAnnotations;
 using Newtonsoft.Json;
 using PlayWebApp.Services.Logistics.ViewModels;
+using PlayWebApp.Services.Logistics.ViewModels.Dtos;
 #nullable disable
 namespace PlayWebApp.Services.Logistics.BookingMgt.ViewModels
 {
@@ -25,5 +26,12 @@ namespace PlayWebApp.Services.Logistics.BookingMgt.ViewModels
         public string CustomerRefNbr { get; set; }
 
         public IList<BookingItemUpdateVm> Lines { get; set; }
+
+        public CollectionMetaData LinesMetaData { get; set; }
+
+        public BookingUpdateVm()
+        {
+            Lines = new List<BookingItemUpdateVm>();
+        }
     }
 }

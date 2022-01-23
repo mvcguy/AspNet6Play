@@ -51,7 +51,7 @@ namespace PlayWebApp.Controllers
         public async Task<IActionResult> GetAll(string customerId, int page = 1)
         {
             if (string.IsNullOrWhiteSpace(customerId) || page < 0) return BadRequest("Params CustomerID or Page are invalid");
-            var items = await service.GetPaginatedCollection(x => x.Customer.RefNbr == customerId.ToString(), page);
+            var items = await service.GetAllByCustomerId(customerId, page);
 
             return Ok(items);
         }

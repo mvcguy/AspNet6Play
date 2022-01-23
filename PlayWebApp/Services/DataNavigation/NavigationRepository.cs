@@ -14,11 +14,14 @@ namespace PlayWebApp.Services.DataNavigation
         protected readonly ApplicationDbContext dbContext;
         protected readonly IPlayAppContext context;
 
+        protected readonly DbSet<TModel> Items;
+
         public NavigationRepository(ApplicationDbContext dbContext, IPlayAppContext context)
         {
             this.dbContext = dbContext;
             this.context = context;
             ThrowOnEmptyContext();
+            Items = dbContext.Set<TModel>();
         }
 
         public virtual void ThrowOnEmptyContext()
@@ -29,14 +32,14 @@ namespace PlayWebApp.Services.DataNavigation
 
         public virtual IQueryable<TModel> GetQuery()
         {
-            return dbContext.Set<TModel>().Where(x => x.TenantId == context.TenantId);
+            return Items.Where(x => x.TenantId == context.TenantId);
         }
 
         public async Task<PagedResult<TModel>> GetPaginatedCollection(Expression<Func<TModel, bool>> filter, int page, int pageLength)
         {
             var count = await GetQuery().Where(filter).CountAsync();
             GetPagingInfo(page, pageLength, out var take, out var skip);
-            var records = await dbContext.Set<TModel>().Where(filter).Skip(skip).Take(take).ToListAsync();
+            var records = await GetQuery().Where(filter).Skip(skip).Take(take).ToListAsync();
 
             return new PagedResult<TModel>
             {
@@ -106,19 +109,19 @@ namespace PlayWebApp.Services.DataNavigation
         public virtual EntityEntry<TModel> Update(TModel model)
         {
             UpdateAuditData(model);
-            return dbContext.Set<TModel>().Update(model);
+            return Items.Update(model);
         }
 
         public virtual EntityEntry<TModel> Add(TModel model)
         {
             AddAuditData(model);
             model.Id = Guid.NewGuid().ToString();
-            return dbContext.Set<TModel>().Add(model);
+            return Items.Add(model);
         }
 
         public virtual EntityEntry<TModel> Delete(TModel model)
         {
-            return dbContext.Set<TModel>().Remove(model);
+            return Items.Remove(model);
         }
 
         public virtual async Task<PagedResult<TModel>> GetAll(int pageIndex, int pageSize)
@@ -156,7 +159,7 @@ namespace PlayWebApp.Services.DataNavigation
             model.ModifiedBy = context.UserId;
         }
 
-        private void GetPagingInfo(int page, int pageSize, out int take, out int skip)
+        public virtual void GetPagingInfo(int page, int pageSize, out int take, out int skip)
         {
             var iPage = page;
             if (page <= 0)

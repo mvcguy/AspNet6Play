@@ -78,6 +78,7 @@ namespace PlayWebApp.Services.ModelExtentions
                 RefNbr = model.RefNbr,
                 Description = model.Description,
                 InternalId = model.Id,
+                CustomerRefNbr = model.Customer.RefNbr,
                 Lines = model.BookingItems?.Select(x => x.ToDto()).ToList()
             };
         }
@@ -89,13 +90,27 @@ namespace PlayWebApp.Services.ModelExtentions
             {
                 RefNbr = model.RefNbr,
                 InternalId = model.Id,
-                BookingRefNbr = model.RefNbr, // TODO: need a fix!!!
+                //BookingRefNbr = model.Booking.RefNbr, // TODO: need a fix!!!
                 Description = model.Description,
                 Discount = model.Discount ?? 0,
                 ExtCost = model.ExtCost ?? 0,
                 Quantity = model.Quantity ?? 0,
-                StockItemRefNbr = model.StockItemId,
+                StockItemRefNbr = model.StockItem.RefNbr,
                 UnitCost = model.UnitCost ?? 0,
+            };
+        }
+
+        public static BookingItemUpdateVm ToVm(this BookingItemDto model)
+        {
+            return new BookingItemUpdateVm
+            {
+                Description = model.Description,
+                Discount = model.Discount,
+                ExtCost = model.ExtCost,
+                Quantity = model.Quantity,
+                RefNbr = model.RefNbr,
+                StockItemRefNbr = model.StockItemRefNbr,
+                UnitCost = model.UnitCost
             };
         }
         public static AppUserDto ToDto(this ApplicationUser model)
@@ -165,7 +180,7 @@ namespace PlayWebApp.Services.ModelExtentions
             };
 
             if (model.Addresses != null && model.Addresses.Items != null)
-            {                
+            {
                 result.Addresses = model.Addresses.Items.Select(x => x.ToVm()).ToList();
             }
 

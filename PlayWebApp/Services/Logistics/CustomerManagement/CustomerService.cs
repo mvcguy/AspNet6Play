@@ -59,7 +59,6 @@ namespace PlayWebApp.Services.Logistics.CustomerManagement
         private void UpdateCustomerAddresses(CustomerUpdateVm model, Customer customer)
         {
             model.Addresses = model.Addresses ?? new List<AddressUpdateVm>();
-            var customerDefaultAddress = customer.DefaultAddress?.RefNbr;
             foreach (var addressVm in model.Addresses)
             {
                 CustomerAddress address = null;
@@ -73,12 +72,17 @@ namespace PlayWebApp.Services.Logistics.CustomerManagement
                         address = UpdateExistingAddress(customer, addressVm);
                         break;
                     case UpdateType.Delete:
-                        DeleteExistingAddress(customer, addressVm);
+                        address = DeleteExistingAddress(customer, addressVm);
                         break;
                 }
 
                 if (addressVm.IsDefault && address != null)
-                    customer.DefaultAddress = address;
+                {
+                    if (addressVm.UpdateType == UpdateType.Delete)
+                        customer.DefaultAddress = null;
+                    else
+                        customer.DefaultAddress = address;
+                }
             }
         }
 

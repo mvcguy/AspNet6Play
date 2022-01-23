@@ -33,11 +33,6 @@ namespace PlayWebApp.Services.Logistics.LocationMgt.ViewModels
         [StringLength(128, ErrorMessage = "The {0} must be at least {2} and at max {1} characters long.", MinimumLength = 2)]
         public string Country { get; set; }
 
-        public UpdateType UpdateType { get; set; }
-
-        [Required]
-        [Range(0, 20000)]
-        public int ClientRowNumber { get; set; }
 
         [Display(Name ="Default")]
         public bool IsDefault { get; set; }

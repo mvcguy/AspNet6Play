@@ -2,7 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using PlayWebApp.Services.Logistics.BookingMgt;
 using PlayWebApp.Services.Logistics.BookingMgt.ViewModels;
 using PlayWebApp.Services.Logistics.ViewModels.Requests;
-#nullable disable
+
 
 namespace PlayWebApp.Controllers
 {
@@ -20,6 +20,7 @@ namespace PlayWebApp.Controllers
         [HttpPut]
         public async Task<IActionResult> Put(BookingUpdateVm model)
         {
+            AdaptModelStateForAddressesArray(model.Lines, nameof(model.Lines));
             if (!ModelState.IsValid) return BadRequest(ModelState);
 
             var id = model.RefNbr;
@@ -35,15 +36,23 @@ namespace PlayWebApp.Controllers
         [HttpPost]
         public async Task<IActionResult> Post(BookingUpdateVm model)
         {
-            if (!ModelState.IsValid) return BadRequest(ModelState);
+            try
+            {
+                AdaptModelStateForAddressesArray(model.Lines, nameof(model.Lines));
+                if (!ModelState.IsValid) return BadRequest(ModelState);
 
-            var id = model.RefNbr;
-            var exists = await bookingService.GetById(new BookingRequestDto { RefNbr = id });
-            if (exists != null) return BadRequest($"Booking with ID: {id} exists from before");
-            
-            var item = await bookingService.Add(model);
-            await bookingService.SaveChanges();
-            return Ok(item.RefNbr); // TODO: return full URi
+                var id = model.RefNbr;
+                var exists = await bookingService.GetById(new BookingRequestDto { RefNbr = id });
+                if (exists != null) return BadRequest($"Booking with ID: {id} exists from before");
+
+                var item = await bookingService.Add(model);
+                await bookingService.SaveChanges();
+                return Ok(item.RefNbr); // TODO: return full URi
+            }
+            catch (Exception e)
+            {
+                return BadRequest(e.Message);
+            }
         }
 
         [HttpGet()]
@@ -109,6 +118,19 @@ namespace PlayWebApp.Controllers
             return Ok(model);
         }
 
+        #region BookingItems
+
+        [HttpGet]
+        [Route("lines/{refNbr}/{page}")]
+        public async Task<IActionResult> GetAllByBookingRef(string refNbr, int page = 1)
+        {
+            var result = await bookingService.GetBookingLines(refNbr, page);
+            if (result == null) return NotFound();
+
+            return Ok(result);
+        }
+
+        #endregion
 
     }
 }

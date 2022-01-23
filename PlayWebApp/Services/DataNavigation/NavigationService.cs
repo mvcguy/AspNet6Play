@@ -92,10 +92,10 @@ namespace PlayWebApp.Services.DataNavigation
 
         public virtual async Task<DtoCollection<TDto>> GetPaginatedCollection(Expression<Func<TDbModel, bool>> filter, int page = 1)
         {
-                var pagedResult = await repository.GetPaginatedCollection(filter, page, MaxPerPage);
-            var result = new DtoCollection<TDto>()
+            var pagedResult = await repository.GetPaginatedCollection(filter, page, MaxPerPage);
+            return new DtoCollection<TDto>()
             {
-                Items = pagedResult.Records.Select(x => ToDto(x)),
+                Items = pagedResult.Records.Select(x => ToDto(x)).ToList(),
                 MetaData = new CollectionMetaData
                 {
                     PageSize = pagedResult.PageSize,
@@ -103,7 +103,6 @@ namespace PlayWebApp.Services.DataNavigation
                     TotalRecords = pagedResult.TotalRecords,
                 }
             };
-            return result;
         }
 
         public virtual async Task<DtoCollection<TDto>> GetAll(int page = 1)

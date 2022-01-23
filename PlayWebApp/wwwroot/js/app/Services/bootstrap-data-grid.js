@@ -272,7 +272,7 @@ class BootstrapDataGrid extends BSGridBase {
                 // cellInputVar.addClass('form-control');
             }
             else {
-                cellInputVar = new BSGridTextInput();
+                cellInputVar = new BSGridTextInput({ inputType: gridCol.dataType });
                 cellInputVar.addClass('form-control');
             }
 
@@ -517,9 +517,9 @@ class BootstrapDataGrid extends BSGridBase {
                 }
 
                 // remove any previous errors
-                row.removeClass('is-invalid').prop('title', '');
+                input.removeClass('is-invalid').prop('title', '');
 
-                var tooltip = _this.bootstrap.Tooltip.getInstance(this);
+                var tooltip = _this.bootstrap.Tooltip.getInstance(e.target);
                 if (tooltip)
                     tooltip.dispose();
 
@@ -605,7 +605,7 @@ class BootstrapDataGrid extends BSGridBase {
      * @param {BSGridEventArgs} eventArgs 
      * @returns 
      */
-    onHeaderNext(eventArgs) {
+    onHeaderNext(eventArgs, fetchGrid) {
 
         if (!eventArgs || !eventArgs.eventData) return;
 
@@ -614,6 +614,7 @@ class BootstrapDataGrid extends BSGridBase {
         this.clearGrid();
         this.paginator.clear();
 
+        if (fetchGrid === false) return;
         //
         // fetch grid data
         //        
@@ -875,6 +876,7 @@ class BootstrapDataGrid extends BSGridBase {
         //
         this.clearGrid();
         var md = eventArgs.eventData.metaData;
+        if (!md) return;
         this.bindDataSource(eventArgs.eventData.items, new PagingMetaData(md.pageIndex, md.pageSize, md.totalRecords));
     }
 
@@ -888,8 +890,8 @@ class BootstrapDataGrid extends BSGridBase {
         var ds = this.options.dataSource.name;
 
         this.registerCallback(id, appDataEvents.GRID_DATA, () => this.body.getDirtyRecords(), ds);
-        this.registerCallback(id, appDataEvents.ON_ADD_RECORD, (a) => this.onHeaderNext(a), ds);
-        this.registerCallback(id, appDataEvents.ON_FETCH_RECORD, (a) => this.onHeaderNext(a), ds);
+        this.registerCallback(id, appDataEvents.ON_ADD_RECORD, (a) => this.onHeaderNext(a, false), ds);
+        this.registerCallback(id, appDataEvents.ON_FETCH_RECORD, (a) => this.onHeaderNext(a, true), ds);
         this.registerCallback(id, appDataEvents.ON_SAVE_RECORD, (a) => this.onSaveRecord(a), ds);
         this.registerCallback(id, appDataEvents.ON_SAVE_ERROR, (a) => this.onSaveError(a), ds);
         this.registerCallback(id, appDataEvents.ON_SORTING_REQUESTED, (a) => this.onSortingRequest(a), ds);
@@ -902,6 +904,9 @@ class BootstrapDataGrid extends BSGridBase {
 }
 
 class BSGridInput extends BSGridBase {
+    /**
+     * @param {{ inputType: string; }} options
+     */
     constructor(options) {
         super();
         this.options = options;
@@ -931,13 +936,13 @@ class BSGridInput extends BSGridBase {
 }
 
 class BSGridTextInput extends BSGridInput {
-    constructor(options) {
+    constructor(options = { inputType: 'text' }) {
         super(options);
         this.render();
     }
 
     render() {
-        this.element = this.jquery("<input type='text' /> ")
+        this.element = this.jquery(`<input type='${this.options.inputType}' /> `)
     }
 
     clone() {

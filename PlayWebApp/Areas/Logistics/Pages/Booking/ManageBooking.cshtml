@@ -48,13 +48,8 @@
         </ul>
         <div class="tab-content" id="myTabContent">
             <div class="tab-pane fade show active" id="tabBookingItemsContent" role="tabpanel" aria-labelledby="tabPrices">
-                <div class="row">
-                    <div class="col-sm-2">Item ID</div>
-                    <div class="col-sm-2">Description</div>
-                    <div class="col-sm-2">Unit cost</div>
-                    <div class="col-sm-2">Quantity</div>
-                    <div class="col-sm-2">Ext. Cost</div>
-                    <div class="col-sm-2">Discount</div>
+                <div class="" id="bookingLines_Container" style="height: 300;">
+                    @* place holder for customer booking details *@
                 </div>
             </div>
         </div>
@@ -66,50 +61,13 @@
 
 @section Scripts {
 <partial name="_ValidationScriptsPartial" />
+<script src="~/js/app/services/ManageBooking/manage-booking.js"></script>
 
 <script>
 
     $(document).ready(function () {
-        var srv = new persistenceService({
-            url: "https://localhost:7096/api/v1/Bookings/",
-            formId: "frmBooking",
-            idField: 'BookingVm_RefNbr',
-            msgContainer: "serverMessages",
-            getIdCallback: function () {
-                return $('#BookingVm_RefNbr').val();
-            },
-            nextEndpoint: function () {
-                return $('#BookingVm_RefNbr').val() + "/next";
-            },
-            prevEndpoint: function () {
-                return $('#BookingVm_RefNbr').val() + "/previous";
-            },
-            onAdd: function (id) {
-                $('#BookingVm_RefNbr').val('');
-                $('#BookingVm_Description').val('');
-
-                if (id && id !== '')
-                    $('#BookingVm_RefNbr').val(id);
-
-            },
-            lastEndpoint: "last",
-            firstEndpoint: "first",
-            onGetResponse: function (response) {
-                $('#BookingVm_RefNbr').val(response.refNbr);
-                $('#BookingVm_Description').val(response.description);
-            },
-            deleteEndpoint: function () {
-                return $('#BookingVm_RefNbr').val();
-            },
-            onDeleteResponse: function (response) {
-
-            },
-            onSaveResponse: function (response) {
-
-            },
-        });
-        srv.registerHandlers();        
-        srv.registerCallbacks();
+        ManageBooking.initBookingPage('@Model.BookingVm.RefNbr', 
+            @Json.Serialize(Model.BookingVm.Lines), @Json.Serialize(Model.BookingVm.LinesMetaData));
     });
 
 </script>
