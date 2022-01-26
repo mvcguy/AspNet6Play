@@ -76,13 +76,13 @@ namespace PlayWebApp.Services.Logistics.CustomerManagement
                         break;
                 }
 
-                if (addressVm.IsDefault && address != null)
+                if (address != null)
                 {
-                    if (addressVm.UpdateType == UpdateType.Delete)
-                        customer.DefaultAddress = null;
-                    else
-                        customer.DefaultAddress = address;
+                    customer.DefaultAddress = addressVm.IsDefault && addressVm.UpdateType != UpdateType.Delete
+                                                ? address
+                                                : null;
                 }
+
             }
         }
 

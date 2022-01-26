@@ -1,7 +1,7 @@
 class ManageBooking {
 
     constructor() {
-        
+
     }
 
     static initBookingPage(bookingRefNbr, bookingLines, bookingLinesMetadata) {
@@ -79,6 +79,20 @@ class ManageBooking {
         var grid = new BootstrapDataGrid(bs);
         grid.registerCallbacks();
         grid.render();
+
+        grid.addHandler(appDataEvents.ON_ROW_UPDATED, (sender, e) => {
+
+        });
+
+        grid.addHandler(appDataEvents.ON_FIELD_UPDATED, (sender, e) => {
+
+            var fieldName = e.eventData.field.getFieldName();
+            var row = e.eventData.row;
+            // console.log('on-field-update', fieldName, row);
+            if (fieldName === 'quantity' || fieldName === 'unitCost') {
+                row.extCost.val = row.quantity.val * row.unitCost.val;
+            }
+        });
 
     }
 }

@@ -523,8 +523,16 @@ class BootstrapDataGrid extends BSGridBase {
                 if (tooltip)
                     tooltip.dispose();
 
+                var rowData = row.getRowDataExt();
+
                 row.notifyListeners(_this.appDataEvents.ON_GRID_UPDATED,
                     { dataSourceName: _this.options.dataSource.name, eventData: e });
+
+                row.notifyListeners(_this.appDataEvents.ON_FIELD_UPDATED,
+                    { dataSourceName: _this.options.dataSource.name, eventData: { row: rowData, field: input } });
+
+                row.notifyListeners(_this.appDataEvents.ON_ROW_UPDATED,
+                    { dataSourceName: _this.options.dataSource.name, eventData: rowData });
 
             });
 
@@ -867,6 +875,16 @@ class BootstrapDataGrid extends BSGridBase {
         dataEventsService.registerCallback(key, eventTypeX, callback, dataSourceNameX);
     };
 
+    /**
+     * @param {string} eventType
+     * @param {(source: BootstrapDataGrid, eventObject: object) => any} handler
+     */
+    addHandler(eventType, handler) {
+        var id = this.options.gridId;
+        var ds = this.options.dataSource.name;
+        this.registerCallback(id, eventType, (/** @type {Object} */ ev) => handler(this, ev), ds);
+    }
+
     onFetchData(eventArgs) {
 
         console.log('onFetchData:', eventArgs);
@@ -932,6 +950,10 @@ class BSGridInput extends BSGridBase {
 
         // return c;
         return super.clone();
+    }
+
+    getFieldName() {
+        return this.getProp('data-propname');
     }
 }
 
@@ -1209,10 +1231,7 @@ class BSGridBody extends BSGridRowCollection {
     }
 
     getDirtyRows() {
-        var rows = this.rows.filter((v, i) => {
-            if ((v.getProp('data-isdirty') === 'true')) return v;
-        });
-
+        var rows = this.rows.filter((v, i) => v.isRowDirty());
         return rows;
     }
 
@@ -1224,22 +1243,7 @@ class BSGridBody extends BSGridRowCollection {
         }
         var records = [];
         dirtyRows.forEach((row, i) => {
-
-            var rowInputs = row.getInputs();
-            var rowIndex = row.getProp('data-index');
-            if (rowIndex) {
-                rowIndex = parseInt(rowIndex);
-            }
-            var record = {};
-            var rowCat = row.getProp('data-rowcategory');
-            record['rowCategory'] = rowCat;
-
-            rowInputs.forEach((rowInput, i) => {
-                var cellPropName = rowInput.getProp('data-propname');
-                record[cellPropName] = rowInput.val;
-            });
-            record["clientRowNumber"] = rowIndex;
-            records.push(record);
+            records.push(row.getRowData());
         })
 
         return records;
@@ -1377,6 +1381,39 @@ class BSGridRow extends BSGridBase {
     getVisibleInputs() {
         var inputs = this.getInputs();
         return inputs.filter((input) => input.visible === true);
+    }
+
+    getRowDataExt() {
+        var rowInputs = this.getInputs();
+        var record = {};
+        rowInputs.forEach((rowInput, i) => {
+            var cellPropName = rowInput.getFieldName();
+            record[cellPropName] = rowInput;
+        });
+        return record;
+    }
+
+    getRowData() {
+        var rowInputs = this.getInputs();
+        var rowIndex = this.getProp('data-index');
+        if (rowIndex) {
+            rowIndex = parseInt(rowIndex);
+        }
+        var record = {};
+        var rowCat = this.getProp('data-rowcategory');
+        record['rowCategory'] = rowCat;
+
+        rowInputs.forEach((rowInput, i) => {
+            var cellPropName = rowInput.getFieldName();
+            record[cellPropName] = rowInput.val;
+        });
+        record["clientRowNumber"] = rowIndex;
+        // console.log('GetRowData: ', record);
+        return record;
+    }
+
+    isRowDirty() {
+        return this.getProp('data-isdirty') === 'true';
     }
 }
 
