@@ -27,22 +27,26 @@ namespace PlayWebApp.Areas.Logistics.Pages.Booking
 
         public List<SelectListItem> Customers { get; set; }
 
-        public async Task OnGet()
+        public async Task OnGet(string refNbr = null)
         {
             BookingVm = new BookingUpdateVm
             {
                 Lines = new List<BookingItemUpdateVm>(),
                 LinesMetaData = new CollectionMetaData()
             };
-            var top1 = await bookingService.GetFirst();
-            if (top1 != null)
+            if (!string.IsNullOrWhiteSpace(refNbr))
             {
-                BookingVm = new BookingUpdateVm
+                var rec = await bookingService.GetById(new BookingRequestDto { RefNbr = refNbr });
+                if (rec != null)
+                    BookingVm = rec.ToVm();
+            }
+            else
+            {
+                var top1 = await bookingService.GetFirst();
+                if (top1 != null)
                 {
-                    RefNbr = top1.RefNbr,
-                    Description = top1.Description,
-                    CustomerRefNbr = top1.CustomerRefNbr,
-                };
+                    BookingVm = top1.ToVm();
+                }
             }
 
             if (!string.IsNullOrWhiteSpace(BookingVm.RefNbr))
@@ -56,13 +60,14 @@ namespace PlayWebApp.Areas.Logistics.Pages.Booking
             }
 
             Customers = new List<SelectListItem>();
-            Customers.Add(new SelectListItem { Text = "Select customer", Value = "", Selected = top1 == null });
+            Customers.Add(new SelectListItem { Text = "Select customer", Value = "", 
+                    Selected = BookingVm.CustomerRefNbr == null });
             Customers.AddRange((await customerService.GetAll(page: 1))
                 .Items.Select(x => new SelectListItem
                 {
                     Value = x.RefNbr,
                     Text = $"{x.RefNbr} - {x.Name}",
-                    Selected = top1?.CustomerRefNbr == x.RefNbr
+                    Selected = BookingVm.CustomerRefNbr == x.RefNbr
                 }));
 
         }

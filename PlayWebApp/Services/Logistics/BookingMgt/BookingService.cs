@@ -43,6 +43,27 @@ namespace PlayWebApp.Services.Logistics.BookingMgt
 
         }
 
+        public void UpdateSummary(Booking booking)
+        {
+            var lt = 0.0m;
+            var ds = 0.0m;
+            foreach (var item in booking.BookingItems)
+            {
+                lt += item.ExtCost.GetValueOrDefault();
+                ds += item.Discount.GetValueOrDefault();
+            }
+
+            var tx = (lt - ds) * .025m;
+
+            booking.Discount = ds;
+            booking.LinesTotal = lt;
+            booking.TaxAmount = tx;
+            booking.TaxableAmount = lt - ds;
+            booking.TotalAmount = (lt - ds) + tx;
+            booking.Balance = (lt - ds) + tx;
+
+        }
+
         public async override Task<BookingDto> Add(BookingUpdateVm model)
         {
             var record = await repository.GetById(model.RefNbr);
@@ -62,6 +83,7 @@ namespace PlayWebApp.Services.Logistics.BookingMgt
                 BookingItems = new List<BookingItem>()
             };
             await UpdateLines(model, record);
+            UpdateSummary(record);
             var item = repository.Add(record);
             return item.Entity.ToDto();
         }
@@ -85,7 +107,7 @@ namespace PlayWebApp.Services.Logistics.BookingMgt
             record.BookingItems = (await bookingRepository.GetBookingLines(record.RefNbr)).ToList();
 
             await UpdateLines(model, record);
-
+            UpdateSummary(record);
             var res = repository.Update(record);
             return res.Entity.ToDto();
         }

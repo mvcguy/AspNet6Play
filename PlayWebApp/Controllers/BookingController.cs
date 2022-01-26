@@ -30,7 +30,7 @@ namespace PlayWebApp.Controllers
             var item = await bookingService.Update(model);
 
             await bookingService.SaveChanges();
-            return Ok(item.RefNbr);
+            return Ok(item);
         }
 
         [HttpPost]
@@ -47,7 +47,7 @@ namespace PlayWebApp.Controllers
 
                 var item = await bookingService.Add(model);
                 await bookingService.SaveChanges();
-                return Ok(item.RefNbr); // TODO: return full URi
+                return Ok(item); // TODO: return full URi
             }
             catch (Exception e)
             {

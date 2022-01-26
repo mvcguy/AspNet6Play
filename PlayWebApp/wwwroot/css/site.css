@@ -109,3 +109,7 @@ table.navTable .form-control {
 .booking-summary li {
   padding: 0;
 }
+
+.booking-summary .card-footer{
+  padding-top: 0;
+}

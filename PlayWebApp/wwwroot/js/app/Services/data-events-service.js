@@ -41,15 +41,15 @@ dataEventsService.registerCallback = function (keyX, eventTypeX, callback, dataS
         .findIndex(({ key, eventType, dataSourceName }) => key === keyX
             && eventType === eventTypeX
             && dataSourceName === dataSourceNameX);
-    // console.log('index: ', index);
-    if (index === -1) {
+    //  console.log('index: ', index);
+    //if (index === -1) {
         this.callbacks.push({
             key: keyX,
             eventType: eventTypeX,
             callback: callback,
             dataSourceName: dataSourceNameX
         });
-    }
+    //}
 };
 
 dataEventsService.invokeCallback = function (eventType, payload) {

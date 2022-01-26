@@ -79,10 +79,33 @@ namespace PlayWebApp.Services.ModelExtentions
                 Description = model.Description,
                 InternalId = model.Id,
                 CustomerRefNbr = model.Customer.RefNbr,
+                Balance = model.Balance,
+                Discount = model.Discount,
+                LinesTotal = model.LinesTotal,
+                TaxableAmount = model.TaxableAmount,
+                TaxAmount = model.TaxAmount,
+                TotalAmount = model.TotalAmount,
                 Lines = model.BookingItems?.Select(x => x.ToDto()).ToList()
             };
         }
 
+        public static BookingUpdateVm ToVm(this BookingDto model)
+        {
+            if (model == null) return null;
+            return new BookingUpdateVm
+            {
+                RefNbr = model.RefNbr,
+                Description = model.Description,
+                CustomerRefNbr = model.CustomerRefNbr,
+                Balance = model.Balance,
+                Discount = model.Discount,
+                LinesTotal = model.LinesTotal,
+                TaxableAmount = model.TaxableAmount,
+                TaxAmount = model.TaxAmount,
+                TotalAmount = model.TotalAmount,
+                Lines = model.Lines?.Select(x=>x.ToVm()).ToList()
+            };
+        }
         public static BookingItemDto ToDto(this BookingItem model)
         {
             if (model == null) return null;
@@ -95,7 +118,7 @@ namespace PlayWebApp.Services.ModelExtentions
                 Discount = model.Discount ?? 0,
                 ExtCost = model.ExtCost ?? 0,
                 Quantity = model.Quantity ?? 0,
-                StockItemRefNbr = model.StockItem.RefNbr,
+                StockItemRefNbr = model.StockItem?.RefNbr,
                 UnitCost = model.UnitCost ?? 0,
             };
         }
@@ -113,6 +136,7 @@ namespace PlayWebApp.Services.ModelExtentions
                 UnitCost = model.UnitCost
             };
         }
+
         public static AppUserDto ToDto(this ApplicationUser model)
         {
             if (model == null) return null;

@@ -25,6 +25,18 @@ namespace PlayWebApp.Services.Logistics.BookingMgt.ViewModels
         [JsonProperty("BookingVm.CustomerRefNbr")]
         public string CustomerRefNbr { get; set; }
 
+        public virtual decimal LinesTotal { get; set; }
+
+        public virtual decimal TotalAmount { get; set; }
+
+        public virtual decimal Balance { get; set; }
+
+        public virtual decimal Discount { get; set; }
+
+        public virtual decimal TaxableAmount { get; set; }
+
+        public virtual decimal TaxAmount { get; set; }
+
         public IList<BookingItemUpdateVm> Lines { get; set; }
 
         public CollectionMetaData LinesMetaData { get; set; }

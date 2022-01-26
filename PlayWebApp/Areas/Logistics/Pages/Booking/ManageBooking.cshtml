@@ -55,21 +55,19 @@
         <div class="col-4 ">
             <div class="row g-1 booking-summary">
                 <div class="card border-light mb-3" style="max-width: 18rem;">
-                    <div class="card-header">Summary</div>
+                    @* <div class="card-header">Summary</div> *@
                     <div class="card-body text-primary">
-                        <h5 class="card-title">Lines total: </h5>
-
+                        <div class="card-title">
+                            <div class="row">
+                                <label for="txtLinesTotal" class="col-6 col-form-label">Lines total.</label>
+                                <div class="col-6">
+                                    <input type="number" readonly class="form-control-plaintext" id="txtLinesTotal"
+                                    value="100.10">
+                                </div>
+                            </div>
+                        </div>
                         <div class="card-text">
                             <ul class="list-group list-group-flush">
-                                <li class="list-group-item">
-                                    <div class="row">
-                                        <label for="txtAmount" class="col-6 col-form-label">Amount.</label>
-                                        <div class="col-6">
-                                            <input type="number" readonly class="form-control-plaintext" id="txtAmount"
-                                            value="100.10">
-                                        </div>
-                                    </div>
-                                </li>
                                 <li class="list-group-item">
                                     <div class="row">
                                         <label for="txtTaxable" class="col-6 col-form-label">Taxable.</label>
@@ -93,6 +91,15 @@
                                         <label for="txtDiscount" class="col-6 col-form-label">Discount.</label>
                                         <div class="col-6">
                                             <input type="number" readonly class="form-control-plaintext" id="txtDiscount"
+                                            value="100.10">
+                                        </div>
+                                    </div>
+                                </li>
+                                <li class="list-group-item">
+                                    <div class="row">
+                                        <label for="txtAmount" class="col-6 col-form-label">Amount.</label>
+                                        <div class="col-6">
+                                            <input type="number" readonly class="form-control-plaintext" id="txtAmount"
                                             value="100.10">
                                         </div>
                                     </div>
@@ -140,8 +147,10 @@
 <script>
 
     $(document).ready(function () {
-        ManageBooking.initBookingPage('@Model.BookingVm.RefNbr',
-            @Json.Serialize(Model.BookingVm.Lines), @Json.Serialize(Model.BookingVm.LinesMetaData));
+        @* ManageBooking.initBookingPage('@Model.BookingVm.RefNbr',
+            @Json.Serialize(Model.BookingVm.Lines), @Json.Serialize(Model.BookingVm.LinesMetaData)); *@
+
+        ManageBooking.initBookingPage(@Json.Serialize(Model.BookingVm));
     });
 
 </script>

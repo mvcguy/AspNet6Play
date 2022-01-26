@@ -44,6 +44,7 @@ var persistenceService = function (serviceParams) {
     var onFetchRecord = function (eventArgs) {
         var response = eventArgs.eventData;
         onGetResponse(response);
+        isRecordDirty = false;
         recordExist = true;
 
         // validate form
@@ -82,7 +83,7 @@ var persistenceService = function (serviceParams) {
     var onSaveRecordError = function (eventArgs) {
 
         var error = eventArgs.eventData;
-        console.error(error);
+        // console.error(error);
         //$('#' + msgContainer).attr('class', 'alert alert-danger')
         //      .text("An error has occurred while saving the changes. Error: " + error.responseText)
         //      .show(0).delay(8000).hide(0);
@@ -129,6 +130,7 @@ var persistenceService = function (serviceParams) {
     }
 
     var shouldNavigate = function () {
+        // debugger;
         if (!isRecordDirty) return true;
         var $confirm = confirm("There is unsaved data. Are you sure you want to leave the current record?");
         return $confirm;
@@ -138,6 +140,7 @@ var persistenceService = function (serviceParams) {
 
         $("#" + formId + " input,textarea,select").each(function () {
             $(this).on('change keydown', function () {
+                // debugger;
                 isRecordDirty = true;
                 enableSaveButton(true);
             });
@@ -224,6 +227,7 @@ var persistenceService = function (serviceParams) {
 
             onAdd();
             notifyListeners(appDataEvents.ON_ADD_RECORD, { eventData: e });
+            isRecordDirty = false;
         });
 
         $("#btnDelete").on('click', function (e) {
@@ -313,6 +317,7 @@ var persistenceService = function (serviceParams) {
             // notify listeners
             //
             notifyListeners(appDataEvents.ON_ADD_RECORD, { eventData: { recordId } });
+            isRecordDirty = false;
 
         }
     };
@@ -442,6 +447,7 @@ var persistenceService = function (serviceParams) {
         postRequest,
         getRequest, 
         getIdCallback,
+        isRecordDirty,
     };
 
 };

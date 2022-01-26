@@ -887,7 +887,7 @@ class BootstrapDataGrid extends BSGridBase {
 
     onFetchData(eventArgs) {
 
-        console.log('onFetchData:', eventArgs);
+        // console.log('onFetchData:', eventArgs);
 
         //
         // populate the grid with the fetched data
@@ -973,6 +973,26 @@ class BSGridTextInput extends BSGridInput {
         c.element = sc.element;
         c.children = sc.children;
         return c;
+    }
+}
+
+class BSGridTextInputExt extends BSGridInput {
+    /**
+     * @param {{ inputType: string, elementId: string; }} options
+     */
+    constructor(options) {
+        super(options);
+        this.options = options;
+        this.render();
+    }
+
+    set valExt(v) {
+        this.element.val(v);
+        this.element.change();
+    }
+
+    render() {
+        this.element = this.jquery(`#${this.options.elementId}`)
     }
 }
 
@@ -2055,7 +2075,7 @@ class BSGridHttpClient extends BSGridBase {
             headers: options.headers ? options.headers : {}
         };
         this.jq.ajax(ajaxOptions).then(function done(response) {
-            console.log(response);
+            // console.log(response);
             _this.notifyListeners(_this.appDataEvents.ON_FETCH_GRID_RECORD, { eventData: response });
 
         }, function error(error) {
