@@ -25,44 +25,48 @@
     <div class="row">
         <div class="col-6">
             <form class="row g-1" id="frmBooking" method="post">
-                <div class="col-12">
+                <div class="col-12 form-floating">
+                    <input asp-for="BookingVm.RefNbr" class="form-control form-control-sm" placeholder="Reference"
+                    aria-required="true" />
                     <label asp-for="BookingVm.RefNbr"></label>
-                    <input asp-for="BookingVm.RefNbr" class="form-control" aria-required="true" />
                     <span asp-validation-for="BookingVm.RefNbr" class="text-danger"></span>
                 </div>
-                <div class="col-12">
+                <div class="col-12 form-floating">
+                    <select asp-for="BookingVm.CustomerRefNbr" asp-items="Model.Customers" class="form-select"></select>
                     <label asp-for="BookingVm.CustomerRefNbr"></label>
-                    <select asp-for="BookingVm.CustomerRefNbr" asp-items="Model.Customers" class="form-control"></select>
+
                     <span asp-validation-for="BookingVm.CustomerRefNbr" class="text-danger"></span>
                 </div>
-                <div class="col-12">
+                <div class="col-12 form-floating">
+                    <input asp-for="BookingVm.Description" class="form-control form-control-sm" placeholder="Description" aria-required="true" />
                     <label asp-for="BookingVm.Description"></label>
-                    <input asp-for="BookingVm.Description" class="form-control" aria-required="true" />
                     <span asp-validation-for="BookingVm.Description" class="text-danger"></span>
                 </div>
-                <div class="input-group mb-3">
-                    <input type="text" class="form-control" placeholder="Recipient's username"
+                <div class="input-group mb-3 form-floating">
+                    <input type="text" id="smp" class="form-control form-control-sm" placeholder="Username"
                     aria-label="Recipient's username" aria-describedby="button-addon2">
                     <button class="btn btn-outline-primary" type="button" id="button-addon2"><i
                         class="bi bi-search"></i></button>
+                    <label for="smp">Username</label>
                 </div>
             </form>
         </div>
 
-        <div class="col-2">
+        <div class="col-1">
 
         </div>
-        <div class="col-4 ">
+        <div class="col-5">
             <div class="row g-1 booking-summary">
                 <div class="card border-light mb-3" style="max-width: 18rem;">
                     @* <div class="card-header">Summary</div> *@
                     <div class="card-body text-primary">
                         <div class="card-title">
                             <div class="row">
-                                <label for="txtLinesTotal" class="col-6 col-form-label">Lines total.</label>
+                                <label for="txtLinesTotal" class="col-6 col-form-label col-form-label-sm">Lines
+                                    total.</label>
                                 <div class="col-6">
-                                    <input type="number" readonly class="form-control-plaintext" id="txtLinesTotal"
-                                    value="100.10">
+                                    <input type="number" readonly class="form-control-plaintext form-control-sm"
+                                    id="txtLinesTotal" value="100.10">
                                 </div>
                             </div>
                         </div>
@@ -70,37 +74,40 @@
                             <ul class="list-group list-group-flush">
                                 <li class="list-group-item">
                                     <div class="row">
-                                        <label for="txtTaxable" class="col-6 col-form-label">Taxable.</label>
+                                        <label for="txtTaxable"
+                                        class="col-6 col-form-label col-form-label-sm">Taxable.</label>
                                         <div class="col-6">
-                                            <input type="number" readonly class="form-control-plaintext" id="txtTaxable"
-                                            value="100.10">
+                                            <input type="number" readonly class="form-control-plaintext form-control-sm"
+                                            id="txtTaxable" value="100.10">
                                         </div>
                                     </div>
                                 </li>
                                 <li class="list-group-item">
                                     <div class="row">
-                                        <label for="txtTax" class="col-6 col-form-label">Tax.</label>
+                                        <label for="txtTax" class="col-6 col-form-label col-form-label-sm">Tax.</label>
                                         <div class="col-6">
-                                            <input type="number" readonly class="form-control-plaintext" id="txtTax"
-                                            value="100.10">
+                                            <input type="number" readonly class="form-control-plaintext form-control-sm"
+                                            id="txtTax" value="100.10">
                                         </div>
                                     </div>
                                 </li>
                                 <li class="list-group-item">
                                     <div class="row">
-                                        <label for="txtDiscount" class="col-6 col-form-label">Discount.</label>
+                                        <label for="txtDiscount"
+                                        class="col-6 col-form-label col-form-label-sm">Discount.</label>
                                         <div class="col-6">
-                                            <input type="number" readonly class="form-control-plaintext" id="txtDiscount"
-                                            value="100.10">
+                                            <input type="number" readonly class="form-control-plaintext form-control-sm"
+                                            id="txtDiscount" value="100.10">
                                         </div>
                                     </div>
                                 </li>
                                 <li class="list-group-item">
                                     <div class="row">
-                                        <label for="txtAmount" class="col-6 col-form-label">Amount.</label>
+                                        <label for="txtAmount"
+                                        class="col-6 col-form-label col-form-label-sm">Amount.</label>
                                         <div class="col-6">
-                                            <input type="number" readonly class="form-control-plaintext" id="txtAmount"
-                                            value="100.10">
+                                            <input type="number" readonly class="form-control-plaintext form-control-sm"
+                                            id="txtAmount" value="100.10">
                                         </div>
                                     </div>
                                 </li>
@@ -109,9 +116,10 @@
                     </div>
                     <div class="card-footer bg-transparent border-light">
                         <div class="row">
-                            <label for="txtBalance" class="col-6 col-form-label">Balance.</label>
+                            <label for="txtBalance" class="col-6 col-form-label col-form-label-sm">Balance.</label>
                             <div class="col-6">
-                                <input type="number" readonly class="form-control-plaintext" id="txtBalance" value="100.10">
+                                <input type="number" readonly class="form-control-plaintext form-control-sm" id="txtBalance"
+                                value="100.10">
                             </div>
                         </div>
                     </div>
@@ -148,9 +156,9 @@
 
     $(document).ready(function () {
         @* ManageBooking.initBookingPage('@Model.BookingVm.RefNbr',
-            @Json.Serialize(Model.BookingVm.Lines), @Json.Serialize(Model.BookingVm.LinesMetaData)); *@
+                @Json.Serialize(Model.BookingVm.Lines), @Json.Serialize(Model.BookingVm.LinesMetaData)); *@
 
-        ManageBooking.initBookingPage(@Json.Serialize(Model.BookingVm));
+            ManageBooking.initBookingPage(@Json.Serialize(Model.BookingVm));
     });
 
 </script>

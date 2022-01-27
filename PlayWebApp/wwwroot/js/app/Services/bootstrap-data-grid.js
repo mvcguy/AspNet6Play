@@ -222,7 +222,7 @@ class BootstrapDataGrid extends BSGridBase {
     render() {
 
         this.element = this
-            .jquery('<table class="table table-bordered resizable navTable nowrap"></table>');
+            .jquery('<table class="table table-bordered table-hover resizable navTable nowrap"></table>');
 
         var _this = this;
 
@@ -265,7 +265,7 @@ class BootstrapDataGrid extends BSGridBase {
                 cellInputVar = new BSGridSelect();
                 gridCol.dataSource
                     .forEach((opt) => cellInputVar.append(new BSGridSelectOption(opt)));
-                cellInputVar.addClass('form-select');
+                cellInputVar.addClass('form-select form-select-sm');
             }
             else if (gridCol.dataType === 'checkbox') {
                 cellInputVar = new BSGridCheckBox();
@@ -273,7 +273,7 @@ class BootstrapDataGrid extends BSGridBase {
             }
             else {
                 cellInputVar = new BSGridTextInput({ inputType: gridCol.dataType });
-                cellInputVar.addClass('form-control');
+                cellInputVar.addClass('form-control form-control-sm');
             }
 
             cellInputVar.props([

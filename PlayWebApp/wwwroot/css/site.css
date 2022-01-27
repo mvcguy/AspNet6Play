@@ -110,6 +110,15 @@ table.navTable .form-control {
   padding: 0;
 }
 
-.booking-summary .card-footer{
+.booking-summary .card-footer {
   padding-top: 0;
+}
+
+input:hover {
+  /* background: rgba(121, 169, 241, 0.534);
+  color: whitesmoke; */
+
+  color: #0d6efd;
+  border-color: #0d6efd;
+  border: 1px solid #0d6efd!important;
 }
