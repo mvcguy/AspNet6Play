@@ -269,19 +269,31 @@ class BootstrapDataGrid extends BSGridBase {
             }
             else if (gridCol.dataType === 'checkbox') {
                 cellInputVar = new BSGridCheckBox();
-                // cellInputVar.addClass('form-control');
+            }
+            else if (gridCol.dataType === 'selector') {
+                // TODO: Fix two types of settings!!!
+                cellInputVar = new BSGridSelector({
+                    propName: gridCol.propName,
+                    btnId: "btn_" + _this.options.gridId + "_template_row_" + gridCol.propName,
+                    cssClass: "form-control form-control-sm",
+                    elementId: _this.options.gridId + "_template_row_" + gridCol.propName,
+                    inputType: "text",
+                    onClick: (sender, e) => { console.log("selector is clicked") },
+                    placeHolder: gridCol.name
+                });
             }
             else {
                 cellInputVar = new BSGridTextInput({ inputType: gridCol.dataType });
                 cellInputVar.addClass('form-control form-control-sm');
             }
-
-            cellInputVar.props([
-                { key: 'data-propname', value: gridCol.propName },
-                { key: 'title', value: gridCol.name },
-                { key: 'id', value: _this.options.gridId + "_template_row_" + gridCol.propName },
-                { key: 'placeholder', value: gridCol.name }
-            ]);
+            // TODO: Fix two types of settings!!!
+            if (gridCol.dataType !== 'selector')
+                cellInputVar.props([
+                    { key: 'data-propname', value: gridCol.propName },
+                    { key: 'title', value: gridCol.name },
+                    { key: 'id', value: _this.options.gridId + "_template_row_" + gridCol.propName },
+                    { key: 'placeholder', value: gridCol.name }
+                ]);
 
             if (gridCol.isKey === true) {
                 cellInputVar.props([
@@ -492,6 +504,7 @@ class BootstrapDataGrid extends BSGridBase {
             input.prop('id', oldId + "_" + rowNumber);
 
             var cellPropName = input.getProp('data-propname');
+            // console.log('cell-pro', cellPropName);
 
             var cellVal = rowData[cellPropName];
 
@@ -500,6 +513,7 @@ class BootstrapDataGrid extends BSGridBase {
                 input.prop('checked', 'checked');
             }
             else if (cellVal !== undefined) {
+
                 input.val = cellVal;
             }
 
@@ -539,6 +553,10 @@ class BootstrapDataGrid extends BSGridBase {
             input.element.on('focus', function (e) {
                 _this.body.focusRow(row);
             });
+
+            if (input instanceof BSGridSelector) {
+                // link the callback from option
+            }
 
         });
 
@@ -1089,6 +1107,81 @@ class BSGridSelect extends BSGridInput {
 
 }
 
+class BSGridSelector extends BSGridInput {
+
+
+    /**
+     * @type {any}
+     */
+    btnElement;
+
+    /**
+     * @type {any}
+     */
+    txtElement;
+
+    /**
+     * @param {{propName:string, inputType: string, cssClass: string, placeHolder: string, btnId: string, elementId: string, onClick: (sender:BSGridSelector, eventArgs:MouseEvent) => void;  }} options
+     */
+    constructor(options) {
+        super(options);
+        this.options = options;
+        this.render();
+    }
+
+    render() {
+        this.txtElement = this.jquery(`<input data-propname="${this.options.propName}" id="${this.options.elementId}" type="${this.options.inputType}" 
+                                            class="${this.options.cssClass}" 
+                                            placeholder="${this.options.placeHolder}" />`);
+        this.btnElement = this.jquery(`<button class="btn btn-outline-primary" type="button" id="${this.options.btnId}">
+                                            <i class="bi bi-search"></i>
+                                        </button>`);
+
+        this.btnElement.on('click', (/** @type {MouseEvent} */ e) => { this.options.onClick(this, e) });
+        this.element = this.jquery('<div class="input-group input-group-sm"></div>');
+
+        this.element = this.element.append(this.txtElement).append(this.btnElement);
+
+    }
+
+    getInput() {
+        var x = new BSGridTextInput(this.options);
+        x.element = this.txtElement;
+        return x;
+    }
+
+    // override base class methods
+
+    get val() {
+        return this.txtElement.val();
+    }
+
+
+    /**
+     * @param {string} v
+     */
+    set val(v) {
+        this.txtElement.val(v);
+    }
+
+    clone() {
+        var sc = super.clone();
+        var c = new BSGridSelector(this.shClone(this.options));
+        // c.element = sc.element;
+        // c.children = sc.children;
+        // c.btnElement = this.jquery(this.btnElement[0].cloneNode());
+        // c.txtElement = this.jquery(this.txtElement[0].cloneNode());
+
+
+        return c;
+        //return super.clone();
+    }
+
+    getFieldName() {
+        return this.txtElement.attr('data-propname');
+    }
+}
+
 class BSGridCell extends BSGridBase {
 
     /**
@@ -1390,7 +1483,9 @@ class BSGridRow extends BSGridBase {
             var children = val.children;
             if (children.length > 0) {
                 children.forEach((v, i) => {
-                    if (v instanceof BSGridInput)
+                    if (v instanceof BSGridSelector)
+                        inputs.push(v.getInput());
+                    else if (v instanceof BSGridInput)
                         inputs.push(v);
                 });
             }

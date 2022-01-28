@@ -94,7 +94,7 @@ class ManageBooking {
         //
         var cols = [];
         cols.push(new BSGridColDefinition("Line nbr", "number", "80px", "refNbr", true));
-        cols.push(new BSGridColDefinition("Stock item", "text", "60px", "stockItemRefNbr", false));
+        cols.push(new BSGridColDefinition("Stock item", "selector", "60px", "stockItemRefNbr", false));
         cols.push(new BSGridColDefinition("Description", "text", "220px", "description", false));
         cols.push(new BSGridColDefinition("Quantity", "number", "80px", "quantity", false));
         cols.push(new BSGridColDefinition("Unit cost", "number", "120px", "unitCost", false));

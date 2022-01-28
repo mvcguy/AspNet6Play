@@ -114,7 +114,7 @@ table.navTable .form-control {
   padding-top: 0;
 }
 
-input:hover {
+input:hover, select:hover {
   /* background: rgba(121, 169, 241, 0.534);
   color: whitesmoke; */
 

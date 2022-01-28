@@ -23,6 +23,7 @@
 @if (Model != null)
 {
     <div class="row">
+        @* booking header *@
         <div class="col-6">
             <form class="row g-1" id="frmBooking" method="post">
                 <div class="col-12 form-floating">
@@ -38,7 +39,8 @@
                     <span asp-validation-for="BookingVm.CustomerRefNbr" class="text-danger"></span>
                 </div>
                 <div class="col-12 form-floating">
-                    <input asp-for="BookingVm.Description" class="form-control form-control-sm" placeholder="Description" aria-required="true" />
+                    <input asp-for="BookingVm.Description" class="form-control form-control-sm" placeholder="Description"
+                    aria-required="true" />
                     <label asp-for="BookingVm.Description"></label>
                     <span asp-validation-for="BookingVm.Description" class="text-danger"></span>
                 </div>
@@ -47,7 +49,7 @@
                     aria-label="Recipient's username" aria-describedby="button-addon2">
                     <button class="btn btn-outline-primary" type="button" id="button-addon2"><i
                         class="bi bi-search"></i></button>
-                    <label for="smp">Username</label>
+                    @* <label for="smp">Username</label> *@
                 </div>
             </form>
         </div>
@@ -55,6 +57,7 @@
         <div class="col-1">
 
         </div>
+        @* booking summary *@
         <div class="col-5">
             <div class="row g-1 booking-summary">
                 <div class="card border-light mb-3" style="max-width: 18rem;">
@@ -127,6 +130,8 @@
             </div>
         </div>
     </div>
+
+    @* tabs for further details of the booking *@
     <div class="row">
         <ul class="nav nav-tabs" id="tabsBooking" role="tablist">
             <li class="nav-item" role="presentation">

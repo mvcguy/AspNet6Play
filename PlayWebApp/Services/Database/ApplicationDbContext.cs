@@ -22,7 +22,7 @@ public class ApplicationDbContext : DbContext
 
     public DbSet<SupplierAddress> SupplierAddresses { get; set; }
 
-    public DbSet<BusinessEntity> BusinessEntities{ get; set; }
+    public DbSet<BusinessEntity> BusinessEntities { get; set; }
 
 
     public DbSet<Tenant> Tenants { get; set; }
@@ -66,7 +66,9 @@ public class ApplicationDbContext : DbContext
         // booking has many booking items
         // one booking item appears in only one booking
         //
-        booking.HasMany(b => b.BookingItems).WithOne(s => s.Booking).HasForeignKey(x => x.BookingId).IsRequired(false);
+        booking.HasMany(b => b.BookingItems).WithOne(s => s.Booking)
+        .HasForeignKey(x => x.BookingId).IsRequired(false).OnDelete(DeleteBehavior.Cascade);
+        
         booking.HasOne(x => x.ShippingAddress);
         booking.Property(x => x.ShippingAddressId).IsRequired();
         booking.Property(x => x.CreatedBy).IsRequired();
@@ -75,7 +77,8 @@ public class ApplicationDbContext : DbContext
         // stockitem has many prices
         // one price is only meant for one particular stock item
         //
-        stockItem.HasMany(s => s.StockItemPrices).WithOne(sp => sp.StockItem).HasForeignKey(x => x.StockItemId).IsRequired(false);
+        stockItem.HasMany(s => s.StockItemPrices).WithOne(sp => sp.StockItem)
+            .HasForeignKey(x => x.StockItemId).IsRequired(false).OnDelete(DeleteBehavior.Cascade);
 
         //
         // stockitem appear in many bookings
@@ -86,8 +89,11 @@ public class ApplicationDbContext : DbContext
         //
         // business entities
         //
-        customer.HasMany(x => x.Addresses).WithOne(b => b.Customer).HasForeignKey(x => x.CustomerId).IsRequired(false);
-        supplier.HasMany(x => x.Addresses).WithOne(b => b.Supplier).HasForeignKey(x => x.SupplierId).IsRequired(false);
+        customer.HasMany(x => x.Addresses).WithOne(b => b.Customer)
+        .HasForeignKey(x => x.CustomerId).IsRequired(false).OnDelete(DeleteBehavior.Cascade);
+
+        supplier.HasMany(x => x.Addresses).WithOne(b => b.Supplier)
+            .HasForeignKey(x => x.SupplierId).IsRequired(false).OnDelete(DeleteBehavior.Cascade);
 
         bEntity.HasOne(x => x.DefaultAddress).WithOne().IsRequired(false);
 
