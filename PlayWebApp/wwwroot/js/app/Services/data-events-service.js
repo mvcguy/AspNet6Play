@@ -23,7 +23,7 @@ dataEventsService.notifyListeners = function (eventType, eventArgs) {
     if (!eventType) return;
     try {
         $.each(this.callbacks, function () {
-            if (this.eventType !== eventType) return;
+            if (this.eventType !== eventType || this.dataSourceName !== eventArgs.dataSourceName) return;
             this.callback(eventArgs);
         });
 
@@ -43,12 +43,12 @@ dataEventsService.registerCallback = function (keyX, eventTypeX, callback, dataS
             && dataSourceName === dataSourceNameX);
     //  console.log('index: ', index);
     //if (index === -1) {
-        this.callbacks.push({
-            key: keyX,
-            eventType: eventTypeX,
-            callback: callback,
-            dataSourceName: dataSourceNameX
-        });
+    this.callbacks.push({
+        key: keyX,
+        eventType: eventTypeX,
+        callback: callback,
+        dataSourceName: dataSourceNameX
+    });
     //}
 };
 

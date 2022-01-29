@@ -278,7 +278,11 @@ class BootstrapDataGrid extends BSGridBase {
                     cssClass: "form-control form-control-sm",
                     elementId: _this.options.gridId + "_template_row_" + gridCol.propName,
                     inputType: "text",
-                    onClick: (sender, e) => { console.log("selector is clicked") },
+                    onClick: (sender, e) => {
+                        var selectorWindow = new BSGridSelectorWindow({ propName: gridCol.propName, containerId: _this.options.containerId });
+                        selectorWindow.show();
+
+                    },
                     placeHolder: gridCol.name
                 });
             }
@@ -323,7 +327,7 @@ class BootstrapDataGrid extends BSGridBase {
 
         var gridActionsRow = new BSGridRow({ dataSourceName: _this.options.dataSource.name, isActionsRow: true });
         var gridActions = new BSGridActions();
-        gridActions.addNewRecordAction((e) => this.addEmptyRow())
+        gridActions.addNewRecordAction(this.options.dataSource.name, (e) => this.addEmptyRow())
             .addDeleteAction((e) => this.body.markDeleted())
             .addGridSettingsAction(this.options.dataSource.name);
         var colDef = new BSGridColDefinition();
@@ -356,7 +360,7 @@ class BootstrapDataGrid extends BSGridBase {
         var data = _this.options.dataSource.data.initData;
         var mdata = _this.options.dataSource.data.metaData;
         //_this.bindDataSource(data, mdata);
-        this.notifyListeners(_this.appDataEvents.ON_FETCH_GRID_RECORD, { eventData: { items: data, metaData: mdata } });
+        this.notifyListeners(_this.appDataEvents.ON_FETCH_GRID_RECORD, { dataSourceName: _this.options.dataSource.name, eventData: { items: data, metaData: mdata } });
 
         //
         // notify that grid is data-bound
@@ -656,7 +660,7 @@ class BootstrapDataGrid extends BSGridBase {
             var url = this.options.dataSource.url(pageIndex);
             if (!url) return;
 
-            var options = new BSGridHttpClientOptions(url, "GET");
+            var options = new BSGridHttpClientOptions(this.options.dataSource.name, url, "GET");
 
             this.httpClient.get(options);
         }
@@ -666,7 +670,13 @@ class BootstrapDataGrid extends BSGridBase {
             //var cb = this.options.dataSource.getPageOfflineCB;
             //var pageData = cb(pageIndex, data, mdata);
             this.notifyListeners(this.appDataEvents.ON_FETCH_GRID_RECORD,
-                { eventData: { items: data, metaData: new PagingMetaData(pageIndex, mdata.pageSize, mdata.totalRecords) } });
+                {
+                    dataSourceName: this.options.dataSource.name,
+                    eventData: {
+                        items: data,
+                        metaData: new PagingMetaData(pageIndex, mdata.pageSize, mdata.totalRecords)
+                    }
+                });
 
         }
 
@@ -1004,6 +1014,12 @@ class BSGridTextInputExt extends BSGridInput {
         this.render();
     }
 
+
+    /**
+     * This method should be used with dropdowns where just setting the val of element is not enough
+     * this method ensure that 'change' is called after 'val' so that value of the selector is set properly
+     * @param {string} v - value
+     */
     set valExt(v) {
         this.element.val(v);
         this.element.change();
@@ -1116,7 +1132,7 @@ class BSGridSelector extends BSGridInput {
     btnElement;
 
     /**
-     * @type {any}
+     * @type {BSGridTextInput}
      */
     txtElement;
 
@@ -1130,30 +1146,41 @@ class BSGridSelector extends BSGridInput {
     }
 
     render() {
-        this.txtElement = this.jquery(`<input data-propname="${this.options.propName}" id="${this.options.elementId}" type="${this.options.inputType}" 
-                                            class="${this.options.cssClass}" 
-                                            placeholder="${this.options.placeHolder}" />`);
+
+        this.txtElement = new BSGridTextInput(this.options);
+        this.txtElement
+            .addClass(this.options.cssClass)
+            .props([{ key: "id", value: this.options.elementId },
+            { key: "placeHolder", value: this.options.placeHolder },
+            { key: "data-propname", value: this.options.propName }]);
+
+
+
         this.btnElement = this.jquery(`<button class="btn btn-outline-primary" type="button" id="${this.options.btnId}">
                                             <i class="bi bi-search"></i>
-                                        </button>`);
+                                       </button>`);
 
         this.btnElement.on('click', (/** @type {MouseEvent} */ e) => { this.options.onClick(this, e) });
         this.element = this.jquery('<div class="input-group input-group-sm"></div>');
-
-        this.element = this.element.append(this.txtElement).append(this.btnElement);
+        this.element = this.element.append(this.txtElement.element).append(this.btnElement);
 
     }
 
-    getInput() {
-        var x = new BSGridTextInput(this.options);
-        x.element = this.txtElement;
-        return x;
+
+    // getInput() {
+    //     var x = new BSGridTextInput(this.options);
+    //     x.element = this.txtElement;
+    //     return x;
+    // }
+
+    getButton() {
+        return this.btnElement;
     }
 
     // override base class methods
 
     get val() {
-        return this.txtElement.val();
+        return this.txtElement.val;
     }
 
 
@@ -1161,24 +1188,19 @@ class BSGridSelector extends BSGridInput {
      * @param {string} v
      */
     set val(v) {
-        this.txtElement.val(v);
+        this.txtElement.val = v;
     }
 
     clone() {
+        // debugger;
         var sc = super.clone();
         var c = new BSGridSelector(this.shClone(this.options));
-        // c.element = sc.element;
-        // c.children = sc.children;
-        // c.btnElement = this.jquery(this.btnElement[0].cloneNode());
-        // c.txtElement = this.jquery(this.txtElement[0].cloneNode());
-
-
+        c.children = sc.children;
         return c;
-        //return super.clone();
     }
 
     getFieldName() {
-        return this.txtElement.attr('data-propname');
+        return this.txtElement.getFieldName();
     }
 }
 
@@ -1241,10 +1263,11 @@ class BSGridActions extends BSGridBase {
     }
 
     /**
+     * @param {string} dsName
      * @param {(arg0: object) => any} [callback]
      */
-    addNewRecordAction(callback, title = '+') {
-        var btn = this.jquery('<button type="button" class="btn btn-sm btn-outline-primary grid-toolbar-action" id="btnAddRow">' + title + '</button>');
+    addNewRecordAction(dsName, callback, title = '+') {
+        var btn = this.jquery(`<button type="button" class="btn btn-sm btn-outline-primary grid-toolbar-action" id="btnAddRow_${dsName}">${title}</button>'`);
         btn.on('click', callback);
         this.element.append(btn);
         return this;
@@ -1255,7 +1278,7 @@ class BSGridActions extends BSGridBase {
      */
     addGridSettingsAction(dsName) {
         var flRight = this.jquery('<div style="float:right"></div>');
-        flRight.append(`<button type="button" class="btn btn-sm btn-outline-primary grid-toolbar-action" data-bs-toggle="modal" data-bs-target="#staticBackdrop_${dsName}" id="btnSettings"><i class="bi bi-gear"></i></button>`);
+        flRight.append(`<button type="button" class="btn btn-sm btn-outline-primary grid-toolbar-action" data-bs-toggle="modal" data-bs-target="#staticBackdrop_${dsName}" id="btnSettings_${dsName}"><i class="bi bi-gear"></i></button>`);
         this.element.append(flRight);
         return this;
     }
@@ -1484,7 +1507,7 @@ class BSGridRow extends BSGridBase {
             if (children.length > 0) {
                 children.forEach((v, i) => {
                     if (v instanceof BSGridSelector)
-                        inputs.push(v.getInput());
+                        inputs.push(v.txtElement);
                     else if (v instanceof BSGridInput)
                         inputs.push(v);
                 });
@@ -1681,7 +1704,7 @@ BootstrapDataGrid.prototype.configurableGrid = function () {
     this.jquery('#' + this.options.containerId).append(modalElem);
     // this.append(modalElem, false);
 
-    var colsList = this.jquery('.grid-config-cols');
+    var colsList = modalElem.find('.grid-config-cols');
     headers.forEach((header, index) => {
 
         var propName = header.getProp('data-th-propname');
@@ -2171,11 +2194,11 @@ class BSGridHttpClient extends BSGridBase {
         };
         this.jq.ajax(ajaxOptions).then(function done(response) {
             // console.log(response);
-            _this.notifyListeners(_this.appDataEvents.ON_FETCH_GRID_RECORD, { eventData: response });
+            _this.notifyListeners(_this.appDataEvents.ON_FETCH_GRID_RECORD, { dataSourceName: options.dataSourceName, eventData: response });
 
         }, function error(error) {
             _this.notifyListeners(_this.appDataEvents.ON_FETCH_GRID_RECORD_ERROR,
-                { eventData: error, recordId: options.recordId });
+                { dataSourceName: options.dataSourceName, eventData: error, recordId: options.recordId });
         });
 
     };
@@ -2188,12 +2211,14 @@ class BSGridHttpClientOptions {
      * @param {string} method
      * @param {object[]} headers
      * @param {string} recordId
+     * @param {string} dsName
      */
-    constructor(url, method, headers = undefined, recordId = undefined) {
+    constructor(url, method, dsName, headers = undefined, recordId = undefined) {
         this.url = url;
         this.method = method;
         this.headers = headers;
         this.recordId = recordId;
+        this.dataSourceName = dsName;
     }
 }
 
@@ -2269,4 +2294,111 @@ class PagingMetaData {
         this.totalRecords = totalRecords;
         this.totalPages = Math.ceil(this.totalRecords / this.pageSize);
     }
+}
+
+class BSGridSelectorWindow extends BSGridBase {
+
+
+    selectorModal;
+    constructor(options) {
+        super();
+        this.options = options;
+
+        this.parentContainerId = this.options.containerId;
+        this.modalId = `${this.parentContainerId}_bs_${this.options.propName}`;
+        this.modalTitleId = `${this.parentContainerId}_lbs_${this.options.propName}`;
+        this.containerId = `${this.parentContainerId}_cbs_${this.options.propName}`;
+        this.gridId = `${this.parentContainerId}_g_${this.options.propName}`;
+
+        this.render();
+    }
+
+    render() {
+
+        var find = this.jquery('#' + this.parentContainerId).find('#' + this.modalId);
+        if (find && find.length === 1) {
+            this.element = find;
+            // @ts-ignore
+            this.selectorModal = new bootstrap.Modal(find);
+        }
+        else {
+            var modelTemplate =
+                `<div class="modal fade" id="${this.modalId}" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1"
+                    aria-labelledby="staticBackdropLabel" aria-hidden="true">
+                        <div class="modal-dialog modal-dialog-scrollable">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                    <h5 class="modal-title" id="${this.modalTitleId}">Select a value</h5>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                </div>
+                                <div class="modal-body">
+                                    <div id="${this.containerId}">
+
+                                    </div>
+                                </div>
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Ok</button>
+                                </div>
+                            </div>
+                        </div>
+                </div>`;
+
+            this.element = this.jquery(modelTemplate);
+            this.jquery('#' + this.parentContainerId).append(this.element);
+
+            // @ts-ignore
+            this.selectorModal = new bootstrap.Modal(this.element);
+
+            this.element[0].addEventListener('shown.bs.modal', (e) => this.runSample());
+        }
+
+
+    }
+
+    show() {
+
+        this.selectorModal.show();
+
+    }
+
+    runSample() {
+
+        // debugger;
+        
+        console.log('rendering grid in the selector modal');
+        if (this.element.find('#' + this.gridId).length > 0) {
+            return;
+        }
+
+        //
+        // booking lines grid 
+        //
+        var cols = [];
+        cols.push(new BSGridColDefinition("Line nbr", "number", "80px", "refNbrx", true));
+        cols.push(new BSGridColDefinition("Stock item", "selector", "60px", "stockItemRefNbrx", false));
+        cols.push(new BSGridColDefinition("Description", "text", "220px", "descriptionx", false));
+        cols.push(new BSGridColDefinition("Quantity", "number", "80px", "quantityx", false));
+        cols.push(new BSGridColDefinition("Unit cost", "number", "120px", "unitCostx", false));
+        cols.push(new BSGridColDefinition("Cost", "number", "120px", "extCostx", false));
+        cols.push(new BSGridColDefinition("Discount", "number", "120px", "discountx", false));
+
+
+        var dataSource = new BSGridDataSource('bsSelector',
+            {
+                initData: [],
+                metaData: undefined
+            },
+            true,
+            (page) => {
+                return undefined;
+            });
+
+        var bs = new BSGridOptions(this.gridId, this.containerId, cols, dataSource);
+
+        var grid = new BootstrapDataGrid(bs);
+        grid.registerCallbacks();
+
+        grid.render();
+    }
+
 }
