@@ -19,6 +19,7 @@ var persistenceService = function (serviceParams) {
     var recordExist = true;
     var isRecordDirty = false;
     var urlQuery = serviceParams.urlQuery;
+    var dataSourceName = serviceParams.dataSourceName || 'mainForm';
 
     var registerCallback = function (key, eventTypeX, callback, dataSourceNameX) {
         dataEventsService.registerCallback(key, eventTypeX, callback, dataSourceNameX);
@@ -29,7 +30,6 @@ var persistenceService = function (serviceParams) {
     };
 
     var updateBrowserHistory = function (response) {
-
         if (!urlQuery) return;
         window.location
         window.history.pushState({ eventData: response }, 'title', urlQuery(response));
@@ -105,15 +105,13 @@ var persistenceService = function (serviceParams) {
     }
 
     var registerCallbacks = function () {
-        registerCallback(formId, appDataEvents.ON_GRID_UPDATED, onGridUpdated, 'mainForm');
-        registerCallback(formId, appDataEvents.ON_NAVIGATING_RECORD, onNavigating, 'mainForm');
-        registerCallback(formId, appDataEvents.ON_FETCH_RECORD, onFetchRecord, 'mainForm');
-        registerCallback(formId, appDataEvents.ON_FETCH_RECORD_ERROR, onFetchRecordError, 'mainForm');
-
-        registerCallback(formId, appDataEvents.ON_SAVE_RECORD, onSaveRecord, 'mainForm');
-        registerCallback(formId, appDataEvents.ON_SAVE_ERROR, onSaveRecordError, 'mainForm');
-
-        registerCallback(formId, appDataEvents.ON_DELETE_RECORD, onDeleteRecord, 'mainForm');
+        registerCallback(formId, appDataEvents.ON_GRID_UPDATED, onGridUpdated, dataSourceName);
+        registerCallback(formId, appDataEvents.ON_NAVIGATING_RECORD, onNavigating, dataSourceName);
+        registerCallback(formId, appDataEvents.ON_FETCH_RECORD, onFetchRecord, dataSourceName);
+        registerCallback(formId, appDataEvents.ON_FETCH_RECORD_ERROR, onFetchRecordError, dataSourceName);
+        registerCallback(formId, appDataEvents.ON_SAVE_RECORD, onSaveRecord, dataSourceName);
+        registerCallback(formId, appDataEvents.ON_SAVE_ERROR, onSaveRecordError, dataSourceName);
+        registerCallback(formId, appDataEvents.ON_DELETE_RECORD, onDeleteRecord, dataSourceName);
 
     };
 
@@ -170,7 +168,7 @@ var persistenceService = function (serviceParams) {
 
         $("#btnNext").on('click', function (e) {
 
-            var ev = { eventData: e };
+            var ev = { eventData: e, dataSourceName };
             notifyListeners(appDataEvents.ON_NAVIGATING_RECORD, ev);
             if (ev.eventData.cancelAction === true) {
                 return;
@@ -185,7 +183,7 @@ var persistenceService = function (serviceParams) {
 
         $("#btnPrev").on('click', function (e) {
 
-            var ev = { eventData: e };
+            var ev = { eventData: e, dataSourceName  };
             notifyListeners(appDataEvents.ON_NAVIGATING_RECORD, ev);
             if (ev.eventData.cancelAction === true) {
                 return;
@@ -199,7 +197,7 @@ var persistenceService = function (serviceParams) {
         });
 
         $('#btnFirst').on('click', function (e) {
-            var ev = { eventData: e };
+            var ev = { eventData: e , dataSourceName };
             notifyListeners(appDataEvents.ON_NAVIGATING_RECORD, ev);
             if (ev.eventData.cancelAction === true) {
                 return;
@@ -209,7 +207,7 @@ var persistenceService = function (serviceParams) {
         });
 
         $('#btnLast').on('click', function (e) {
-            var ev = { eventData: e };
+            var ev = { eventData: e , dataSourceName };
             notifyListeners(appDataEvents.ON_NAVIGATING_RECORD, ev);
             if (ev.eventData.cancelAction === true) {
                 return;
@@ -219,14 +217,14 @@ var persistenceService = function (serviceParams) {
         });
 
         $("#btnAdd").on('click', function (e) {
-            var ev = { eventData: e };
+            var ev = { eventData: e, dataSourceName  };
             notifyListeners(appDataEvents.ON_NAVIGATING_RECORD, ev);
             if (ev.eventData.cancelAction === true) {
                 return;
             }
 
             onAdd();
-            notifyListeners(appDataEvents.ON_ADD_RECORD, { eventData: e });
+            notifyListeners(appDataEvents.ON_ADD_RECORD, { eventData: e, dataSourceName  });
             isRecordDirty = false;
         });
 
@@ -316,7 +314,7 @@ var persistenceService = function (serviceParams) {
             //
             // notify listeners
             //
-            notifyListeners(appDataEvents.ON_ADD_RECORD, { eventData: { recordId } });
+            notifyListeners(appDataEvents.ON_ADD_RECORD, { eventData: { recordId }, dataSourceName  });
             isRecordDirty = false;
 
         }
@@ -347,9 +345,9 @@ var persistenceService = function (serviceParams) {
         };
 
         $.ajax(ajaxOptions).then(function done(response) {
-            _notifyListeners(appDataEvents.ON_SAVE_RECORD, { eventData: response });
+            _notifyListeners(appDataEvents.ON_SAVE_RECORD, { eventData: response , dataSourceName });
         }, function error(error, dt) {
-            _notifyListeners(appDataEvents.ON_SAVE_ERROR, { eventData: error });
+            _notifyListeners(appDataEvents.ON_SAVE_ERROR, { eventData: error , dataSourceName });
         });
     };
 
@@ -366,9 +364,9 @@ var persistenceService = function (serviceParams) {
         };
 
         $.ajax(ajaxOptions).then(function done(response) {
-            _notifyListeners(appDataEvents.ON_SAVE_RECORD, { eventData: response });
+            _notifyListeners(appDataEvents.ON_SAVE_RECORD, { eventData: response, dataSourceName  });
         }, function error(error, dt) {
-            _notifyListeners(appDataEvents.ON_SAVE_ERROR, { eventData: error });
+            _notifyListeners(appDataEvents.ON_SAVE_ERROR, { eventData: error, dataSourceName  });
         });
     };
 
@@ -382,10 +380,10 @@ var persistenceService = function (serviceParams) {
         };
         var _notifyListeners = notifyListeners;
         $.ajax(ajaxOptions).then(function done(response) {
-            _notifyListeners(appDataEvents.ON_FETCH_RECORD, { idField: _idField, eventData: response });
+            _notifyListeners(appDataEvents.ON_FETCH_RECORD, { idField: _idField, eventData: response, dataSourceName  });
 
         }, function error(error) {
-            _notifyListeners(appDataEvents.ON_FETCH_RECORD_ERROR, { eventData: error, recordId: getParams.recordId });
+            _notifyListeners(appDataEvents.ON_FETCH_RECORD_ERROR, { eventData: error, recordId: getParams.recordId, dataSourceName  });
         });
 
     };
@@ -398,9 +396,9 @@ var persistenceService = function (serviceParams) {
         };
         var _notifyListeners = notifyListeners;
         $.ajax(ajaxOptions).then(function done(response) {
-            _notifyListeners(appDataEvents.ON_DELETE_RECORD, { eventData: response });
+            _notifyListeners(appDataEvents.ON_DELETE_RECORD, { eventData: response, dataSourceName  });
         }, function error(error, dt) {
-            _notifyListeners(appDataEvents.ON_SAVE_ERROR, { eventData: error });
+            _notifyListeners(appDataEvents.ON_SAVE_ERROR, { eventData: error , dataSourceName });
         });
     };
 

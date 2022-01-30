@@ -23,7 +23,10 @@ dataEventsService.notifyListeners = function (eventType, eventArgs) {
     if (!eventType) return;
     try {
         $.each(this.callbacks, function () {
-            if (this.eventType !== eventType || this.dataSourceName !== eventArgs.dataSourceName) return;
+            // TODO: Check for datasourcname???
+            if (this.eventType !== eventType || (this.dataSourceName !== eventArgs.dataSourceName && this.verifyDSName === true)) return;
+            // if (this.eventType !== eventType) return;
+
             this.callback(eventArgs);
         });
 
@@ -32,22 +35,33 @@ dataEventsService.notifyListeners = function (eventType, eventArgs) {
     }
 };
 
-dataEventsService.registerCallback = function (keyX, eventTypeX, callback, dataSourceNameX) {
+dataEventsService.unRegisterCallback = function (keyX, eventTypeX, dataSourceNameX) {
+
+    var filtered = this.callbacks
+        .filter((cb) => !(cb.key === keyX && cb.eventType === eventTypeX && cb.dataSourceName === dataSourceNameX));
+
+    this.callbacks = filtered;
+
+}
+
+dataEventsService.registerCallback = function (keyX, eventTypeX, callback, dataSourceNameX, verifyDSName = false) {
     //
-    // search if callback exist from before
+    // search if callback exist from before : TODO: No need to do a lookup if handler exist from before
     //
     if (!eventTypeX) return;
-    var index = this.callbacks
-        .findIndex(({ key, eventType, dataSourceName }) => key === keyX
-            && eventType === eventTypeX
-            && dataSourceName === dataSourceNameX);
+    // var index = this.callbacks
+    //     .findIndex(({ key, eventType, dataSourceName }) => key === keyX
+    //         && eventType === eventTypeX
+    //         && dataSourceName === dataSourceNameX);
     //  console.log('index: ', index);
     //if (index === -1) {
+
     this.callbacks.push({
         key: keyX,
         eventType: eventTypeX,
         callback: callback,
-        dataSourceName: dataSourceNameX
+        dataSourceName: dataSourceNameX,
+        verifyDSName
     });
     //}
 };

@@ -703,10 +703,9 @@ class BootstrapDataGrid extends BSGridBase {
         this.body.find("tr[data-rowcategory='DELETED']").remove();
         this.body.find("tr[data-rowcategory='ADDED_DELETED']").remove();
 
-        this.body.rows.filter((v) => {
-            if (v.prop('data-rowcategory') === 'DELETED' || v.prop('data-rowcategory') === 'ADDED_DELETED')
-                return v;
-        }).forEach((v) => this.body.removeRow(v));
+        this.body.rows
+            .filter((v) => v.prop('data-rowcategory') === 'DELETED' || v.prop('data-rowcategory') === 'ADDED_DELETED')
+            .forEach((v) => this.body.removeRow(v));
 
         //
         // when main record is saved, disable the key columns of the grid,
@@ -911,18 +910,29 @@ class BootstrapDataGrid extends BSGridBase {
 
     };
 
-    registerCallback(key, eventTypeX, callback, dataSourceNameX) {
-        dataEventsService.registerCallback(key, eventTypeX, callback, dataSourceNameX);
+    registerCallback(key, eventTypeX, callback, dataSourceNameX, verifyDSName = false) {
+        dataEventsService.registerCallback(key, eventTypeX, callback, dataSourceNameX, verifyDSName);
+    };
+
+    unRegisterCallback(key, eventTypeX, dataSourceNameX) {
+        dataEventsService.unRegisterCallback(key, eventTypeX, dataSourceNameX);
     };
 
     /**
      * @param {string} eventType
      * @param {(source: BootstrapDataGrid, eventObject: object) => any} handler
      */
-    addHandler(eventType, handler) {
+    addHandler(eventType, handler, verifyDSName = false) {
         var id = this.options.gridId;
         var ds = this.options.dataSource.name;
-        this.registerCallback(id, eventType, (/** @type {Object} */ ev) => handler(this, ev), ds);
+        this.registerCallback(id, eventType, (/** @type {Object} */ ev) => handler(this, ev), ds, verifyDSName);
+    }
+
+    removeHandler(eventType) {
+        var id = this.options.gridId;
+        var ds = this.options.dataSource.name;
+        this.unRegisterCallback(id, eventType, ds);
+
     }
 
     onFetchData(eventArgs) {
@@ -942,22 +952,29 @@ class BootstrapDataGrid extends BSGridBase {
         console.error('onFetchDataError: ', eventArgs);
     }
 
-    registerCallbacks() {
+    registerCallbacks(verifyDSName = true) {
         // debugger;
         var id = this.options.gridId;
         var ds = this.options.dataSource.name;
 
+        //
+        // subscribe to main view/form events
+        //
         this.registerCallback(id, appDataEvents.GRID_DATA, () => this.body.getDirtyRecords(), ds);
         this.registerCallback(id, appDataEvents.ON_ADD_RECORD, (a) => this.onHeaderNext(a, false), ds);
         this.registerCallback(id, appDataEvents.ON_FETCH_RECORD, (a) => this.onHeaderNext(a, true), ds);
         this.registerCallback(id, appDataEvents.ON_SAVE_RECORD, (a) => this.onSaveRecord(a), ds);
         this.registerCallback(id, appDataEvents.ON_SAVE_ERROR, (a) => this.onSaveError(a), ds);
-        this.registerCallback(id, appDataEvents.ON_SORTING_REQUESTED, (a) => this.onSortingRequest(a), ds);
-        this.registerCallback(id, appDataEvents.ON_COLS_REORDERED, (a) => this.onColsReordered(a), ds);
-        this.registerCallback(id, appDataEvents.ON_GRID_CONFIG_UPDATED, (ev) => this.onGridConfigurationChanged(ev), ds);
-        this.registerCallback(id, appDataEvents.ON_GRID_DATA_BOUND, (ev) => this.onGridDataBound(ev), ds);
-        this.registerCallback(id, appDataEvents.ON_FETCH_GRID_RECORD, (ev) => this.onFetchData(ev), ds);
-        this.registerCallback(id, appDataEvents.ON_FETCH_GRID_RECORD_ERROR, (ev) => this.onFetchDataError(ev), ds);
+
+        //
+        // subscribe to grid events
+        //
+        this.registerCallback(id, appDataEvents.ON_SORTING_REQUESTED, (a) => this.onSortingRequest(a), ds, verifyDSName);
+        this.registerCallback(id, appDataEvents.ON_COLS_REORDERED, (a) => this.onColsReordered(a), ds, verifyDSName);
+        this.registerCallback(id, appDataEvents.ON_GRID_CONFIG_UPDATED, (ev) => this.onGridConfigurationChanged(ev), ds, verifyDSName);
+        this.registerCallback(id, appDataEvents.ON_GRID_DATA_BOUND, (ev) => this.onGridDataBound(ev), ds, verifyDSName);
+        this.registerCallback(id, appDataEvents.ON_FETCH_GRID_RECORD, (ev) => this.onFetchData(ev), ds, verifyDSName);
+        this.registerCallback(id, appDataEvents.ON_FETCH_GRID_RECORD_ERROR, (ev) => this.onFetchDataError(ev), ds, verifyDSName);
     };
 }
 
@@ -2376,8 +2393,7 @@ class BSGridSelectorWindow extends BSGridBase {
         }
         else {
             var modelTemplate =
-                `<div class="modal fade" id="${this.modalId}" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1"
-                    aria-labelledby="${this.modalTitleId}" aria-hidden="true">
+                `<div class="modal fade" id="${this.modalId}">
                         <div class="modal-dialog modal-dialog-scrollable">
                             <div class="modal-content">
                                 <div class="modal-header">
@@ -2440,7 +2456,17 @@ class BSGridSelectorWindow extends BSGridBase {
 
         grid.addHandler(this.appDataEvents.ON_ROW_DOUBLE_CLICKED, (sender, e) => {
             console.log('row selected', sender, e);
-        });
+        }, true);
+
+        //
+        // following events are linked to parent (primary view/form) and are not needed for selector
+        //
+
+        grid.removeHandler(this.appDataEvents.GRID_DATA);
+        grid.removeHandler(this.appDataEvents.ON_ADD_RECORD);
+        grid.removeHandler(this.appDataEvents.ON_FETCH_RECORD);
+        grid.removeHandler(this.appDataEvents.ON_SAVE_RECORD);
+        grid.removeHandler(this.appDataEvents.ON_SAVE_ERROR);
 
         grid.render();
 
