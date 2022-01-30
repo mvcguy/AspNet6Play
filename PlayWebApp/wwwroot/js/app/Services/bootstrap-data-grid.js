@@ -262,24 +262,28 @@ class BootstrapDataGrid extends BSGridBase {
 
             //debugger;
             if (gridCol.dataType === 'select') {
-                cellInputVar = new BSGridSelect();
+                cellInputVar = new BSGridSelect({ dataSourceName: _this.options.dataSource.name });
                 gridCol.dataSource
                     .forEach((opt) => cellInputVar.append(new BSGridSelectOption(opt)));
                 cellInputVar.addClass('form-select form-select-sm');
             }
             else if (gridCol.dataType === 'checkbox') {
-                cellInputVar = new BSGridCheckBox();
+                cellInputVar = new BSGridCheckBox({ dataSourceName: _this.options.dataSource.name });
             }
             else if (gridCol.dataType === 'selector') {
                 // TODO: Fix two types of settings!!!
                 cellInputVar = new BSGridSelector({
+                    dataSourceName: _this.options.dataSource.name,
                     propName: gridCol.propName,
                     btnId: "btn_" + _this.options.gridId + "_template_row_" + gridCol.propName,
                     cssClass: "form-control form-control-sm",
                     elementId: _this.options.gridId + "_template_row_" + gridCol.propName,
                     inputType: "text",
                     onClick: (sender, e) => {
-                        var selectorWindow = new BSGridSelectorWindow({ propName: gridCol.propName, containerId: _this.options.containerId });
+                        var selectorWindow = new BSGridSelectorWindow({
+                            propName: gridCol.propName,
+                            containerId: _this.options.containerId, dataCB: gridCol.selectorDataCB
+                        });
                         selectorWindow.show();
 
                     },
@@ -287,7 +291,10 @@ class BootstrapDataGrid extends BSGridBase {
                 });
             }
             else {
-                cellInputVar = new BSGridTextInput({ inputType: gridCol.dataType });
+                cellInputVar = new BSGridTextInput({
+                    dataSourceName: _this.options.dataSource.name,
+                    inputType: gridCol.dataType
+                });
                 cellInputVar.addClass('form-control form-control-sm');
             }
             // TODO: Fix two types of settings!!!
@@ -301,9 +308,14 @@ class BootstrapDataGrid extends BSGridBase {
 
             if (gridCol.isKey === true) {
                 cellInputVar.props([
-                    { key: 'disabled', value: true },
+                    { key: 'readonly', value: true },
                     { key: 'data-keycolumn', value: 'true' }
                 ]);
+            }
+
+            if (_this.options.isReadonly === true) {
+                cellInputVar.readonly = true;
+                cellInputVar.setCss('cursor', 'pointer');
             }
 
             gridBodyCell.append(cellInputVar);
@@ -660,7 +672,7 @@ class BootstrapDataGrid extends BSGridBase {
             var url = this.options.dataSource.url(pageIndex);
             if (!url) return;
 
-            var options = new BSGridHttpClientOptions(this.options.dataSource.name, url, "GET");
+            var options = new BSGridHttpClientOptions(url, "GET", this.options.dataSource.name);
 
             this.httpClient.get(options);
         }
@@ -885,7 +897,7 @@ class BootstrapDataGrid extends BSGridBase {
         // modify 'keydown' events on the row inputs
         //
         var grid = this;
-        console.log(eventArgs);
+        // console.log(eventArgs);
 
 
         grid.body.rows.forEach((row, i) => {
@@ -951,7 +963,7 @@ class BootstrapDataGrid extends BSGridBase {
 
 class BSGridInput extends BSGridBase {
     /**
-     * @param {{ inputType: string; }} options
+     * @param {{ inputType: string; dataSourceName: string }} options
      */
     constructor(options) {
         super();
@@ -970,6 +982,14 @@ class BSGridInput extends BSGridBase {
         this.element.val(v);
     }
 
+    get readonly() {
+        return this.element.is("readonly");
+    }
+
+    set readonly(v) {
+        this.element.attr('readonly', true);
+    }
+
     clone() {
         // var sc = super.clone();
         // var c = new BSGridInput(this.shClone(this.options));
@@ -983,16 +1003,23 @@ class BSGridInput extends BSGridBase {
     getFieldName() {
         return this.getProp('data-propname');
     }
+
+    addDoubleClickEvent() {
+        this.element.on('dblclick', (e) => {
+            this.notifyListeners(this.appDataEvents.ON_ROW_DOUBLE_CLICKED,
+                { dataSourceName: this.options.dataSourceName, eventData: e, source: this });
+        })
+    }
 }
 
 class BSGridTextInput extends BSGridInput {
-    constructor(options = { inputType: 'text' }) {
+    constructor(options = { dataSourceName: "", inputType: 'text' }) {
         super(options);
         this.render();
     }
 
     render() {
-        this.element = this.jquery(`<input type='${this.options.inputType}' /> `)
+        this.element = this.jquery(`<input type='${this.options.inputType}' /> `);
     }
 
     clone() {
@@ -1000,13 +1027,14 @@ class BSGridTextInput extends BSGridInput {
         var c = new BSGridTextInput(this.shClone(this.options));
         c.element = sc.element;
         c.children = sc.children;
+        c.addDoubleClickEvent();
         return c;
     }
 }
 
 class BSGridTextInputExt extends BSGridInput {
     /**
-     * @param {{ inputType: string, elementId: string; }} options
+     * @param {{ inputType: string, elementId: string; dataSourceName:string }} options
      */
     constructor(options) {
         super(options);
@@ -1057,6 +1085,7 @@ class BSGridCheckBox extends BSGridInput {
         var c = new BSGridCheckBox(this.shClone(this.options));
         c.element = sc.element;
         c.children = sc.children;
+        this.addDoubleClickEvent();
         return c;
     }
 
@@ -1117,6 +1146,8 @@ class BSGridSelect extends BSGridInput {
         var c = new BSGridSelect(this.shClone(this.options));
         c.element = sc.element;
         c.children = sc.children;
+        this.addDoubleClickEvent();
+
         return c;
     }
 
@@ -1137,7 +1168,7 @@ class BSGridSelector extends BSGridInput {
     txtElement;
 
     /**
-     * @param {{propName:string, inputType: string, cssClass: string, placeHolder: string, btnId: string, elementId: string, onClick: (sender:BSGridSelector, eventArgs:MouseEvent) => void;  }} options
+     * @param {{ dataSourceName:string, propName:string, inputType: string, cssClass: string, placeHolder: string, btnId: string, elementId: string, onClick: (sender:BSGridSelector, eventArgs:MouseEvent) => void;  }} options
      */
     constructor(options) {
         super(options);
@@ -1196,12 +1227,22 @@ class BSGridSelector extends BSGridInput {
         var sc = super.clone();
         var c = new BSGridSelector(this.shClone(this.options));
         c.children = sc.children;
+        this.addDoubleClickEvent();
         return c;
+    }
+
+    addDoubleClickEvent() {
+        this.txtElement.element.on('dblclick', (e) => {
+            this.notifyListeners(this.appDataEvents.ON_ROW_DOUBLE_CLICKED,
+                { dataSourceName: this.options.dataSourceName, eventData: e, source: this });
+        })
     }
 
     getFieldName() {
         return this.txtElement.getFieldName();
     }
+
+
 }
 
 class BSGridCell extends BSGridBase {
@@ -1308,6 +1349,10 @@ class BSGridRowCollection extends BSGridBase {
 
     getVisibleRows() {
         return this.rows.filter((row) => row.visible === true);
+    }
+
+    getActionsRow() {
+        return this.rows.find((row) => row.options.isActionsRow === true);
     }
 
     getGridTitlesRow() {
@@ -1442,7 +1487,6 @@ class BSGridRow extends BSGridBase {
         //this.dataSourceName = options.dataSourceName;
 
         this.render();
-
     }
 
     /**
@@ -1553,6 +1597,7 @@ class BSGridRow extends BSGridBase {
     isRowDirty() {
         return this.getProp('data-isdirty') === 'true';
     }
+
 }
 
 class BSGridOptions {
@@ -1563,12 +1608,14 @@ class BSGridOptions {
      * @param {string} containerId
      * @param {BSGridColDefinition[]} colDefinition 
      * @param {BSGridDataSource} dataSource 
+     * @param {boolean} isReadonly
      */
-    constructor(gridId, containerId, colDefinition, dataSource) {
+    constructor(gridId, containerId, colDefinition, dataSource, isReadonly = false) {
         this.gridId = gridId;
         this.containerId = containerId;
         this.colDefinition = colDefinition;
         this.dataSource = dataSource;
+        this.isReadonly = isReadonly;
     }
 }
 
@@ -1584,8 +1631,10 @@ class BSGridColDefinition {
      * @param {boolean} [isHeader]
      * @param {number} [colSpan]
      * @param {number} [rowSpan]
+     * @param {getUrlCallback} [selectorDataCB] - a cb to return the page url
      */
-    constructor(name, dataType, width, propName, isKey, dataSource, isHeader, colSpan, rowSpan) {
+    constructor(name, dataType, width, propName, isKey,
+        dataSource, isHeader, colSpan, rowSpan, selectorDataCB) {
         this.name = name;
         this.dataType = dataType;
         this.width = width;
@@ -1595,6 +1644,7 @@ class BSGridColDefinition {
         this.isHeader = isHeader;
         this.colSpan = colSpan;
         this.rowSpan = rowSpan;
+        this.selectorDataCB = selectorDataCB;
     }
 }
 
@@ -2270,7 +2320,8 @@ class BSGridPagination extends BSGridBase {
                 e.preventDefault();
                 var index = this.jquery(e.target).attr('data-p-index');
 
-                this.options.nextPageCallback(parseInt(index));
+                if (this.options.nextPageCallback)
+                    this.options.nextPageCallback(parseInt(index));
             });
         };
 
@@ -2297,9 +2348,11 @@ class PagingMetaData {
 }
 
 class BSGridSelectorWindow extends BSGridBase {
-
-
     selectorModal;
+
+    /**
+     * @param {{ propName: string; containerId: string; dataCB: getUrlCallback}} options
+     */
     constructor(options) {
         super();
         this.options = options;
@@ -2324,7 +2377,7 @@ class BSGridSelectorWindow extends BSGridBase {
         else {
             var modelTemplate =
                 `<div class="modal fade" id="${this.modalId}" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1"
-                    aria-labelledby="staticBackdropLabel" aria-hidden="true">
+                    aria-labelledby="${this.modalTitleId}" aria-hidden="true">
                         <div class="modal-dialog modal-dialog-scrollable">
                             <div class="modal-content">
                                 <div class="modal-header">
@@ -2351,37 +2404,25 @@ class BSGridSelectorWindow extends BSGridBase {
 
             this.element[0].addEventListener('shown.bs.modal', (e) => this.runSample());
         }
-
-
     }
 
     show() {
-
         this.selectorModal.show();
-
     }
 
     runSample() {
-
-        // debugger;
-        
         console.log('rendering grid in the selector modal');
         if (this.element.find('#' + this.gridId).length > 0) {
             return;
         }
 
         //
-        // booking lines grid 
+        // booking lines grid
         //
         var cols = [];
-        cols.push(new BSGridColDefinition("Line nbr", "number", "80px", "refNbrx", true));
-        cols.push(new BSGridColDefinition("Stock item", "selector", "60px", "stockItemRefNbrx", false));
-        cols.push(new BSGridColDefinition("Description", "text", "220px", "descriptionx", false));
-        cols.push(new BSGridColDefinition("Quantity", "number", "80px", "quantityx", false));
-        cols.push(new BSGridColDefinition("Unit cost", "number", "120px", "unitCostx", false));
-        cols.push(new BSGridColDefinition("Cost", "number", "120px", "extCostx", false));
-        cols.push(new BSGridColDefinition("Discount", "number", "120px", "discountx", false));
 
+        cols.push(new BSGridColDefinition("Stock item", "text", "60px", "refNbr", true));
+        cols.push(new BSGridColDefinition("Description", "text", "220px", "itemDescription", false));
 
         var dataSource = new BSGridDataSource('bsSelector',
             {
@@ -2389,16 +2430,25 @@ class BSGridSelectorWindow extends BSGridBase {
                 metaData: undefined
             },
             true,
-            (page) => {
-                return undefined;
-            });
+            this.options.dataCB
+        );
 
-        var bs = new BSGridOptions(this.gridId, this.containerId, cols, dataSource);
+        var bs = new BSGridOptions(this.gridId, this.containerId, cols, dataSource, true);
 
         var grid = new BootstrapDataGrid(bs);
         grid.registerCallbacks();
 
+        grid.addHandler(this.appDataEvents.ON_ROW_DOUBLE_CLICKED, (sender, e) => {
+            console.log('row selected', sender, e);
+        });
+
         grid.render();
+
+        // hide actions
+        grid.head.getActionsRow().visible = false;
+
+        // debugger;
+        grid.fetchGridPage(1); // load the first page
     }
 
 }

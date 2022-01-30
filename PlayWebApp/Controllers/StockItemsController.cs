@@ -49,6 +49,14 @@ namespace PlayWebApp.Controllers
             return Ok(item.RefNbr);
         }
 
+        [HttpGet]
+        [Route("paginated/{page}")]
+        public async Task<IActionResult> GetAll(int page = 1)
+        {
+            var items = await service.GetAll(page);
+            return Ok(items);
+        }
+
         [HttpGet()]
         [Route("{id}")]
         public async Task<IActionResult> GetById(string id)

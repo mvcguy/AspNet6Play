@@ -93,8 +93,12 @@ class ManageBooking {
         // booking lines grid 
         //
         var cols = [];
+
+        var stockSelector = new BSGridColDefinition("Stock item", "selector", "60px", "stockItemRefNbr");
+        stockSelector.selectorDataCB = (page) => { return `https://localhost:7096/api/v1/StockItems/paginated/${page}` };
+
         cols.push(new BSGridColDefinition("Line nbr", "number", "80px", "refNbr", true));
-        cols.push(new BSGridColDefinition("Stock item", "selector", "60px", "stockItemRefNbr", false));
+        cols.push(stockSelector);
         cols.push(new BSGridColDefinition("Description", "text", "220px", "description", false));
         cols.push(new BSGridColDefinition("Quantity", "number", "80px", "quantity", false));
         cols.push(new BSGridColDefinition("Unit cost", "number", "120px", "unitCost", false));

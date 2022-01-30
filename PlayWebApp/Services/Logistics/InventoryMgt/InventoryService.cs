@@ -16,6 +16,12 @@ namespace PlayWebApp.Services.Logistics.InventoryMgt
         public InventoryService(INavigationRepository<StockItem> repository) : base(repository)
         {
         }
+        
+        public override StockItemDto ToDto(StockItem model)
+        {
+            return model.ToDto();
+        }
+
 
         public async override Task<StockItemDto> Add(StockItemUpdateVm vm)
         {
@@ -49,11 +55,6 @@ namespace PlayWebApp.Services.Logistics.InventoryMgt
         }
 
 
-        public override StockItemDto ToDto(StockItem model)
-        {
-            return model.ToDto();
-        }
-
         public async override Task<StockItemDto> Update(StockItemUpdateVm model)
         {
             var record = await repository.GetById(model.RefNbr);
@@ -78,6 +79,7 @@ namespace PlayWebApp.Services.Logistics.InventoryMgt
 
             throw new Exception("Record cannot be found");
         }
+    
     }
 
 }

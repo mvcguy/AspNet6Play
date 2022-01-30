@@ -33,6 +33,8 @@ var appDataEvents = {
     ON_ROW_UPDATED: "ON_ROW_UPDATED",
 
     ON_FIELD_UPDATED: "ON_FIELD_UPDATED",
+
+    ON_ROW_DOUBLE_CLICKED: "ON_ROW_DOUBLE_CLICKED"
 };
 
 var appActions = {
