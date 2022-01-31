@@ -186,6 +186,7 @@ class BootstrapDataGrid extends BSGridBase {
 
         this.head = new BSGridHeader();
         this.body = new BSGridBody();
+        this.selectors = new BSGridSelectorWindowCollection();
 
         // @ts-ignore
         this.bootstrap = bootstrap;
@@ -272,6 +273,13 @@ class BootstrapDataGrid extends BSGridBase {
             }
             else if (gridCol.dataType === 'selector') {
                 // TODO: Fix two types of settings!!!
+                var sWindow = new BSGridSelectorWindow({
+                    propName: gridCol.propName,
+                    containerId: _this.options.containerId,
+                    urlCb: gridCol.selectorDataCB,
+                });
+                _this.selectors.add(sWindow);
+
                 cellInputVar = new BSGridSelector({
                     dataSourceName: _this.options.dataSource.name,
                     propName: gridCol.propName,
@@ -279,16 +287,14 @@ class BootstrapDataGrid extends BSGridBase {
                     cssClass: "form-control form-control-sm",
                     elementId: _this.options.gridId + "_template_row_" + gridCol.propName,
                     inputType: "text",
-                    onClick: (sender, e) => {
-                        var selectorWindow = new BSGridSelectorWindow({
-                            propName: gridCol.propName,
-                            containerId: _this.options.containerId, dataCB: gridCol.selectorDataCB
-                        });
-                        selectorWindow.show();
-
-                    },
-                    placeHolder: gridCol.name
+                    placeHolder: gridCol.name,
+                    btnClick: (sender, e) => {
+                        sWindow.grid.removeHandler(_this.appDataEvents.ON_ROW_DOUBLE_CLICKED);
+                        sWindow.grid.addHandler(_this.appDataEvents.ON_ROW_DOUBLE_CLICKED, (s, ev) => sender.onItemSelected(sWindow, ev));
+                        sWindow.show();
+                    }
                 });
+
             }
             else {
                 cellInputVar = new BSGridTextInput({
@@ -316,6 +322,7 @@ class BootstrapDataGrid extends BSGridBase {
             if (_this.options.isReadonly === true) {
                 cellInputVar.readonly = true;
                 cellInputVar.setCss('cursor', 'pointer');
+                cellInputVar.setCss('user-select', 'none');
             }
 
             gridBodyCell.append(cellInputVar);
@@ -572,6 +579,9 @@ class BootstrapDataGrid extends BSGridBase {
 
             if (input instanceof BSGridSelector) {
                 // link the callback from option
+                //TODO: fix the button ID
+                var xId = input.btnElement.attr('id');
+                input.btnElement.attr('id', xId + "_" + rowNumber)
             }
 
         });
@@ -716,10 +726,7 @@ class BootstrapDataGrid extends BSGridBase {
             v.prop('data-rowcategory', 'PRESTINE');
 
             // make id inputs disabled
-            v.getInputs().filter((x) => {
-                if (x.prop('data-keycolumn') === 'true')
-                    return x;
-            }).forEach((vx) => vx.prop('disabled', true));
+            v.getInputs().filter((x) => x.isKeyField()).forEach((vx) => vx.prop('disabled', true));
         });
     };
 
@@ -1027,6 +1034,14 @@ class BSGridInput extends BSGridBase {
                 { dataSourceName: this.options.dataSourceName, eventData: e, source: this });
         })
     }
+
+    isKeyField() {
+        return this.getProp('data-keycolumn') === 'true';
+    }
+
+    change() {
+        this.element.change();
+    }
 }
 
 class BSGridTextInput extends BSGridInput {
@@ -1173,7 +1188,6 @@ class BSGridSelect extends BSGridInput {
 
 class BSGridSelector extends BSGridInput {
 
-
     /**
      * @type {any}
      */
@@ -1185,12 +1199,38 @@ class BSGridSelector extends BSGridInput {
     txtElement;
 
     /**
-     * @param {{ dataSourceName:string, propName:string, inputType: string, cssClass: string, placeHolder: string, btnId: string, elementId: string, onClick: (sender:BSGridSelector, eventArgs:MouseEvent) => void;  }} options
+     * @param {{dataSourceName:string, 
+     * propName:string, 
+     * inputType: string, 
+     * cssClass: string, 
+     * placeHolder: string, 
+     * btnId: string, 
+     * elementId: string,
+     * btnClick: (sender:BSGridSelector, e:any)=> void }} options
      */
     constructor(options) {
         super(options);
         this.options = options;
         this.render();
+    }
+
+    /**
+     * @param {BSGridSelectorWindow} sender
+     * @param {any} e
+     */
+    onItemSelected(sender, e) {
+
+        console.log('row selected', sender.grid.body.getSelectedRow());
+
+        var row = sender.grid.body.getSelectedRow();
+        var selectedInput = row.getInputs().find((input) => input.isKeyField());
+        if (selectedInput) {
+            console.log('Selected value: ', selectedInput.val);
+            console.log('selector: ', this.txtElement.val);
+            this.val = selectedInput.val;
+            this.change(); // call change to fire the change event
+        }
+        sender.selectorModal.hide();
     }
 
     render() {
@@ -1202,24 +1242,16 @@ class BSGridSelector extends BSGridInput {
             { key: "placeHolder", value: this.options.placeHolder },
             { key: "data-propname", value: this.options.propName }]);
 
-
-
         this.btnElement = this.jquery(`<button class="btn btn-outline-primary" type="button" id="${this.options.btnId}">
                                             <i class="bi bi-search"></i>
                                        </button>`);
 
-        this.btnElement.on('click', (/** @type {MouseEvent} */ e) => { this.options.onClick(this, e) });
+        this.btnElement.on('click', (/** @type {MouseEvent} */ e) => {
+            this.options.btnClick(this, e);
+        });
         this.element = this.jquery('<div class="input-group input-group-sm"></div>');
         this.element = this.element.append(this.txtElement.element).append(this.btnElement);
-
     }
-
-
-    // getInput() {
-    //     var x = new BSGridTextInput(this.options);
-    //     x.element = this.txtElement;
-    //     return x;
-    // }
 
     getButton() {
         return this.btnElement;
@@ -1244,19 +1276,24 @@ class BSGridSelector extends BSGridInput {
         var sc = super.clone();
         var c = new BSGridSelector(this.shClone(this.options));
         c.children = sc.children;
-        this.addDoubleClickEvent();
+        // c.addDoubleClickEvent(); // TODO: why it has to be in the clone method?  
+
         return c;
     }
 
-    addDoubleClickEvent() {
-        this.txtElement.element.on('dblclick', (e) => {
-            this.notifyListeners(this.appDataEvents.ON_ROW_DOUBLE_CLICKED,
-                { dataSourceName: this.options.dataSourceName, eventData: e, source: this });
-        })
-    }
+    // addDoubleClickEvent() {
+    //     this.txtElement.element.on('dblclick', (e) => {
+    //         this.notifyListeners(this.appDataEvents.ON_ROW_DOUBLE_CLICKED,
+    //             { dataSourceName: this.options.dataSourceName, eventData: e, source: this });
+    //     })
+    // }
 
     getFieldName() {
         return this.txtElement.getFieldName();
+    }
+
+    change() {
+        this.txtElement.change();
     }
 
 
@@ -2364,11 +2401,39 @@ class PagingMetaData {
     }
 }
 
+class BSGridSelectorWindowCollection extends BSGridBase {
+
+    /**@type BSGridSelectorWindow[] */
+    items;
+
+    constructor() {
+        super();
+        this.items = [];
+    }
+
+    /**
+     * @param {BSGridSelectorWindow} item
+     */
+    add(item) {
+        if (!this.find(item.options.propName))
+            this.items.push(item);
+    }
+
+    /**
+     * @param {string} propName
+     * @returns {BSGridSelectorWindow} Item that mataches the propName
+     */
+    find(propName) {
+        return this.items.find((item) => item.options.propName === propName);
+    }
+}
+
 class BSGridSelectorWindow extends BSGridBase {
+
     selectorModal;
 
     /**
-     * @param {{ propName: string; containerId: string; dataCB: getUrlCallback}} options
+     * @param {{ propName: string; containerId: string; urlCb: getUrlCallback;}} options
      */
     constructor(options) {
         super();
@@ -2379,9 +2444,11 @@ class BSGridSelectorWindow extends BSGridBase {
         this.modalTitleId = `${this.parentContainerId}_lbs_${this.options.propName}`;
         this.containerId = `${this.parentContainerId}_cbs_${this.options.propName}`;
         this.gridId = `${this.parentContainerId}_g_${this.options.propName}`;
-
         this.render();
+        this.grid = this.renderGrid();
+        this.onItemSelected = (/** @type {BootstrapDataGrid} */ sender, /** @type {any} */ e) => { console.log(); };
     }
+
 
     render() {
 
@@ -2389,11 +2456,11 @@ class BSGridSelectorWindow extends BSGridBase {
         if (find && find.length === 1) {
             this.element = find;
             // @ts-ignore
-            this.selectorModal = new bootstrap.Modal(find);
+            this.selectorModal = bootstrap.Modal.getOrCreateInstance(find);
         }
         else {
             var modelTemplate =
-                `<div class="modal fade" id="${this.modalId}">
+                `<div class="modal" id="${this.modalId}">
                         <div class="modal-dialog modal-dialog-scrollable">
                             <div class="modal-content">
                                 <div class="modal-header">
@@ -2418,7 +2485,7 @@ class BSGridSelectorWindow extends BSGridBase {
             // @ts-ignore
             this.selectorModal = new bootstrap.Modal(this.element);
 
-            this.element[0].addEventListener('shown.bs.modal', (e) => this.runSample());
+            this.element[0].addEventListener('shown.bs.modal', (e) => this.grid.fetchGridPage(1));
         }
     }
 
@@ -2426,14 +2493,9 @@ class BSGridSelectorWindow extends BSGridBase {
         this.selectorModal.show();
     }
 
-    runSample() {
-        console.log('rendering grid in the selector modal');
-        if (this.element.find('#' + this.gridId).length > 0) {
-            return;
-        }
-
+    renderGrid() {
         //
-        // booking lines grid
+        // grid shown in the selector window
         //
         var cols = [];
 
@@ -2446,7 +2508,7 @@ class BSGridSelectorWindow extends BSGridBase {
                 metaData: undefined
             },
             true,
-            this.options.dataCB
+            this.options.urlCb
         );
 
         var bs = new BSGridOptions(this.gridId, this.containerId, cols, dataSource, true);
@@ -2454,9 +2516,7 @@ class BSGridSelectorWindow extends BSGridBase {
         var grid = new BootstrapDataGrid(bs);
         grid.registerCallbacks();
 
-        grid.addHandler(this.appDataEvents.ON_ROW_DOUBLE_CLICKED, (sender, e) => {
-            console.log('row selected', sender, e);
-        }, true);
+        // grid.addHandler(grid.appDataEvents.ON_ROW_DOUBLE_CLICKED, this.onItemSelected);
 
         //
         // following events are linked to parent (primary view/form) and are not needed for selector
@@ -2472,9 +2532,6 @@ class BSGridSelectorWindow extends BSGridBase {
 
         // hide actions
         grid.head.getActionsRow().visible = false;
-
-        // debugger;
-        grid.fetchGridPage(1); // load the first page
+        return grid;
     }
-
 }
