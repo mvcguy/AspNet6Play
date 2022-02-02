@@ -2,7 +2,7 @@
 
 using PlayWebApp;
 
-namespace PlayWebApp.Services.Logistics.ViewModels.Dtos
+namespace PlayWebApp.Services.Logistics.ViewModels
 {
     public class BaseDto
     {

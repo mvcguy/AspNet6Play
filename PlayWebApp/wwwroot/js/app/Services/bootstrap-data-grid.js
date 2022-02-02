@@ -540,6 +540,7 @@ class BootstrapDataGrid extends BSGridBase {
                 input.val = cellVal;
             }
 
+            debugger;
             if (existingRecord === false) {
                 input.prop('disabled', false);
             }

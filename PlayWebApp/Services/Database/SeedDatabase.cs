@@ -10,7 +10,7 @@ using PlayWebApp.Services.Identity.Repository;
 using PlayWebApp.Services.Identity.ViewModels;
 using PlayWebApp.Services.Logistics.InventoryMgt;
 using PlayWebApp.Services.Logistics.InventoryMgt.Repository;
-using PlayWebApp.Services.Logistics.ViewModels;
+using PlayWebApp.Services.Logistics.InventoryMgt.ViewModels;
 #nullable disable
 
 namespace PlayWebApp.Services.Database;

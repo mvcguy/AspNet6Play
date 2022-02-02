@@ -3,7 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using PlayWebApp.Services.Database;
 using PlayWebApp.Services.Database.Model;
 using PlayWebApp.Services.Logistics.InventoryMgt;
-using PlayWebApp.Services.Logistics.ViewModels;
+using PlayWebApp.Services.Logistics.InventoryMgt.ViewModels;
 #nullable disable
 
 namespace PlayWebApp.Controllers

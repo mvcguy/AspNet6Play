@@ -2,7 +2,7 @@
 
 
 using PlayWebApp;
-using PlayWebApp.Services.Logistics.ViewModels.Requests;
+using PlayWebApp.Services.Logistics.ViewModels;
 
 namespace PlayWebApp.Services.Logistics.LocationMgt.ViewModels
 {

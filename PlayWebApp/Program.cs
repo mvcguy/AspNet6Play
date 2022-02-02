@@ -123,7 +123,8 @@ services.AddScoped<INavigationRepository<ApplicationUser>, UserRepository>();
 services.AddScoped<INavigationRepository<Tenant>, TenantRepository>();
 services.AddScoped<INavigationRepository<StockItem>, InventoryRepository>();
 services.AddScoped<INavigationRepository<Booking>, BookingRepository>();
-services.AddScoped<BookingRepository, BookingRepository>();
+services.AddScoped<BookingRepository>();
+services.AddScoped<InventoryRepository>();
 
 services.AddScoped<INavigationRepository<Customer>, CustomerRepository>();
 

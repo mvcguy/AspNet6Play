@@ -2,9 +2,10 @@ using PlayWebApp.Services.AppManagement.ViewModels;
 using PlayWebApp.Services.Logistics.CustomerManagement.ViewModels;
 using PlayWebApp.Services.Database.Model;
 using PlayWebApp.Services.Identity.ViewModels;
-using PlayWebApp.Services.Logistics.ViewModels.Dtos;
 using PlayWebApp.Services.Logistics.BookingMgt.ViewModels;
 using PlayWebApp.Services.Logistics.LocationMgt.ViewModels;
+using PlayWebApp.Services.Logistics.InventoryMgt.ViewModels;
+using PlayWebApp.Services.Logistics.ViewModels;
 #nullable disable
 
 namespace PlayWebApp.Services.ModelExtentions
@@ -36,9 +37,35 @@ namespace PlayWebApp.Services.ModelExtentions
                 ExpiresAt = model.ExpiresAt,
                 UnitCost = model.UnitCost,
                 UnitOfMeasure = model.UnitOfMeasure,
-                StockItemRefNbr = model.StockItemId,
+                RefNbr = model.RefNbr,
                 InternalId = model.Id,
-                RefNbr = model.RefNbr
+            };
+        }
+
+         public static StockItemUpdateVm ToVm(this StockItemDto model)
+        {
+            if (model == null) return null;
+
+            return new StockItemUpdateVm
+            {
+                ItemDescription = model.ItemDescription,
+                RefNbr = model.RefNbr,
+                ItemPrices = model.Prices?.Select(x => x.ToVm()).ToList()
+            };
+        }
+
+        public static StockItemPriceUpdateVm ToVm(this StockItemPriceDto model)
+        {
+            if (model == null) return null;
+
+            return new StockItemPriceUpdateVm
+            {
+                BreakQty = model.BreakQty,
+                EffectiveFrom = model.EffectiveFrom,
+                ExpiresAt = model.ExpiresAt,
+                UnitCost = model.UnitCost,
+                UnitOfMeasure = model.UnitOfMeasure,
+                RefNbr = model.RefNbr,
             };
         }
 
@@ -106,6 +133,7 @@ namespace PlayWebApp.Services.ModelExtentions
                 Lines = model.Lines?.Select(x=>x.ToVm()).ToList()
             };
         }
+
         public static BookingItemDto ToDto(this BookingItem model)
         {
             if (model == null) return null;

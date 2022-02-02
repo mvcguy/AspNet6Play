@@ -1,7 +1,8 @@
 using System.ComponentModel.DataAnnotations;
 using Newtonsoft.Json;
-#nullable disable
-namespace PlayWebApp.Services.Logistics.ViewModels
+using PlayWebApp.Services.Logistics.ViewModels;
+
+namespace PlayWebApp.Services.Logistics.InventoryMgt.ViewModels
 {
     public class StockItemUpdateVm : ViewModelBase
     {
@@ -18,6 +19,8 @@ namespace PlayWebApp.Services.Logistics.ViewModels
         public string ItemDescription { get; set; }
 
         public IList<StockItemPriceUpdateVm> ItemPrices { get; set; }
+
+        public CollectionMetaData ItemPricesMetaData { get; set; }
     }
 
 }

@@ -1,7 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 using Newtonsoft.Json;
 using PlayWebApp.Services.Logistics.ViewModels;
-using PlayWebApp.Services.Logistics.ViewModels.Dtos;
 #nullable disable
 namespace PlayWebApp.Services.Logistics.BookingMgt.ViewModels
 {

@@ -3,37 +3,50 @@ using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.EntityFrameworkCore;
 using PlayWebApp.Services.Database;
 using PlayWebApp.Services.Database.Model;
-using PlayWebApp.Services.Logistics.ViewModels;
+using PlayWebApp.Services.Logistics.InventoryMgt;
+using PlayWebApp.Services.Logistics.InventoryMgt.ViewModels;
+using PlayWebApp.Services.ModelExtentions;
 #nullable disable
 namespace PlayWebApp.Areas.Logistics.Pages.StockItems
 {
-
-
     public class ManageStockItemsModel : PageModel
     {
-        private readonly ApplicationDbContext dbContext;
+        private readonly InventoryService service;
 
-        public ManageStockItemsModel(ApplicationDbContext dbContext)
+        public ManageStockItemsModel(InventoryService service)
         {
-            this.dbContext = dbContext;
-            StockItemsList = new List<StockItem>();
+            this.service = service;
         }
+
         [BindProperty]
         public StockItemUpdateVm StockItemVm { get; set; }
 
-        public IEnumerable<StockItem> StockItemsList { get; set; }
-
-        public async Task OnGetAsync()
+        public async Task OnGetAsync(string refNbr = null)
         {
-            StockItemsList = await dbContext.StockItems.OrderBy(x => x.RefNbr).ToListAsync();
-            var item = await dbContext.StockItems.OrderBy(x => x.RefNbr).Take(1).FirstOrDefaultAsync();
-            if (item != null)
+            StockItemVm = new StockItemUpdateVm { ItemPrices = new List<StockItemPriceUpdateVm>() };
+            if (!string.IsNullOrWhiteSpace(refNbr))
             {
-                StockItemVm = new StockItemUpdateVm
+                var rec = await service.GetById(new StockItemRequestDto { RefNbr = refNbr });
+                if (rec != null)
+                    StockItemVm = rec.ToVm();
+            }
+            else
+            {
+                var top1 = await service.GetFirst();
+                if (top1 != null)
                 {
-                    RefNbr = item.RefNbr,
-                    ItemDescription = item.Description
-                };
+                    StockItemVm = top1.ToVm();
+                }
+            }
+
+            if (!string.IsNullOrWhiteSpace(StockItemVm.RefNbr))
+            {
+                var prices = await service.GetItemPrices(StockItemVm.RefNbr, 1);
+                if (prices != null && prices.Items != null && prices.Items.Any())
+                {
+                    StockItemVm.ItemPrices = prices.Items.Select(x => x.ToVm()).ToList();
+                    StockItemVm.ItemPricesMetaData = prices.MetaData;
+                }
             }
         }
 

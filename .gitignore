@@ -353,3 +353,4 @@ MigrationBackup/
 *.db-shm
 *.db-wal
 PlayWebApp/app.db-wal
+.vscode/settings.json

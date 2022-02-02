@@ -1,20 +1,20 @@
 using PlayWebApp.Services.Database.Model;
 using PlayWebApp.Services.DataNavigation;
 using PlayWebApp.Services.Logistics.InventoryMgt.Repository;
+using PlayWebApp.Services.Logistics.InventoryMgt.ViewModels;
 using PlayWebApp.Services.Logistics.ViewModels;
-using PlayWebApp.Services.Logistics.ViewModels.Dtos;
-using PlayWebApp.Services.Logistics.ViewModels.Requests;
 using PlayWebApp.Services.ModelExtentions;
-
-#nullable disable
 
 namespace PlayWebApp.Services.Logistics.InventoryMgt
 {
 
     public class InventoryService : NavigationService<StockItem, StockItemRequestDto, StockItemUpdateVm, StockItemDto>
     {
-        public InventoryService(INavigationRepository<StockItem> repository) : base(repository)
+        private readonly InventoryRepository inventoryRepository;
+
+        public InventoryService(InventoryRepository repository) : base(repository)
         {
+            this.inventoryRepository = repository;
         }
         
         public override StockItemDto ToDto(StockItem model)
@@ -22,6 +22,23 @@ namespace PlayWebApp.Services.Logistics.InventoryMgt
             return model.ToDto();
         }
 
+        public async Task<DtoCollection<StockItemPriceDto>> GetItemPrices(string refNbr, int page = 1)
+        {
+            var pagedResult = await inventoryRepository.GetItemPricesPaginated(refNbr, MaxPerPage, page);
+            if (pagedResult == null) return null;
+
+            return new DtoCollection<StockItemPriceDto>()
+            {
+                Items = pagedResult.Records.Select(x => x.ToDto()).ToList(),
+                MetaData = new CollectionMetaData
+                {
+                    PageSize = pagedResult.PageSize,
+                    PageIndex = pagedResult.PageIndex,
+                    TotalRecords = pagedResult.TotalRecords,
+                }
+            };
+
+        }
 
         public async override Task<StockItemDto> Add(StockItemUpdateVm vm)
         {
@@ -39,11 +56,11 @@ namespace PlayWebApp.Services.Logistics.InventoryMgt
                     StockItemPrices = vm.ItemPrices?.Select(x => new StockItemPrice
                     {
                         BreakQty = x.BreakQty,
-                        RefNbr = x.Code,
+                        RefNbr = x.RefNbr,
                         EffectiveFrom = x.EffectiveFrom,
                         ExpiresAt = x.ExpiresAt,
                         UnitCost = x.UnitCost,
-                        UnitOfMeasure = x.UnitOfMeasure,
+                        UnitOfMeasure = x.UnitOfMeasure,                        
                     }).ToList(),
                 };
                 var item = repository.Add(record);
@@ -64,7 +81,7 @@ namespace PlayWebApp.Services.Logistics.InventoryMgt
 
                 foreach (var item in model.ItemPrices)
                 {
-                    var line = record.StockItemPrices.FirstOrDefault(x => x.RefNbr == item.Code);
+                    var line = record.StockItemPrices.FirstOrDefault(x => x.RefNbr == item.RefNbr);
                     if (line == null) continue;
 
                     line.BreakQty = item.BreakQty;
@@ -79,7 +96,7 @@ namespace PlayWebApp.Services.Logistics.InventoryMgt
 
             throw new Exception("Record cannot be found");
         }
-    
+        
     }
 
 }

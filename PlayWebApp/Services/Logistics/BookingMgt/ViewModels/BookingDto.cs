@@ -1,6 +1,6 @@
 #nullable disable
 using PlayWebApp;
-using PlayWebApp.Services.Logistics.ViewModels.Dtos;
+using PlayWebApp.Services.Logistics.ViewModels;
 
 namespace PlayWebApp.Services.Logistics.BookingMgt.ViewModels
 {

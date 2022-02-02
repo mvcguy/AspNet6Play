@@ -2,8 +2,6 @@ using System.ComponentModel.DataAnnotations;
 using Newtonsoft.Json;
 using PlayWebApp.Services.Logistics.LocationMgt.ViewModels;
 using PlayWebApp.Services.Logistics.ViewModels;
-using PlayWebApp.Services.Logistics.ViewModels.Dtos;
-using PlayWebApp.Services.Logistics.ViewModels.Requests;
 
 namespace PlayWebApp.Services.Logistics.CustomerManagement.ViewModels
 {
@@ -27,15 +25,6 @@ namespace PlayWebApp.Services.Logistics.CustomerManagement.ViewModels
         public List<AddressUpdateVm> Addresses { get; set; }
 
         public CollectionMetaData AddressesMetaData { get; set; }
-    }
-
-    public class CustomerDto : BaseDto
-    {
-        public string Name { get; set; }
-
-        public bool Active { get; set; }
-
-        public DtoCollection<AddressDto> Addresses { get; set; }
     }
 
     public class CustomerRequestDto : RequestBase
