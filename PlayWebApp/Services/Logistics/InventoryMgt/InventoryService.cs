@@ -2,6 +2,7 @@ using PlayWebApp.Services.Database.Model;
 using PlayWebApp.Services.DataNavigation;
 using PlayWebApp.Services.Logistics.InventoryMgt.Repository;
 using PlayWebApp.Services.Logistics.InventoryMgt.ViewModels;
+using PlayWebApp.Services.Logistics.LocationMgt.ViewModels;
 using PlayWebApp.Services.Logistics.ViewModels;
 using PlayWebApp.Services.ModelExtentions;
 
@@ -16,7 +17,7 @@ namespace PlayWebApp.Services.Logistics.InventoryMgt
         {
             this.inventoryRepository = repository;
         }
-        
+
         public override StockItemDto ToDto(StockItem model)
         {
             return model.ToDto();
@@ -47,27 +48,19 @@ namespace PlayWebApp.Services.Logistics.InventoryMgt
             // TODO: do not allow to add two lines with same CODE
 
             var record = await repository.GetById(vm.RefNbr);
-            if (record == null)
+            if (record != null)
             {
-                record = new StockItem
-                {
-                    RefNbr = vm.RefNbr,
-                    Description = vm.ItemDescription,
-                    StockItemPrices = vm.ItemPrices?.Select(x => new StockItemPrice
-                    {
-                        BreakQty = x.BreakQty,
-                        RefNbr = x.RefNbr,
-                        EffectiveFrom = x.EffectiveFrom,
-                        ExpiresAt = x.ExpiresAt,
-                        UnitCost = x.UnitCost,
-                        UnitOfMeasure = x.UnitOfMeasure,                        
-                    }).ToList(),
-                };
-                var item = repository.Add(record);
-                return item.Entity.ToDto();
+                throw new Exception("Record exist from before");
             }
 
-            throw new Exception("Record exist from before");
+            record = new StockItem
+            {
+                RefNbr = vm.RefNbr,
+                Description = vm.ItemDescription
+            };
+            UpdateLines(vm, record);
+            var item = repository.Add(record);
+            return item.Entity.ToDto();
 
         }
 
@@ -75,28 +68,86 @@ namespace PlayWebApp.Services.Logistics.InventoryMgt
         public async override Task<StockItemDto> Update(StockItemUpdateVm model)
         {
             var record = await repository.GetById(model.RefNbr);
-            if (record != null)
+            if (record == null)
             {
-                record.Description = model.ItemDescription;
-
-                foreach (var item in model.ItemPrices)
-                {
-                    var line = record.StockItemPrices.FirstOrDefault(x => x.RefNbr == item.RefNbr);
-                    if (line == null) continue;
-
-                    line.BreakQty = item.BreakQty;
-                    line.EffectiveFrom = item.EffectiveFrom;
-                    line.ExpiresAt = item.ExpiresAt;
-                    line.UnitCost = item.UnitCost;
-                    line.UnitOfMeasure = item.UnitOfMeasure;
-                }
-                var res = repository.Update(record);
-                return res.Entity.ToDto();
+                throw new Exception("Record cannot be found");
             }
 
-            throw new Exception("Record cannot be found");
+            record.Description = model.ItemDescription;
+            record.StockItemPrices = (await inventoryRepository.GetItemPrices(model.RefNbr)).ToList();
+            UpdateLines(model, record);
+
+            var res = repository.Update(record);
+            return res.Entity.ToDto();
         }
-        
+
+        private void UpdateLines(StockItemUpdateVm vm, StockItem dbModel)
+        {
+            if (vm.ItemPrices == null) return;
+
+            foreach (var lineVm in vm.ItemPrices)
+            {
+                StockItemPrice line = null;
+                switch (lineVm.UpdateType)
+                {
+                    case UpdateType.New:
+                        line = AddNewLine(dbModel, lineVm);
+                        break;
+                    case UpdateType.Update:
+                        line = UpdateExistingLine(dbModel, lineVm);
+                        break;
+                    case UpdateType.Delete:
+                        line = DeleteExistingLine(dbModel, lineVm);
+                        break;
+                }
+            }
+        }
+
+        private StockItemPrice DeleteExistingLine(StockItem dbModel, StockItemPriceUpdateVm vm)
+        {
+            var line = dbModel.StockItemPrices.FirstOrDefault(x => x.RefNbr == vm.RefNbr);
+            if (line != null)
+            {
+                dbModel.StockItemPrices.Remove(line);
+            }
+            return line;
+        }
+
+        private StockItemPrice UpdateExistingLine(StockItem dbModel, StockItemPriceUpdateVm vm)
+        {
+            var line = dbModel.StockItemPrices.FirstOrDefault(x => x.RefNbr == vm.RefNbr);
+            if (line != null)
+            {
+                line.UnitCost = vm.UnitCost.Value;
+                line.BreakQty = vm.BreakQty.Value;
+                line.EffectiveFrom = vm.EffectiveFrom.Value;
+                line.ExpiresAt = vm.ExpiresAt.Value;
+                line.UnitOfMeasure = vm.UnitOfMeasure;
+
+                repository.UpdateAuditData(line);
+            }
+            return line;
+        }
+
+        private StockItemPrice AddNewLine(StockItem dbModel, StockItemPriceUpdateVm vm)
+        {
+            var line = new StockItemPrice
+            {
+                Id = Guid.NewGuid().ToString(),
+                BreakQty = vm.BreakQty.Value,
+                UnitOfMeasure = vm.UnitOfMeasure,
+                UnitCost = vm.UnitCost.Value,
+                EffectiveFrom = vm.EffectiveFrom.Value,
+                ExpiresAt = vm.ExpiresAt.Value,
+                RefNbr = vm.RefNbr
+            };
+
+            repository.AddAuditData(line);
+            dbModel.StockItemPrices.Add(line);
+            return line;
+        }
+
+
     }
 
 }

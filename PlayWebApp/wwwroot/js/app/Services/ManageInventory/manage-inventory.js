@@ -30,7 +30,7 @@ class ManageInventory {
                 return ref.val + "/previous";
             },
             onAdd: function (id) {
-                StockItemVm_RefNbr.val = '';
+                ref.val = '';
                 desc.val = '';
                 if (id && id !== '')
                     ref.val = id;
@@ -64,7 +64,13 @@ class ManageInventory {
         cols.push(new BSGridColDefinition("Line nbr", "number", "80px", "refNbr", true));
         cols.push(new BSGridColDefinition("Unit Cost", "number", "220px", "unitCost", false));
         cols.push(new BSGridColDefinition("Break Qty", "number", "80px", "breakQty", false));
-        cols.push(new BSGridColDefinition("UOM", "text", "120px", "unitOfMeasure", false));
+        cols.push(new BSGridColDefinition("UOM", "select", "120px", "unitOfMeasure", false,
+            [
+                new BSGridSelectListItem('Select', ''),
+                new BSGridSelectListItem('KG', 'KG'),
+                new BSGridSelectListItem('Liter', 'LT')
+
+            ]));
         cols.push(new BSGridColDefinition("Effective From", "date", "120px", "effectiveFrom", false));
         cols.push(new BSGridColDefinition("Expires on", "date", "120px", "expiresAt", false));
 

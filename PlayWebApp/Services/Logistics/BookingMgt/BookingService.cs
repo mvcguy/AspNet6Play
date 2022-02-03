@@ -114,7 +114,7 @@ namespace PlayWebApp.Services.Logistics.BookingMgt
 
         private async Task UpdateLines(BookingUpdateVm vm, Booking dbModel)
         {
-            vm.Lines = vm.Lines ?? new List<BookingItemUpdateVm>();
+            if(vm.Lines == null) return;
             foreach (var lineVm in vm.Lines)
             {
                 BookingItem line = null;
@@ -132,7 +132,6 @@ namespace PlayWebApp.Services.Logistics.BookingMgt
                 }
             }
         }
-
 
         private BookingItem DeleteExistingLine(Booking dbModel, BookingItemUpdateVm vm)
         {
@@ -201,6 +200,7 @@ namespace PlayWebApp.Services.Logistics.BookingMgt
             dbModel.BookingItems.Add(line);
             return line;
         }
+    
     }
 
 }

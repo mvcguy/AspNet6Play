@@ -22,6 +22,7 @@ namespace PlayWebApp.Controllers
         [HttpPut]
         public async Task<IActionResult> Put(StockItemUpdateVm model)
         {
+            AdaptModelStateForAddressesArray(model.ItemPrices, nameof(model.ItemPrices));
             if (!ModelState.IsValid) return BadRequest(ModelState);
 
             var id = model.RefNbr;
@@ -31,12 +32,14 @@ namespace PlayWebApp.Controllers
             var item = await service.Update(model);
 
             await service.SaveChanges();
-            return Ok(item.RefNbr);
+            return Ok(item);
         }
 
         [HttpPost]
         public async Task<IActionResult> Post(StockItemUpdateVm model)
         {
+            AdaptModelStateForAddressesArray(model.ItemPrices, nameof(model.ItemPrices));
+
             if (!ModelState.IsValid) return BadRequest(ModelState);
 
             var id = model.RefNbr;
@@ -46,7 +49,7 @@ namespace PlayWebApp.Controllers
             var item = await service.Add(model);
 
             await service.SaveChanges();
-            return Ok(item.RefNbr);
+            return Ok(item);
         }
 
         [HttpGet]
@@ -111,18 +114,32 @@ namespace PlayWebApp.Controllers
         }
 
         [HttpDelete]
-        [Route("{displayId}")]
-        public async Task<IActionResult> Delete(string displayId)
+        [Route("{refNbr}")]
+        public async Task<IActionResult> Delete(string refNbr)
         {
-            if (string.IsNullOrWhiteSpace(displayId)) return BadRequest();
+            if (string.IsNullOrWhiteSpace(refNbr)) return BadRequest();
 
-            var item = await service.GetById(new StockItemRequestDto { RefNbr = displayId });
+            var item = await service.GetById(new StockItemRequestDto { RefNbr = refNbr });
             if (item == null) return NotFound();
 
-            var del = await service.Delete(new StockItemRequestDto { RefNbr = displayId });
+            var del = await service.Delete(new StockItemRequestDto { RefNbr = refNbr });
             await service.SaveChanges();
             return Ok(del);
         }
+
+        #region Item prices
+
+        [HttpGet]
+        [Route("prices/{refNbr}/{page}")]
+        public async Task<IActionResult> GetPricesByStockItem(string refNbr, int page = 1)
+        {
+            var result = await service.GetItemPrices(refNbr, page);
+            if (result == null) return NotFound();
+
+            return Ok(result);
+        }
+
+        #endregion
 
     }
 }

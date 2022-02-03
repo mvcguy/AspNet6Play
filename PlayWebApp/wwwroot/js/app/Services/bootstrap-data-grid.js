@@ -504,7 +504,12 @@ class BootstrapDataGrid extends BSGridBase {
         this.jquery('#' + this.options.containerId).append(this.paginator.element);
     }
 
-    addNewRow(rowNumber, rowData, existingRecord) {
+    /**
+     * @param {string | number} rowNumber
+     * @param {{ [x: string]: any; }} rowData
+     * @param {boolean} isExistingRecord
+     */
+    addNewRow(rowNumber, rowData, isExistingRecord) {
         var row = this.body.getTemplateRow().clone();
         row.options.isTemplateRow = false;
 
@@ -531,18 +536,23 @@ class BootstrapDataGrid extends BSGridBase {
 
             var cellVal = rowData[cellPropName];
 
-            if (input instanceof BSGridCheckBox
+            if (input.options.inputType === 'date' && cellVal) {
+                var date = new Date(cellVal);
+
+                input.val = _this.toDateDisplayFormat(date);
+            }
+            else if (input instanceof BSGridCheckBox
                 && (cellVal === 'true' || cellVal === 'True' || cellVal === true)) {
                 input.prop('checked', 'checked');
             }
             else if (cellVal !== undefined) {
-
                 input.val = cellVal;
             }
 
-            debugger;
-            if (existingRecord === false) {
-                input.prop('disabled', false);
+            // debugger;
+            if (isExistingRecord === false) {
+                input.disabled = false;
+                input.readonly = false;
             }
 
             input.element.on('change', (e) => {
@@ -604,6 +614,28 @@ class BootstrapDataGrid extends BSGridBase {
         return row;
 
     };
+
+    toDateDisplayFormat(date) {
+
+        var day = date.getDate(),
+            month = date.getMonth() + 1,
+            year = date.getFullYear();
+
+        month = (month < 10 ? "0" : "") + month;
+        day = (day < 10 ? "0" : "") + day;
+
+        return year + "-" + month + "-" + day;
+    }
+
+    toTimeDisplayFormat(date) {
+        var hour = date.getHours(),
+            min = date.getMinutes();
+
+        hour = (hour < 10 ? "0" : "") + hour;
+        min = (min < 10 ? "0" : "") + min;
+
+        return hour + ":" + min;
+    }
 
     /**
      * 
@@ -727,7 +759,7 @@ class BootstrapDataGrid extends BSGridBase {
             v.prop('data-rowcategory', 'PRESTINE');
 
             // make id inputs disabled
-            v.getInputs().filter((x) => x.isKeyField()).forEach((vx) => vx.prop('disabled', true));
+            v.getInputs().filter((x) => x.isKeyField()).forEach((vx) => { vx.disabled = true; });
         });
     };
 
@@ -780,6 +812,12 @@ class BootstrapDataGrid extends BSGridBase {
                     var inputError = errors[dsName + '[' + serverIndex + '].' + propName];
                     if (inputError && inputError.length > 0) {
                         var input = errorRow.find("input[data-propname=" + col.propName + "]");
+
+                        if (!input || input.length <= 0) {
+                            input = errorRow.find("select[data-propname=" + col.propName + "]");
+                            console.log('select found');
+                        }
+
                         if (input && input.length > 0) {
                             input.addClass('is-invalid');
                             //console.log(inputError);
@@ -957,7 +995,7 @@ class BootstrapDataGrid extends BSGridBase {
     }
 
     onFetchDataError(eventArgs) {
-        console.error('onFetchDataError: ', eventArgs);
+        // console.error('onFetchDataError: ', eventArgs);
     }
 
     registerCallbacks(verifyDSName = true) {
@@ -996,12 +1034,15 @@ class BSGridInput extends BSGridBase {
     }
 
     get val() {
+        if (this.options.inputType === 'date' && this.element.val())
+            return new Date(this.element.val());
+
         return this.element.val();
     }
 
 
     /**
-     * @param {string} v
+     * @param {object} v
      */
     set val(v) {
         this.element.val(v);
@@ -1012,7 +1053,15 @@ class BSGridInput extends BSGridBase {
     }
 
     set readonly(v) {
-        this.element.attr('readonly', true);
+        this.element.attr('readonly', v);
+    }
+
+    get disabled() {
+        return this.element.is("disabled");
+    }
+
+    set disabled(v) {
+        this.element.attr('disabled', v);
     }
 
     clone() {

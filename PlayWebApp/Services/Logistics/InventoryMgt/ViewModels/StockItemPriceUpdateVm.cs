@@ -9,20 +9,20 @@ namespace PlayWebApp.Services.Logistics.InventoryMgt.ViewModels
         [Display(Name = "Line Nbr")]
         public new virtual string RefNbr { get; set; }
 
-        [Display(Name = "Breaking Qty")]
-        public virtual decimal BreakQty { get; set; }
+        [Required, Display(Name = "Breaking Qty")]
+        public virtual decimal? BreakQty { get; set; }
 
-        [Display(Name = "Unit cost")]
-        public virtual decimal UnitCost { get; set; }
+        [Required, Display(Name = "Unit cost")]
+        public virtual decimal? UnitCost { get; set; }
 
-        [Display(Name = "UOM")]
+        [Required, Display(Name = "UOM")]
         public virtual string UnitOfMeasure { get; set; }
 
-        [Display(Name ="Effective From")]
-        public virtual DateTime EffectiveFrom { get; set; }
+        [Required, Display(Name ="Effective From")]
+        public virtual DateTime? EffectiveFrom { get; set; }
 
-        [Display(Name ="Expires On")]
-        public virtual DateTime ExpiresAt { get; set; }
+        [Required, Display(Name ="Expires On")]
+        public virtual DateTime? ExpiresAt { get; set; }
     }
 
 }

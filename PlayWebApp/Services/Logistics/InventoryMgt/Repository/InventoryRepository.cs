@@ -19,7 +19,7 @@ namespace PlayWebApp.Services.Logistics.InventoryMgt.Repository
         }
         public async Task<PagedResult<StockItemPrice>> GetItemPricesPaginated(string refNbr, int pageLength, int page)
         {
-            var query = dbContext.StockItemPrices.Where(x => x.RefNbr == refNbr && x.TenantId == context.TenantId);
+            var query = dbContext.StockItemPrices.Where(x => x.StockItem.RefNbr == refNbr && x.TenantId == context.TenantId);
             var count = await query.CountAsync();
             if (count == 0) return null;
             GetPagingInfo(page, pageLength, out var take, out var skip);
@@ -37,7 +37,7 @@ namespace PlayWebApp.Services.Logistics.InventoryMgt.Repository
 
         public async Task<IEnumerable<StockItemPrice>> GetItemPrices(string refNbr)
         {
-            var query = dbContext.StockItemPrices.Where(x => x.RefNbr == refNbr && x.TenantId == context.TenantId);
+            var query = dbContext.StockItemPrices.Where(x => x.StockItem.RefNbr == refNbr && x.TenantId == context.TenantId);
             return await query.ToListAsync();
 
         }
