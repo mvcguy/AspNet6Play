@@ -68,7 +68,8 @@ namespace PlayWebApp.Services.Logistics.InventoryMgt
             record = new StockItem
             {
                 RefNbr = vm.RefNbr,
-                Description = vm.ItemDescription
+                Description = vm.ItemDescription,
+                StockItemPrices = new List<StockItemPrice>()
             };
             UpdateLines(vm, record);
             var item = repository.Add(record);
