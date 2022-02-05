@@ -27,5 +27,13 @@ namespace PlayWebApp.Services.DataNavigation
         void UpdateAuditData<TEntity>(TEntity model) where TEntity : EntityBase;
         Task<PagedResult<TModel>> GetPaginatedCollection(Expression<Func<TModel, bool>> filter, int page, int pageLength);
         Task<IEnumerable<TModel>> GetCollection(Expression<Func<TModel, bool>> filter);
+
+        /// <summary>
+        /// Speical method to return any collection client needs to query
+        /// </summary>
+        /// <typeparam name="TEntity"></typeparam>
+        /// <param name="filter"></param>
+        /// <returns></returns>
+        IQueryable<TEntity> GetCollection<TEntity>(Expression<Func<TEntity, bool>> filter) where TEntity : EntityBase, new();
     }
 }

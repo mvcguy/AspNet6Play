@@ -96,6 +96,10 @@ class ManageBooking {
 
         var stockSelector = new BSGridColDefinition("Stock item", "selector", "60px", "stockItemRefNbr");
         stockSelector.selectorDataCB = (page) => { return `https://localhost:7096/api/v1/StockItems/paginated/${page}` };
+        stockSelector.selectorCols = [
+            new BSGridColDefinition("Stock item", "text", "60px", "refNbr", true),
+            new BSGridColDefinition("Description", "text", "220px", "itemDescription", false)
+        ];
 
         cols.push(new BSGridColDefinition("Line nbr", "number", "80px", "refNbr", true));
         cols.push(stockSelector);
@@ -168,13 +172,37 @@ class ManageBooking {
 
         grid.addHandler(appDataEvents.ON_FIELD_UPDATED, (sender, e) => {
 
-            var fieldName = e.eventData.field.getFieldName();
+            var field = e.eventData.field;
+            var fieldName = field.getFieldName();
             var row = e.eventData.row;
             // console.log('on-field-update', fieldName, row);
             if (fieldName === 'quantity' || fieldName === 'unitCost') {
                 row.extCost.val = row.quantity.val * row.unitCost.val;
 
                 //calcSummary(sender);
+            }
+            else if (fieldName === 'stockItemRefNbr') {
+                // console.log(sender, e);
+                var selector = sender.selectors.find(fieldName);
+                var sRow = selector.grid.body.getSelectedRow().getRowDataExt();
+                row.description.val = sRow.itemDescription.val;
+                //row.unitCost.val = 100.20;
+
+                //
+                // get item price from server
+                //
+                var options = {
+                    url: `https://localhost:7096/api/v1/stockitems/price/${field.val}`,
+                    method: 'GET'
+                };
+                selector.grid.jquery.ajax(options).then(
+                    function success(response) {
+                        // console.log('Response: ', response);
+                        row.unitCost.valExt = response.unitCost;
+                    }, function error(err) {
+                        console.error(err);
+                    });
+
             }
         });
 

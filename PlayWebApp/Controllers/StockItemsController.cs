@@ -139,6 +139,17 @@ namespace PlayWebApp.Controllers
             return Ok(result);
         }
 
+        [HttpGet]
+        [Route("price/{refNbr}")]
+        public async Task<IActionResult> GetStockItemPrice(string refNbr)
+        {
+            if (string.IsNullOrWhiteSpace(refNbr)) return BadRequest("RefNbr is required");
+            var price = await service.GetItemPrice(refNbr);
+            if (price == null) return NotFound("Item price not found");
+
+            return Ok(price);
+        }
+
         #endregion
 
     }

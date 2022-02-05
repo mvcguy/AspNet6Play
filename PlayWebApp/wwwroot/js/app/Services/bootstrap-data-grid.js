@@ -186,6 +186,7 @@ class BootstrapDataGrid extends BSGridBase {
 
         this.head = new BSGridHeader();
         this.body = new BSGridBody();
+
         this.selectors = new BSGridSelectorWindowCollection();
 
         // @ts-ignore
@@ -277,6 +278,7 @@ class BootstrapDataGrid extends BSGridBase {
                     propName: gridCol.propName,
                     containerId: _this.options.containerId,
                     urlCb: gridCol.selectorDataCB,
+                    gridCols: gridCol.selectorCols
                 });
                 _this.selectors.add(sWindow);
 
@@ -1047,6 +1049,16 @@ class BSGridInput extends BSGridBase {
     set val(v) {
         this.element.val(v);
     }
+    
+    /**
+     * This method should be used with dropdowns where just setting the val of element is not enough
+     * this method ensure that 'change' is called after 'val' so that value of the selector is set properly
+     * @param {string} v - value
+     */
+     set valExt(v) {
+        this.element.val(v);
+        this.element.change();
+    }
 
     get readonly() {
         return this.element.is("readonly");
@@ -1125,15 +1137,6 @@ class BSGridTextInputExt extends BSGridInput {
     }
 
 
-    /**
-     * This method should be used with dropdowns where just setting the val of element is not enough
-     * this method ensure that 'change' is called after 'val' so that value of the selector is set properly
-     * @param {string} v - value
-     */
-    set valExt(v) {
-        this.element.val(v);
-        this.element.change();
-    }
 
     render() {
         this.element = this.jquery(`#${this.options.elementId}`)
@@ -1275,8 +1278,8 @@ class BSGridSelector extends BSGridInput {
         var row = sender.grid.body.getSelectedRow();
         var selectedInput = row.getInputs().find((input) => input.isKeyField());
         if (selectedInput) {
-            console.log('Selected value: ', selectedInput.val);
-            console.log('selector: ', this.txtElement.val);
+            // console.log('Selected value: ', selectedInput.val);
+            // console.log('selector: ', this.txtElement.val);
             this.val = selectedInput.val;
             this.change(); // call change to fire the change event
         }
@@ -1736,9 +1739,10 @@ class BSGridColDefinition {
      * @param {number} [colSpan]
      * @param {number} [rowSpan]
      * @param {getUrlCallback} [selectorDataCB] - a cb to return the page url
+     * @param {BSGridColDefinition[]} [selectorCols] - cols def for selector
      */
     constructor(name, dataType, width, propName, isKey,
-        dataSource, isHeader, colSpan, rowSpan, selectorDataCB) {
+        dataSource, isHeader, colSpan, rowSpan, selectorDataCB, selectorCols) {
         this.name = name;
         this.dataType = dataType;
         this.width = width;
@@ -1749,6 +1753,8 @@ class BSGridColDefinition {
         this.colSpan = colSpan;
         this.rowSpan = rowSpan;
         this.selectorDataCB = selectorDataCB;
+        this.selectorCols = selectorCols;
+
     }
 }
 
@@ -2483,7 +2489,7 @@ class BSGridSelectorWindow extends BSGridBase {
     selectorModal;
 
     /**
-     * @param {{ propName: string; containerId: string; urlCb: getUrlCallback;}} options
+     * @param {{ propName: string; containerId: string; urlCb: getUrlCallback; gridCols: BSGridColDefinition[]}} options
      */
     constructor(options) {
         super();
@@ -2494,6 +2500,7 @@ class BSGridSelectorWindow extends BSGridBase {
         this.modalTitleId = `${this.parentContainerId}_lbs_${this.options.propName}`;
         this.containerId = `${this.parentContainerId}_cbs_${this.options.propName}`;
         this.gridId = `${this.parentContainerId}_g_${this.options.propName}`;
+        this.gridCols = options.gridCols;
         this.render();
         this.grid = this.renderGrid();
         this.onItemSelected = (/** @type {BootstrapDataGrid} */ sender, /** @type {any} */ e) => { console.log(); };
@@ -2547,11 +2554,6 @@ class BSGridSelectorWindow extends BSGridBase {
         //
         // grid shown in the selector window
         //
-        var cols = [];
-
-        cols.push(new BSGridColDefinition("Stock item", "text", "60px", "refNbr", true));
-        cols.push(new BSGridColDefinition("Description", "text", "220px", "itemDescription", false));
-
         var dataSource = new BSGridDataSource('bsSelector',
             {
                 initData: [],
@@ -2561,7 +2563,7 @@ class BSGridSelectorWindow extends BSGridBase {
             this.options.urlCb
         );
 
-        var bs = new BSGridOptions(this.gridId, this.containerId, cols, dataSource, true);
+        var bs = new BSGridOptions(this.gridId, this.containerId, this.gridCols, dataSource, true);
 
         var grid = new BootstrapDataGrid(bs);
         grid.registerCallbacks();

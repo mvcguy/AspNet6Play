@@ -34,6 +34,11 @@ namespace PlayWebApp.Services.DataNavigation
         {
             return Items.Where(x => x.TenantId == context.TenantId);
         }
+        
+        public IQueryable<TEntity> GetCollection<TEntity>(Expression<Func<TEntity, bool>> filter) where TEntity : EntityBase, new()
+        {
+            return this.dbContext.Set<TEntity>().Where(x => x.TenantId == context.TenantId);
+        }
 
         public async Task<PagedResult<TModel>> GetPaginatedCollection(Expression<Func<TModel, bool>> filter, int page, int pageLength)
         {

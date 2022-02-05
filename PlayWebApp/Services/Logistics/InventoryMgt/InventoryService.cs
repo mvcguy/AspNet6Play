@@ -1,3 +1,4 @@
+using Microsoft.EntityFrameworkCore;
 using PlayWebApp.Services.Database.Model;
 using PlayWebApp.Services.DataNavigation;
 using PlayWebApp.Services.Logistics.InventoryMgt.Repository;
@@ -21,6 +22,17 @@ namespace PlayWebApp.Services.Logistics.InventoryMgt
         public override StockItemDto ToDto(StockItem model)
         {
             return model.ToDto();
+        }
+
+        public async Task<StockItemPriceDto> GetItemPrice(string refNbr)
+        {
+            var price = await repository
+                .GetCollection<StockItemPrice>(x => x.StockItem.RefNbr == refNbr)
+                .OrderByDescending(x => x.ExpiresAt)
+                .FirstOrDefaultAsync();
+
+            return price.ToDto();
+
         }
 
         public async Task<DtoCollection<StockItemPriceDto>> GetItemPrices(string refNbr, int page = 1)
@@ -63,7 +75,6 @@ namespace PlayWebApp.Services.Logistics.InventoryMgt
             return item.Entity.ToDto();
 
         }
-
 
         public async override Task<StockItemDto> Update(StockItemUpdateVm model)
         {
