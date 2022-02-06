@@ -1,5 +1,7 @@
 // @ts-check
 
+// const { SessionStorageService } = require("./session-storage-service");
+
 class BSGridBase {
 
     /**
@@ -192,7 +194,6 @@ class BootstrapDataGrid extends BSGridBase {
         // @ts-ignore
         this.bootstrap = bootstrap;
         this.appActions = appActions;
-        this.httpClient = new BSGridHttpClient();
 
         this.paginator = new BSGridPagination(
             new BSGridPaginationOptions(this.options.dataSource.name,
@@ -202,7 +203,14 @@ class BootstrapDataGrid extends BSGridBase {
         // @ts-ignore
         this.sessionCache = new SessionStorageService();
 
+
+        this.httpClient = new BSGridHttpClient(this.sessionCache, this.options.dataSource.name);
+
         // this.render(); // render manually
+
+        // this.infiniteScroller = new BSGridInfiniteScroll({ gridElement: this.element });
+        this.infiniteScroller = null;
+
 
     }
     /**
@@ -232,7 +240,7 @@ class BootstrapDataGrid extends BSGridBase {
         _this.prop('data-datasource', _this.options.dataSource.name);
 
         var settings = _this.getGridSettings(this.options.gridId) || {};
-        _this.css = { 'width': 'inherit' };
+         _this.css = { 'width': 'inherit' };
 
 
         var gridHeaderRow = new BSGridRow({ dataSourceName: _this.options.dataSource.name, hasGridTitles: true });
@@ -388,6 +396,14 @@ class BootstrapDataGrid extends BSGridBase {
         //
         _this.notifyListeners(_this.appDataEvents.ON_GRID_DATA_BOUND,
             { dataSourceName: _this.options.dataSource.name, eventData: {}, source: _this });
+
+        //
+        // enable infinite scroll
+        //
+        if (this.options.enableInfiniteScroll === true) {
+            this.infiniteScroller = new BSGridInfiniteScroll({ gridElement: this.element, httpClient: _this.httpClient });
+            this.infiniteScroller.enable();
+        }
     };
 
     /**
@@ -493,7 +509,8 @@ class BootstrapDataGrid extends BSGridBase {
         //
         // update the pagination component
         //
-        this.bindPaginator(metaData);
+        if (this.options.enableInfiniteScroll == false)
+            this.bindPaginator(metaData);
     }
 
 
@@ -660,7 +677,7 @@ class BootstrapDataGrid extends BSGridBase {
 
         // console.log(gridRows, currentRowIndex);
         if (lastRowIndex === parentIndex) {
-            this.addEmptyRow();
+            var eRow = this.addEmptyRow();
         }
     };
 
@@ -678,6 +695,10 @@ class BootstrapDataGrid extends BSGridBase {
 
         this.notifyListeners(this.appDataEvents.ON_GRID_UPDATED, { dataSourceName: this.options.dataSource.name, eventData: emptyRow });
 
+        this.infiniteScroller.unobserve();
+        this.infiniteScroller.observe(emptyRow.element[0]);
+
+        return emptyRow;
     };
 
     createEmptyRowData() {
@@ -717,7 +738,7 @@ class BootstrapDataGrid extends BSGridBase {
             var url = this.options.dataSource.url(pageIndex);
             if (!url) return;
 
-            var options = new BSGridHttpClientOptions(url, "GET", this.options.dataSource.name);
+            var options = new BSGridHttpClientOptions(url, "GET");
 
             this.httpClient.get(options);
         }
@@ -1049,13 +1070,13 @@ class BSGridInput extends BSGridBase {
     set val(v) {
         this.element.val(v);
     }
-    
+
     /**
      * This method should be used with dropdowns where just setting the val of element is not enough
      * this method ensure that 'change' is called after 'val' so that value of the selector is set properly
      * @param {string} v - value
      */
-     set valExt(v) {
+    set valExt(v) {
         this.element.val(v);
         this.element.change();
     }
@@ -1723,6 +1744,7 @@ class BSGridOptions {
         this.colDefinition = colDefinition;
         this.dataSource = dataSource;
         this.isReadonly = isReadonly;
+        this.enableInfiniteScroll = true;
     }
 }
 
@@ -2334,11 +2356,14 @@ class BSGridColSettings {
 }
 
 class BSGridHttpClient extends BSGridBase {
-    constructor() {
+
+    constructor(sessionStorage, dataSourceName) {
         super();
         //@ts-ignore
         this.jq = jQuery;
         this.appDataEvents = appDataEvents;
+        this.sessionStorage = sessionStorage;
+        this.dataSourceName = dataSourceName;
     }
 
 
@@ -2346,6 +2371,14 @@ class BSGridHttpClient extends BSGridBase {
      * @param {BSGridHttpClientOptions} options
      */
     get(options) {
+        // debugger;
+        var key = JSON.stringify(options);
+        var value = this.sessionStorage.getItem(key);
+        if (value) {
+            this.notifyResponse(value);
+            return;
+        }
+
         var _this = this;
         var ajaxOptions = {
             url: options.url,
@@ -2354,14 +2387,23 @@ class BSGridHttpClient extends BSGridBase {
         };
         this.jq.ajax(ajaxOptions).then(function done(response) {
             // console.log(response);
-            _this.notifyListeners(_this.appDataEvents.ON_FETCH_GRID_RECORD, { dataSourceName: options.dataSourceName, eventData: response });
+            _this.sessionStorage.addItem(key, response, new Date(Date.now() + (10 * 60 * 1000)));// expires in 10 minutes
+            _this.notifyResponse(response)
 
         }, function error(error) {
-            _this.notifyListeners(_this.appDataEvents.ON_FETCH_GRID_RECORD_ERROR,
-                { dataSourceName: options.dataSourceName, eventData: error, recordId: options.recordId });
+            _this.nofifyError(error);
         });
 
     };
+
+    notifyResponse(response) {
+        this.notifyListeners(this.appDataEvents.ON_FETCH_GRID_RECORD, { dataSourceName: this.dataSourceName, eventData: response });
+    }
+
+    nofifyError(error) {
+        this.notifyListeners(this.appDataEvents.ON_FETCH_GRID_RECORD_ERROR,
+            { dataSourceName: this.dataSourceName, eventData: error, recordId: options.recordId });
+    }
 }
 
 class BSGridHttpClientOptions {
@@ -2371,14 +2413,13 @@ class BSGridHttpClientOptions {
      * @param {string} method
      * @param {object[]} headers
      * @param {string} recordId
-     * @param {string} dsName
      */
-    constructor(url, method, dsName, headers = undefined, recordId = undefined) {
+    constructor(url, method, headers = undefined, recordId = undefined) {
         this.url = url;
         this.method = method;
         this.headers = headers;
         this.recordId = recordId;
-        this.dataSourceName = dsName;
+        this.cacheResponse = true;
     }
 }
 
@@ -2440,6 +2481,64 @@ class BSGridPagination extends BSGridBase {
 
     clear() {
         this.jquery('#' + this.listId).children('li').remove();
+    }
+}
+
+class BSGridInfiniteScroll extends BSGridBase {
+    /**
+     * @param {{ gridElement: any; httpClient: BSGridHttpClient }} options
+     */
+    constructor(options) {
+        super();
+        this.gridElement = options.gridElement;
+        this.httpClient = options.httpClient;
+
+        this.s_area = null;
+        this.observer = null;
+        this.target = null;
+
+        this.totalPages = null;
+        this.currentPage = null;
+
+    }
+
+    observerCB(entries, sender) {
+        var entry = entries[0];
+        // console.log(entry);
+        if (entry.isIntersecting === true) {
+            console.log('Observer is invoked. Entry: ', entry);
+        }
+    }
+
+    observe(el) {
+        this.target = el;
+        this.observer.observe(el);
+    }
+
+    unobserve() {
+        this.observer.unobserve(this.target);
+    }
+
+    enable() {
+        this.s_area = 'scroll_area_' + this.gridElement.attr('id');
+        var scrollArea = this.jquery(`<div id="${this.s_area}" style="max-height: 200px; overflow-y: auto"></div>`);
+        this.gridElement.wrap(scrollArea);
+
+        var root = this.jquery.find(`#${this.s_area}`);
+        let options = {
+            root: root[0],
+            rootMargin: '0px',
+            threshold: 0.3,
+            trackVisibility: false
+        };
+
+        this.observer = new IntersectionObserver((entries, sender) => this.observerCB(entries, sender), options);
+
+        var rows = this.gridElement.find('tr');
+        var lastRow = rows[rows.length - 1];
+        var target = lastRow;
+        console.log(target, root);
+        this.observe(target);
     }
 }
 
@@ -2564,6 +2663,7 @@ class BSGridSelectorWindow extends BSGridBase {
         );
 
         var bs = new BSGridOptions(this.gridId, this.containerId, this.gridCols, dataSource, true);
+        bs.enableInfiniteScroll = false;
 
         var grid = new BootstrapDataGrid(bs);
         grid.registerCallbacks();

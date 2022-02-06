@@ -24,7 +24,26 @@
 
 <div class="container continer-fluid">
     <div class="row">
-        <div id="dummy-data-container">
+        <div id="dummy-data-container" style="display: none;">
+
+        </div>
+    </div>
+    <div class="row">
+        <div>
+            <div id="scroll_area" style="max-height: 450px; overflow-y: auto">
+                <table class="table table-bordered" >
+                    <thead>
+                        <tr>
+                            <td>col-1</td>
+                            <td>col-2</td>
+                        </tr>
+                    </thead>
+                    <tbody id="infinite_scroll">
+
+                    </tbody>
+                </table>
+            </div>
+
 
         </div>
     </div>
@@ -32,6 +51,6 @@
 
 @section Scripts
 {
-    <partial name="_ValidationScriptsPartial" />
-    <script src="~/js/app/services/appindex/app-index.js"></script>
+<partial name="_ValidationScriptsPartial" />
+<script src="~/js/app/services/appindex/app-index.js"></script>
 }
