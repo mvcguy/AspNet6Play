@@ -2696,7 +2696,11 @@ class BSGridSelectorWindow extends BSGridBase {
             // @ts-ignore
             this.selectorModal = new bootstrap.Modal(this.element);
 
-            this.element[0].addEventListener('shown.bs.modal', (e) => this.grid.fetchGridPage(1));
+            this.element[0].addEventListener('shown.bs.modal', (e) => {
+                this.grid.clearGrid();
+                this.grid.infiniteScroller.currentPage = 1;
+                this.grid.fetchGridPage(1)
+            });
         }
     }
 
