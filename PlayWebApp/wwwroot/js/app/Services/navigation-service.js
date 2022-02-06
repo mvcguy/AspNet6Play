@@ -1,3 +1,4 @@
+// const { SessionStorageService } = require("./session-storage-service");
 
 var persistenceService = function (serviceParams) {
     var url = serviceParams.url;
@@ -20,6 +21,7 @@ var persistenceService = function (serviceParams) {
     var isRecordDirty = false;
     var urlQuery = serviceParams.urlQuery;
     var dataSourceName = serviceParams.dataSourceName || 'mainForm';
+    var storageService = new SessionStorageService();
 
     var registerCallback = function (key, eventTypeX, callback, dataSourceNameX) {
         dataEventsService.registerCallback(key, eventTypeX, callback, dataSourceNameX);
@@ -233,6 +235,9 @@ var persistenceService = function (serviceParams) {
             deleteItem();
         });
 
+        $("#btnRefresh").on('click', (e) => { 
+            sessionStorage.clear();
+        });
 
     };
 

@@ -217,7 +217,7 @@ class BootstrapDataGrid extends BSGridBase {
      * @param {number} page
      */
     paginatorCallback(page) {
-        console.log(`Page.Nbr: ${page} is requested`);
+        // console.log(`Page.Nbr: ${page} is requested`);
         this.fetchGridPage(page);
     }
 
@@ -240,7 +240,7 @@ class BootstrapDataGrid extends BSGridBase {
         _this.prop('data-datasource', _this.options.dataSource.name);
 
         var settings = _this.getGridSettings(this.options.gridId) || {};
-         _this.css = { 'width': 'inherit' };
+        _this.css = { 'width': 'inherit' };
 
 
         var gridHeaderRow = new BSGridRow({ dataSourceName: _this.options.dataSource.name, hasGridTitles: true });
@@ -384,11 +384,19 @@ class BootstrapDataGrid extends BSGridBase {
         _this.jquery('#' + _this.options.containerId).append(_this.element);
 
         //
+        // enable infinite scroll
+        //
+        if (this.options.enableInfiniteScroll === true) {
+            this.infiniteScroller = new BSGridInfiniteScroll({ gridElement: this.element, httpClient: _this.httpClient });
+            this.infiniteScroller.nextPageCallback = (/** @type {number} */ page) => this.paginatorCallback(page);
+            this.infiniteScroller.enable();
+        }
+
+        //
         // add data to the grid
         //
         var data = _this.options.dataSource.data.initData;
         var mdata = _this.options.dataSource.data.metaData;
-        //_this.bindDataSource(data, mdata);
         this.notifyListeners(_this.appDataEvents.ON_FETCH_GRID_RECORD, { dataSourceName: _this.options.dataSource.name, eventData: { items: data, metaData: mdata } });
 
         //
@@ -397,13 +405,6 @@ class BootstrapDataGrid extends BSGridBase {
         _this.notifyListeners(_this.appDataEvents.ON_GRID_DATA_BOUND,
             { dataSourceName: _this.options.dataSource.name, eventData: {}, source: _this });
 
-        //
-        // enable infinite scroll
-        //
-        if (this.options.enableInfiniteScroll === true) {
-            this.infiniteScroller = new BSGridInfiniteScroll({ gridElement: this.element, httpClient: _this.httpClient });
-            this.infiniteScroller.enable();
-        }
     };
 
     /**
@@ -494,6 +495,7 @@ class BootstrapDataGrid extends BSGridBase {
      */
     bindDataSource(data, metaData) {
 
+        // debugger;
         if (!data || data.length <= 0) return;
 
         var pagedData = data;
@@ -501,9 +503,14 @@ class BootstrapDataGrid extends BSGridBase {
             pagedData = this.options.dataSource.getPageOfflineCB(metaData.pageIndex, this.options.dataSource.data.initData, metaData);
         }
 
+        /**
+         * @type {BSGridRow}
+         */
+        var lastRow = null;
         pagedData.forEach((v, i) => {
             var row = this.addNewRow(i, v, true);
             row.prop('data-rowcategory', 'PRESTINE');
+            lastRow = row;
         });
 
         //
@@ -511,6 +518,15 @@ class BootstrapDataGrid extends BSGridBase {
         //
         if (this.options.enableInfiniteScroll == false)
             this.bindPaginator(metaData);
+        else {
+            this.infiniteScroller.initMetaData = metaData;
+            this.infiniteScroller.initData = pagedData;
+            if (lastRow) {
+
+                this.infiniteScroller.unobserve();
+                this.infiniteScroller.observe(lastRow.element[0]);
+            }
+        }
     }
 
 
@@ -727,6 +743,10 @@ class BootstrapDataGrid extends BSGridBase {
         // fetch grid data
         //        
         this.fetchGridPage(1);
+
+        if (this.options.enableInfiniteScroll === true) {
+            this.infiniteScroller.currentPage = 1;
+        }
     };
 
     /**
@@ -1011,7 +1031,8 @@ class BootstrapDataGrid extends BSGridBase {
         //
         // populate the grid with the fetched data
         //
-        this.clearGrid();
+        if (this.options.enableInfiniteScroll === false)
+            this.clearGrid();
         var md = eventArgs.eventData.metaData;
         if (!md) return;
         this.bindDataSource(eventArgs.eventData.items, new PagingMetaData(md.pageIndex, md.pageSize, md.totalRecords));
@@ -2485,6 +2506,22 @@ class BSGridPagination extends BSGridBase {
 }
 
 class BSGridInfiniteScroll extends BSGridBase {
+
+    /**
+     * @type {PagingMetaData} metadata
+     */
+    initMetaData;
+
+    /**
+     * @type {number}
+     */
+    currentPage;
+
+    /**
+     * @type {object[]}
+     */
+    initData;
+
     /**
      * @param {{ gridElement: any; httpClient: BSGridHttpClient }} options
      */
@@ -2497,16 +2534,34 @@ class BSGridInfiniteScroll extends BSGridBase {
         this.observer = null;
         this.target = null;
 
-        this.totalPages = null;
-        this.currentPage = null;
+        // this.totalPages = null;
+        this.currentPage = 1;
+        this.initData = null;
+        this.initMetaData = null;
+        this.nextPageCallback = null;
 
     }
 
+    /**
+     * @param {IntersectionObserverEntry[]} entries
+     * @param {IntersectionObserver} sender
+     */
     observerCB(entries, sender) {
         var entry = entries[0];
         // console.log(entry);
         if (entry.isIntersecting === true) {
-            console.log('Observer is invoked. Entry: ', entry);
+            // console.log('Observer is invoked. Entry: ', entry);
+            // console.log('initdata: ', this.initData);
+            // console.log('metadata: ', this.initMetaData);
+
+            //
+            // fetch next page if we still have more pages to read
+            //
+            if (this.currentPage < this.initMetaData.totalPages) {
+                console.log('Infinite scroll: fetching next page#: ', this.currentPage + 1);
+                this.currentPage++;
+                this.nextPageCallback(this.currentPage);
+            }
         }
     }
 
@@ -2537,7 +2592,7 @@ class BSGridInfiniteScroll extends BSGridBase {
         var rows = this.gridElement.find('tr');
         var lastRow = rows[rows.length - 1];
         var target = lastRow;
-        console.log(target, root);
+        // console.log(target, root);
         this.observe(target);
     }
 }
@@ -2663,7 +2718,7 @@ class BSGridSelectorWindow extends BSGridBase {
         );
 
         var bs = new BSGridOptions(this.gridId, this.containerId, this.gridCols, dataSource, true);
-        bs.enableInfiniteScroll = false;
+        // bs.enableInfiniteScroll = false;
 
         var grid = new BootstrapDataGrid(bs);
         grid.registerCallbacks();
