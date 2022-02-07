@@ -120,9 +120,44 @@ input:hover, select:hover {
 
   color: #0d6efd;
   border-color: #0d6efd;
-  border: 1px solid #0d6efd!important;
+  border: 1px solid #0d6efd !important;
 }
 
-.sum-value{
+.sum-value {
   text-align: right;
+}
+
+.actions-container {
+  margin: 5px 0px;
+}
+
+.table-hover>tbody>tr:hover {
+  --bs-table-accent-bg: rgb(13 110 253 / 7%);
+  color: #c1d7ec;
+}
+
+.table-active {
+  --bs-table-accent-bg: rgb(13 110 253 / 17%);
+  color: #c1d7ec;
+}
+
+.table-active:hover {
+  --bs-table-accent-bg: rgb(13 110 253 / 27%)!important;
+  color: #c1d7ec!important;
+}
+
+.table-active .row-marker{
+  margin: 5px 0px;
+  color: blue;
+  vertical-align: middle;
+  float: right;  
+  display: initial;
+}
+
+.row-marker{
+  display: none;
+}
+
+.table td{
+  padding: 2px 0px;
 }

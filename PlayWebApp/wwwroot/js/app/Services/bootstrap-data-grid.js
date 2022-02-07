@@ -174,6 +174,10 @@ class BSGridBase {
 
 class BootstrapDataGrid extends BSGridBase {
 
+    /**
+     * @type{BSGridActions}
+     */
+    gridActions;
 
     /**
      * 
@@ -212,6 +216,9 @@ class BootstrapDataGrid extends BSGridBase {
         this.infiniteScroller = null;
 
 
+        this.gridActions = null;
+
+
     }
     /**
      * @param {number} page
@@ -232,7 +239,7 @@ class BootstrapDataGrid extends BSGridBase {
     render() {
 
         this.element = this
-            .jquery('<table class="table table-bordered table-hover resizable navTable nowrap"></table>');
+            .jquery('<table class="table table-bordered table-hover table-sm resizable navTable nowrap"></table>');
 
         var _this = this;
 
@@ -253,6 +260,20 @@ class BootstrapDataGrid extends BSGridBase {
         gridBodyRow.css = { 'display': 'none' };
 
         var gridColumns = _this.applyColSorting(settings);
+
+        //
+        // add row markers - this helps to improve the visual appearance of selected row
+        //
+        var mh = new BSGridCell();
+        mh.options.isHeader = true;
+
+        var marker = new BSGridMarker();
+        var mb = new BSGridCell();
+        mb.append(marker);
+
+        gridHeaderRow.addCell(mh);
+        gridBodyRow.addCell(mb);
+
 
         gridColumns.forEach(function (gc) {
             var gridCol = gc;
@@ -354,20 +375,22 @@ class BootstrapDataGrid extends BSGridBase {
         // add grid actions toolbar
         //
 
-        var gridActionsRow = new BSGridRow({ dataSourceName: _this.options.dataSource.name, isActionsRow: true });
-        var gridActions = new BSGridActions();
-        gridActions.addNewRecordAction(this.options.dataSource.name, (e) => this.addEmptyRow())
+        //var gridActionsRow = new BSGridRow({ dataSourceName: _this.options.dataSource.name, isActionsRow: true });
+        this.gridActions = new BSGridActions();
+        this.gridActions.dataSourceName = this.options.dataSource.name;
+        this.gridActions.addNewRecordAction((e) => this.addEmptyRow())
             .addDeleteAction((e) => this.body.markDeleted())
-            .addGridSettingsAction(this.options.dataSource.name);
-        var colDef = new BSGridColDefinition();
-        colDef.isHeader = true;
-        colDef.colSpan = gridHeaderRow.cells.length;
-        var actionsCell = new BSGridCell(colDef);
-        actionsCell.removeClass('sorting').removeClass('ds-col').addClass('grid-toolbar');
-        actionsCell.append(gridActions);
-        gridActionsRow.addCell(actionsCell);
+            .addGridSettingsAction();
+        //var colDef = new BSGridColDefinition();
+        //colDef.isHeader = true;
+        //colDef.colSpan = gridHeaderRow.cells.length;
+        //var actionsCell = new BSGridCell(colDef);
+        //actionsCell.removeClass('sorting').removeClass('ds-col').addClass('grid-toolbar');
+        //actionsCell.append(gridActions);
+        //gridActionsRow.addCell(actionsCell);
 
-        _this.head.addRow(gridActionsRow);
+        //_this.head.addRow(gridActionsRow);
+
         _this.head.addRow(gridHeaderRow);
         _this.body.addRow(gridBodyRow)
 
@@ -377,6 +400,10 @@ class BootstrapDataGrid extends BSGridBase {
         _this.addHeader();
         _this.addBody();
 
+        //
+        // add actions for the grid to the container
+        //
+        _this.jquery('#' + _this.options.containerId).append(this.gridActions.element);
 
         //
         // add grid to the provided container
@@ -454,6 +481,8 @@ class BootstrapDataGrid extends BSGridBase {
     };
 
     /**
+     * Apply visibility and size settings from store cookie.
+     * This helps the user not to re-arrange cols based on their needs all the time they open the screen
      * @param {BSGridCell} col
      * @param {object} settings
      */
@@ -471,7 +500,8 @@ class BootstrapDataGrid extends BSGridBase {
     };
 
     /**
-     * 
+     * Apply column re-ordering based on the stored cookie
+     * This helps the user to not re-order the columns everytime they open the screen.
      * @param {*} settings 
      * @returns {BSGridColDefinition[]}
      */
@@ -703,7 +733,7 @@ class BootstrapDataGrid extends BSGridBase {
 
         var inputs = emptyRow.getVisibleInputs();
         if (inputs.length > 0) {
-            //inputs[0].focus();
+            inputs[0].focus();
         }
 
         emptyRow.prop('data-rowcategory', 'ADDED');
@@ -1068,6 +1098,21 @@ class BootstrapDataGrid extends BSGridBase {
     };
 }
 
+class BSGridMarker extends BSGridBase {
+    constructor() {
+        super();
+        this.render();
+    }
+
+    render() {
+        this.element = this.jquery(`<i class="bi bi-caret-right row-marker"></i>`);
+    }
+
+    clone() {
+        return super.clone();    
+    }
+}
+
 class BSGridInput extends BSGridBase {
     /**
      * @param {{ inputType: string; dataSourceName: string }} options
@@ -1401,7 +1446,7 @@ class BSGridCell extends BSGridBase {
      */
     constructor(options) {
         super();
-        this.options = options;
+        this.options = options || new BSGridColDefinition();
         this.render();
     }
 
@@ -1433,43 +1478,50 @@ class BSGridCell extends BSGridBase {
 
 class BSGridActions extends BSGridBase {
 
+
+    /**
+     * @type {string}
+     */
+    dataSourceName;
     constructor() {
         super();
         this.render();
     }
 
     render() {
-        this.element = this.jquery('<div class="actions-container"></div>')
+        this.element = this.jquery('<div class="row actions-container"></div>')
     }
 
     /**
      * @param {(arg0: object) => any} [callback]
      */
-    addDeleteAction(callback, title = '-') {
-        var btn = this.jquery('<button type="button" class="btn btn-sm btn-outline-danger grid-toolbar-action" id="btnDeleteRow">' + title + '</button>');
+    addDeleteAction(callback) {
+        var btn = this.jquery(`<button type="button" class="btn btn-sm btn-outline-danger grid-toolbar-action" 
+                                    id="btnDeleteRow_${this.dataSourceName}"><i class="bi bi-trash"></i>
+                                </button>`);
         btn.on('click', callback);
         this.element.append(btn);
         return this;
     }
 
     /**
-     * @param {string} dsName
      * @param {(arg0: object) => any} [callback]
      */
-    addNewRecordAction(dsName, callback, title = '+') {
-        var btn = this.jquery(`<button type="button" class="btn btn-sm btn-outline-primary grid-toolbar-action" id="btnAddRow_${dsName}">${title}</button>'`);
+    addNewRecordAction(callback) {
+        var btn = this.jquery(`<button type="button" class="btn btn-sm btn-outline-primary grid-toolbar-action" 
+                                    id="btnAddRow_${this.dataSourceName}"><i class="bi bi-plus-circle"></i>
+                                </button>'`);
         btn.on('click', callback);
         this.element.append(btn);
         return this;
     }
 
-    /**
-     * @param {string} [dsName]
-     */
-    addGridSettingsAction(dsName) {
-        var flRight = this.jquery('<div style="float:right"></div>');
-        flRight.append(`<button type="button" class="btn btn-sm btn-outline-primary grid-toolbar-action" data-bs-toggle="modal" data-bs-target="#staticBackdrop_${dsName}" id="btnSettings_${dsName}"><i class="bi bi-gear"></i></button>`);
-        this.element.append(flRight);
+    addGridSettingsAction() {
+        var btn = this.jquery(`<button type="button" class="btn btn-sm btn-outline-primary grid-toolbar-action" 
+                                    data-bs-toggle="modal" data-bs-target="#staticBackdrop_${this.dataSourceName}" 
+                                    id="btnSettings_${this.dataSourceName}"><i class="bi bi-gear"></i>
+                                </button>`);
+        this.element.append(btn);
         return this;
     }
 
@@ -1500,9 +1552,9 @@ class BSGridRowCollection extends BSGridBase {
         return this.rows.filter((row) => row.visible === true);
     }
 
-    getActionsRow() {
-        return this.rows.find((row) => row.options.isActionsRow === true);
-    }
+    // getActionsRow() {
+    //     return this.rows.find((row) => row.options.isActionsRow === true);
+    // }
 
     getGridTitlesRow() {
         return this.rows.find((row) => row.options.hasGridTitles === true);
@@ -1517,7 +1569,7 @@ class BSGridHeader extends BSGridRowCollection {
     }
 
     render() {
-        this.element = this.jquery("<thead></thead>");
+        this.element = this.jquery('<thead class="table-light"></thead>');
     }
 
 }
@@ -1627,7 +1679,7 @@ class BSGridRow extends BSGridBase {
     cells = [];
 
     /**
-     * @param {{ dataSourceName: string; hasGridTitles?: boolean; isTemplateRow?: boolean; isActionsRow?:boolean }} options
+     * @param {{ dataSourceName: string; hasGridTitles?: boolean; isTemplateRow?: boolean;}} options
      */
     constructor(options) {
         super();
@@ -2098,16 +2150,16 @@ BootstrapDataGrid.prototype.enableColumnReordering = function () {
     //var gridId = $table.attr('id');
     //console.log('datasource-name', dataSourceName);
     var addWaitMarker = function () {
-        var dw = jq('<div></div>');
-        dw.addClass('wait-reorder').hide();
-        var ct = jq('<div class="d-flex justify-content-center"></div>');
-        var ds = jq('<div></div>').addClass('spinner-border');
-        ds.append('<span class="visually-hidden">Wait...</span>');
-        ct.append(ds);
-        dw.append(ct);
-        _this.addClass('caption-top');
-        var caption = jq('<caption></caption>').append(dw);
-        _this.element.append(caption);
+        // var dw = jq('<div></div>');
+        // dw.addClass('wait-reorder').hide();
+        // var ct = jq('<div class="d-flex justify-content-center"></div>');
+        // var ds = jq('<div></div>').addClass('spinner-border');
+        // ds.append('<span class="visually-hidden">Wait...</span>');
+        // ct.append(ds);
+        // dw.append(ct);
+        // _this.addClass('caption-top');
+        // var caption = jq('<caption></caption>').append(dw);
+        // _this.element.append(caption);
     };
 
     var thWrap = jq('<div draggable="true" class="grid-header"></div>');
@@ -2126,7 +2178,7 @@ BootstrapDataGrid.prototype.enableColumnReordering = function () {
         jq(childs).wrap(thWrap);
     });
 
-    addWaitMarker();
+    // addWaitMarker();
 
     var srcElement;
 
@@ -2211,7 +2263,7 @@ BootstrapDataGrid.prototype.enableColumnReordering = function () {
             reOrder(headerRow, cells, fromIndex, toIndex);
 
             var rows = _this.body.rows;
-            jq('.wait-reorder').css({ 'cursor': 'progress' }).show();
+            // jq('.wait-reorder').css({ 'cursor': 'progress' }).show();
 
             //
             // apply new order to all the rows in the grid
@@ -2236,7 +2288,7 @@ BootstrapDataGrid.prototype.enableColumnReordering = function () {
                 _this.notifyListeners(appDataEvents.ON_GRID_CONFIG_UPDATED,
                     { dataSourceName: dataSourceName, eventData: e, source: _this, action: appActions.COL_REORDER });
 
-                jq('.wait-reorder').css({ 'cursor': '' }).hide();
+                // jq('.wait-reorder').css({ 'cursor': '' }).hide();
             }, 500);
 
         }
@@ -2576,7 +2628,7 @@ class BSGridInfiniteScroll extends BSGridBase {
 
     enable() {
         this.s_area = 'scroll_area_' + this.gridElement.attr('id');
-        var scrollArea = this.jquery(`<div id="${this.s_area}" style="max-height: 200px; overflow-y: auto"></div>`);
+        var scrollArea = this.jquery(`<div class="row" id="${this.s_area}" style="max-height: 200px; overflow-y: auto"></div>`);
         this.gridElement.wrap(scrollArea);
 
         var root = this.jquery.find(`#${this.s_area}`);
@@ -2742,7 +2794,7 @@ class BSGridSelectorWindow extends BSGridBase {
         grid.render();
 
         // hide actions
-        grid.head.getActionsRow().visible = false;
+        grid.gridActions.visible = false;
         return grid;
     }
 }
