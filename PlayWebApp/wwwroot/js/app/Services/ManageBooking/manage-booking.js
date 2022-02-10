@@ -173,7 +173,7 @@ class ManageBooking {
         grid.addHandler(appDataEvents.ON_FIELD_UPDATED, (sender, e) => {
 
             var field = e.eventData.field;
-            var fieldName = field.getFieldName();
+            var fieldName = field.modelName;
             var row = e.eventData.row;
             // console.log('on-field-update', fieldName, row);
             if (fieldName === 'quantity' || fieldName === 'unitCost') {

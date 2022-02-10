@@ -142,6 +142,13 @@ class BSGridBase {
         return Object.keys(obj).length === 0;
     }
 
+    get id() {
+        return this.getProp('id');
+    }
+
+    set id(v) {
+        this.prop('id', v);
+    }
 
     clone() {
         //debugger;
@@ -250,13 +257,12 @@ class BootstrapDataGrid extends BSGridBase {
         _this.css = { 'width': 'inherit' };
 
 
-        var gridHeaderRow = new BSGridRow({ dataSourceName: _this.options.dataSource.name, hasGridTitles: true });
+        var gridHeaderRow = new BSGridRow({ dataSourceName: _this.options.dataSource.name, gridId: this.options.gridId, hasGridTitles: true });
         gridHeaderRow.addClass('draggable').addClass('grid-cols');
 
-        var gridBodyRow = new BSGridRow({ isTemplateRow: true, dataSourceName: _this.options.dataSource.name });
+        var gridBodyRow = new BSGridRow({ isTemplateRow: true, dataSourceName: _this.options.dataSource.name, gridId: this.options.gridId, });
         gridBodyRow.addClass('grid-rows');
-
-        gridBodyRow.props([{ key: 'id', value: _this.options.gridId + "_template_row_" }])
+        
         gridBodyRow.css = { 'display': 'none' };
 
         var gridColumns = _this.applyColSorting(settings);
@@ -538,7 +544,7 @@ class BootstrapDataGrid extends BSGridBase {
          */
         var lastRow = null;
         pagedData.forEach((v, i) => {
-            var row = this.addNewRow(i, v, true);
+            var row = this.addNewRow(v, true);
             row.prop('data-rowcategory', 'PRESTINE');
             lastRow = row;
         });
@@ -570,16 +576,14 @@ class BootstrapDataGrid extends BSGridBase {
     }
 
     /**
-     * @param {string | number} rowNumber
      * @param {{ [x: string]: any; }} rowData
      * @param {boolean} isExistingRecord
      */
-    addNewRow(rowNumber, rowData, isExistingRecord) {
+    addNewRow(rowData, isExistingRecord) {
+        var rowNumber = this.body.getNextRowIndex();
         var row = this.body.getTemplateRow().clone();
         row.options.isTemplateRow = false;
 
-        row.prop('id', this.options.gridId + "_template_row_" + rowNumber);
-        row.prop('data-index', rowNumber);
         row.addClass('grid-row');
         row.css = { 'display': 'table-row' };
 
@@ -596,7 +600,7 @@ class BootstrapDataGrid extends BSGridBase {
             var oldId = input.getProp('id');
             input.prop('id', oldId + "_" + rowNumber);
 
-            var cellPropName = input.getProp('data-propname');
+            var cellPropName = input.modelName;
             // console.log('cell-pro', cellPropName);
 
             var cellVal = rowData[cellPropName];
@@ -656,8 +660,9 @@ class BootstrapDataGrid extends BSGridBase {
             if (input instanceof BSGridSelector) {
                 // link the callback from option
                 //TODO: fix the button ID
-                var xId = input.btnElement.attr('id');
-                input.btnElement.attr('id', xId + "_" + rowNumber)
+                //debugger;
+                // var xId = input.btnElement.attr('id');
+                // input.btnElement.attr('id', xId + "_" + rowNumber)
             }
 
         });
@@ -718,8 +723,8 @@ class BootstrapDataGrid extends BSGridBase {
         // debugger;
         var visibleRows = this.body.getVisibleRows();
         if (visibleRows.length <= 0) return;
-        var lastRowIndex = visibleRows[visibleRows.length - 1].getProp('data-index');
-        var parentIndex = row.getProp('data-index');
+        var lastRowIndex = visibleRows[visibleRows.length - 1].getRowIndex();
+        var parentIndex = row.getRowIndex();
 
         // console.log(gridRows, currentRowIndex);
         if (lastRowIndex === parentIndex) {
@@ -729,7 +734,7 @@ class BootstrapDataGrid extends BSGridBase {
 
     addEmptyRow() {
         //var rowCount = this.jquery('#' + this.options.gridId).find('tbody>tr').length;
-        var emptyRow = this.addNewRow(this.body.rows.length - 1, this.createEmptyRowData(), false);
+        var emptyRow = this.addNewRow(this.createEmptyRowData(), false);
 
         var inputs = emptyRow.getVisibleInputs();
         if (inputs.length > 0) {
@@ -910,10 +915,7 @@ class BootstrapDataGrid extends BSGridBase {
     }
 
     getRowByIndex(index) {
-        return this.body.rows.find((v, i) => {
-            var prop = v.getProp('data-index');
-            return prop === index.toString();
-        });
+        return this.body.rows.find((v, i) => v.getRowIndex() === index);
     }
 
     /**
@@ -1109,7 +1111,7 @@ class BSGridMarker extends BSGridBase {
     }
 
     clone() {
-        return super.clone();    
+        return super.clone();
     }
 }
 
@@ -1146,6 +1148,14 @@ class BSGridInput extends BSGridBase {
         this.element.val(v);
         this.element.change();
     }
+    
+    get modelName() {
+        return this.getProp('data-propname');
+    }
+
+    set modelName(v) {
+        this.prop('data-propname', v);
+    }
 
     get readonly() {
         return this.element.is("readonly");
@@ -1171,10 +1181,6 @@ class BSGridInput extends BSGridBase {
 
         // return c;
         return super.clone();
-    }
-
-    getFieldName() {
-        return this.getProp('data-propname');
     }
 
     addDoubleClickEvent() {
@@ -1428,8 +1434,11 @@ class BSGridSelector extends BSGridInput {
     //     })
     // }
 
-    getFieldName() {
-        return this.txtElement.getFieldName();
+    get modelName() {
+        return this.txtElement.modelName;
+    }
+    set modelName(v) {
+        this.txtElement.modelName = v;
     }
 
     change() {
@@ -1544,12 +1553,21 @@ class BSGridRowCollection extends BSGridBase {
      */
     addRow(row) {
         this.element.append(row.element);
+        var index = this.getNextRowIndex();
+        row.prop('data-rowindex', index);
+        
+        var rType = row.options.hasGridTitles === true ? 'head' : 'data';
+        row.prop('id', `${row.options.gridId}_${rType}_${index}`);
         this.rows.push(row);
         return this;
     }
 
     getVisibleRows() {
         return this.rows.filter((row) => row.visible === true);
+    }
+
+    getNextRowIndex() {
+        return this.rows.length + 1;
     }
 
     // getActionsRow() {
@@ -1575,6 +1593,7 @@ class BSGridHeader extends BSGridRowCollection {
 }
 
 class BSGridBody extends BSGridRowCollection {
+
     constructor(options) {
         super(options);
         this.render();
@@ -1679,14 +1698,11 @@ class BSGridRow extends BSGridBase {
     cells = [];
 
     /**
-     * @param {{ dataSourceName: string; hasGridTitles?: boolean; isTemplateRow?: boolean;}} options
+     * @param {{ dataSourceName: string;gridId: string; hasGridTitles?: boolean; isTemplateRow?: boolean;}} options
      */
     constructor(options) {
         super();
         this.options = options;
-        //this.isTemplateRow = options.isTemplateRow;
-        //this.dataSourceName = options.dataSourceName;
-
         this.render();
     }
 
@@ -1770,24 +1786,26 @@ class BSGridRow extends BSGridBase {
         var rowInputs = this.getInputs();
         var record = {};
         rowInputs.forEach((rowInput, i) => {
-            var cellPropName = rowInput.getFieldName();
+            var cellPropName = rowInput.modelName;
             record[cellPropName] = rowInput;
         });
         return record;
     }
 
+    getRowIndex() {
+        var rowIndex = this.getProp('data-rowindex');
+        return parseInt(rowIndex);
+    }
+
     getRowData() {
         var rowInputs = this.getInputs();
-        var rowIndex = this.getProp('data-index');
-        if (rowIndex) {
-            rowIndex = parseInt(rowIndex);
-        }
+        var rowIndex = this.getRowIndex();
         var record = {};
         var rowCat = this.getProp('data-rowcategory');
         record['rowCategory'] = rowCat;
 
         rowInputs.forEach((rowInput, i) => {
-            var cellPropName = rowInput.getFieldName();
+            var cellPropName = rowInput.modelName;
             record[cellPropName] = rowInput.val;
         });
         record["clientRowNumber"] = rowIndex;
