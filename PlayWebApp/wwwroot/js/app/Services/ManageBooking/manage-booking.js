@@ -183,6 +183,7 @@ class ManageBooking {
             }
             else if (fieldName === 'stockItemRefNbr') {
                 // console.log(sender, e);
+                // debugger;
                 var selector = sender.selectors.find(fieldName);
                 var sRow = selector.grid.body.getSelectedRow().getRowDataExt();
                 row.description.val = sRow.itemDescription.val;

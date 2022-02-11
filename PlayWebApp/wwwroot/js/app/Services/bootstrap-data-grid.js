@@ -262,7 +262,7 @@ class BootstrapDataGrid extends BSGridBase {
 
         var gridBodyRow = new BSGridRow({ isTemplateRow: true, dataSourceName: _this.options.dataSource.name, gridId: this.options.gridId, });
         gridBodyRow.addClass('grid-rows');
-        
+
         gridBodyRow.css = { 'display': 'none' };
 
         var gridColumns = _this.applyColSorting(settings);
@@ -545,7 +545,7 @@ class BootstrapDataGrid extends BSGridBase {
         var lastRow = null;
         pagedData.forEach((v, i) => {
             var row = this.addNewRow(v, true);
-            row.prop('data-rowcategory', 'PRESTINE');
+            row.rowCategory = 'PRESTINE';
             lastRow = row;
         });
 
@@ -594,7 +594,6 @@ class BootstrapDataGrid extends BSGridBase {
         // debugger;
 
         inputs.forEach(function (v, i) {
-
             var input = v;
 
             var oldId = input.getProp('id');
@@ -628,9 +627,9 @@ class BootstrapDataGrid extends BSGridBase {
 
                 row.prop('data-isdirty', true);
 
-                var rowCat = row.getProp('data-rowcategory');
+                var rowCat = row.rowCategory;
                 if (rowCat !== 'ADDED') {
-                    row.prop('data-rowcategory', 'UPDATED');
+                    row.rowCategory = 'UPDATED';
                 }
 
                 // remove any previous errors
@@ -656,15 +655,6 @@ class BootstrapDataGrid extends BSGridBase {
             input.element.on('focus', function (e) {
                 _this.body.focusRow(row);
             });
-
-            if (input instanceof BSGridSelector) {
-                // link the callback from option
-                //TODO: fix the button ID
-                //debugger;
-                // var xId = input.btnElement.attr('id');
-                // input.btnElement.attr('id', xId + "_" + rowNumber)
-            }
-
         });
 
         row.element.on('click', function (e) {
@@ -741,7 +731,7 @@ class BootstrapDataGrid extends BSGridBase {
             inputs[0].focus();
         }
 
-        emptyRow.prop('data-rowcategory', 'ADDED');
+        emptyRow.rowCategory = 'ADDED'
         emptyRow.prop('data-isdirty', 'true');
 
         this.notifyListeners(this.appDataEvents.ON_GRID_UPDATED, { dataSourceName: this.options.dataSource.name, eventData: emptyRow });
@@ -821,11 +811,14 @@ class BootstrapDataGrid extends BSGridBase {
         // remove rows from the grid that has been deleted
         //
 
-        this.body.find("tr[data-rowcategory='DELETED']").remove();
-        this.body.find("tr[data-rowcategory='ADDED_DELETED']").remove();
+        // this.body.find("tr[data-rowcategory='DELETED']").remove();
+        // this.body.find("tr[data-rowcategory='ADDED_DELETED']").remove();
 
+        //
+        // remove elements from the real and virtual DOM
+        //
         this.body.rows
-            .filter((v) => v.prop('data-rowcategory') === 'DELETED' || v.prop('data-rowcategory') === 'ADDED_DELETED')
+            .filter((v) => v.rowCategory === 'DELETED' || v.rowCategory === 'ADDED_DELETED')
             .forEach((v) => this.body.removeRow(v));
 
         //
@@ -834,7 +827,7 @@ class BootstrapDataGrid extends BSGridBase {
         this.body.rows.forEach((v) => {
 
             // mark all rows prestine
-            v.prop('data-rowcategory', 'PRESTINE');
+            v.rowCategory = 'PRESTINE';
 
             // make id inputs disabled
             v.getInputs().filter((x) => x.isKeyField()).forEach((vx) => { vx.disabled = true; });
@@ -1148,7 +1141,7 @@ class BSGridInput extends BSGridBase {
         this.element.val(v);
         this.element.change();
     }
-    
+
     get modelName() {
         return this.getProp('data-propname');
     }
@@ -1332,6 +1325,36 @@ class BSGridSelect extends BSGridInput {
 
 }
 
+class BSGridButton extends BSGridInput {
+    /**
+     * @param {{ inputType: string; dataSourceName: string; icon?:string; handler?:  (arg0: MouseEvent) => void}} options
+     */
+    constructor(options) {
+        super(options);
+        this.options = options;
+        this.render();
+    }
+
+    render() {
+        var icon = this.options.icon ? `<i class="bi bi-${this.options.icon}"></i>` : '';
+        this.element = this.jquery(`<button class="btn btn-outline-primary" type="button">${icon}</button>`);
+        if (this.options.handler)
+            this.addClickHandler();
+    }
+
+    addClickHandler() {
+        this.element.on('click', (/** @type {MouseEvent} */ e) => this.options.handler(e));
+    }
+
+    clone() {
+        var sc = super.clone();
+        var btn = new BSGridButton(this.shClone(this.options));
+        btn.children = sc.children;
+
+        return btn;
+    }
+}
+
 class BSGridSelector extends BSGridInput {
 
     /**
@@ -1373,8 +1396,8 @@ class BSGridSelector extends BSGridInput {
         if (selectedInput) {
             // console.log('Selected value: ', selectedInput.val);
             // console.log('selector: ', this.txtElement.val);
-            this.val = selectedInput.val;
-            this.change(); // call change to fire the change event
+            this.txtElement.val = selectedInput.val;
+            this.txtElement.change(); // call change to fire the change event
         }
         sender.selectorModal.hide();
     }
@@ -1388,33 +1411,15 @@ class BSGridSelector extends BSGridInput {
             { key: "placeHolder", value: this.options.placeHolder },
             { key: "data-propname", value: this.options.propName }]);
 
-        this.btnElement = this.jquery(`<button class="btn btn-outline-primary" type="button" id="${this.options.btnId}">
-                                            <i class="bi bi-search"></i>
-                                       </button>`);
+        this.btnElement = new BSGridButton({
+            inputType: 'button',
+            dataSourceName: this.options.dataSourceName,
+            icon: 'search',
+            handler: (e) => this.options.btnClick(this, e)
+        })
 
-        this.btnElement.on('click', (/** @type {MouseEvent} */ e) => {
-            this.options.btnClick(this, e);
-        });
-        this.element = this.jquery('<div class="input-group input-group-sm"></div>');
-        this.element = this.element.append(this.txtElement.element).append(this.btnElement);
-    }
-
-    getButton() {
-        return this.btnElement;
-    }
-
-    // override base class methods
-
-    get val() {
-        return this.txtElement.val;
-    }
-
-
-    /**
-     * @param {string} v
-     */
-    set val(v) {
-        this.txtElement.val = v;
+        var wrapper = this.jquery('<div class="input-group input-group-sm"></div>');
+        this.element = wrapper.append(this.txtElement.element).append(this.btnElement.element);
     }
 
     clone() {
@@ -1426,25 +1431,6 @@ class BSGridSelector extends BSGridInput {
 
         return c;
     }
-
-    // addDoubleClickEvent() {
-    //     this.txtElement.element.on('dblclick', (e) => {
-    //         this.notifyListeners(this.appDataEvents.ON_ROW_DOUBLE_CLICKED,
-    //             { dataSourceName: this.options.dataSourceName, eventData: e, source: this });
-    //     })
-    // }
-
-    get modelName() {
-        return this.txtElement.modelName;
-    }
-    set modelName(v) {
-        this.txtElement.modelName = v;
-    }
-
-    change() {
-        this.txtElement.change();
-    }
-
 
 }
 
@@ -1555,7 +1541,7 @@ class BSGridRowCollection extends BSGridBase {
         this.element.append(row.element);
         var index = this.getNextRowIndex();
         row.prop('data-rowindex', index);
-        
+
         var rType = row.options.hasGridTitles === true ? 'head' : 'data';
         row.prop('id', `${row.options.gridId}_${rType}_${index}`);
         this.rows.push(row);
@@ -1665,12 +1651,12 @@ class BSGridBody extends BSGridRowCollection {
         row.prop('data-isdirty', 'true');
         row.css = { 'display': 'none' };
 
-        var rowCat = row.getProp('data-rowcategory');
+        var rowCat = row.rowCategory;
         if (rowCat === 'ADDED') {
-            row.prop('data-rowcategory', 'ADDED_DELETED');
+            row.rowCategory = 'ADDED_DELETED';
         }
         else {
-            row.prop('data-rowcategory', 'DELETED');
+            row.rowCategory = 'DELETED';
         }
 
         this.notifyListeners(this.appDataEvents.ON_GRID_UPDATED, { dataSourceName: row.options.dataSourceName, eventData: row });
@@ -1683,9 +1669,13 @@ class BSGridBody extends BSGridRowCollection {
      * @param {BSGridRow} row 
      */
     removeRow(row) {
+
+        // this.find(`tr[data-rowcategory='${row.rowCategory}']`).remove();
+        row.element.remove();
+
         var index = this.rows.indexOf(row);
         if (index > -1)
-            this.rows.splice(index);
+            this.rows.splice(index, 1);
     }
 
 }
@@ -1704,6 +1694,14 @@ class BSGridRow extends BSGridBase {
         super();
         this.options = options;
         this.render();
+    }
+
+    get rowCategory() {
+        return this.element.prop('data-rowcategory');
+    }
+
+    set rowCategory(v) {
+        this.element.prop('data-rowcategory', v);
     }
 
     /**
@@ -1771,6 +1769,8 @@ class BSGridRow extends BSGridBase {
                         inputs.push(v.txtElement);
                     else if (v instanceof BSGridInput)
                         inputs.push(v);
+                    // if (v instanceof BSGridInput)
+                    //     inputs.push(v);
                 });
             }
         });
@@ -1801,7 +1801,7 @@ class BSGridRow extends BSGridBase {
         var rowInputs = this.getInputs();
         var rowIndex = this.getRowIndex();
         var record = {};
-        var rowCat = this.getProp('data-rowcategory');
+        var rowCat = this.rowCategory;
         record['rowCategory'] = rowCat;
 
         rowInputs.forEach((rowInput, i) => {
