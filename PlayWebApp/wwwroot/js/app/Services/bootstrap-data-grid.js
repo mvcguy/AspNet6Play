@@ -275,8 +275,7 @@ class BootstrapDataGrid extends BSGridBase {
         //
         // add row markers - this helps to improve the visual appearance of selected row
         //
-        var mh = new BSGridCell();
-        mh.isHeader = true;
+        var mh = new BSGridCell(new BSGridColDefinition(), true);
 
         var marker = new BSGridMarker();
         var mb = new BSGridCell();
@@ -1382,10 +1381,12 @@ class BSGridCell extends BSGridBase {
     isHeader;
     /**
      * @param {BSGridColDefinition} [options]
+     * @param {boolean} [isHeader]
      */
-    constructor(options) {
+    constructor(options, isHeader = false) {
         super();
         this.options = options || new BSGridColDefinition();
+        this.isHeader = isHeader;
         this.render();
     }
 
@@ -1408,10 +1409,9 @@ class BSGridCell extends BSGridBase {
     clone() {
         // debugger;
         var sc = super.clone();
-        var c = new BSGridCell(this.shClone(this.options));
+        var c = new BSGridCell(this.shClone(this.options), this.isHeader);
         c.children = sc.children;
         c.element = sc.element;
-        c.isHeader = this.isHeader;
         return c;
     }
 }
@@ -1808,8 +1808,7 @@ class BSGridRow extends BSGridBase {
      * @param {BSGridColDefinition} model
      */
     createHeaderFor(model) {
-        var th = new BSGridCell(model);
-        th.isHeader = true;
+        var th = new BSGridCell(model, true);
         th.addClass('sorting').addClass('ds-col');
         th.setText(model.name);
         th.prop('data-th-propname', model.propName);
@@ -2685,6 +2684,7 @@ class BSGridInfiniteScroll extends BSGridBase {
         var scrollArea = this.jquery(`<div class="row" id="${this.s_area}" style="max-height: 200px; overflow-y: auto"></div>`);
         this.gridElement.wrap(scrollArea);
 
+        //@ts-ignore
         var root = this.jquery.find(`#${this.s_area}`);
         let options = {
             root: root[0],
